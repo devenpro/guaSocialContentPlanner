@@ -38,6 +38,8 @@ $jsFiles = @(
     'src/ai/_helpers.js',
     'src/ai/actions/research.js',
     'src/ai/actions/content.js',
+    'src/ai/actions/media.js',
+    'src/ai/actions/visual.js',
     'src/ai/actions/platform.js',
     'src/ai/scp-part2b.js'
 )
