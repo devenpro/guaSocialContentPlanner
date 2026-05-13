@@ -37,16 +37,24 @@
   // ============================================================
 
   var APP_VIEWS = {
-    'dashboard': { order: 1, label: 'Dashboard',  icon: 'chart-pie',          description: 'Overview & pipeline' },
-    'research':  { order: 2, label: 'Research',   icon: 'flask',              description: 'AI-powered ideation' },
-    'topics':    { order: 3, label: 'Topics',     icon: 'tags',               description: 'Themes & content pillars' },
-    'series':    { order: 4, label: 'Series',     icon: 'layer-group',        description: 'Multi-post content arcs' },
-    'posts':     { order: 5, label: 'Posts',      icon: 'thumbtack',          description: 'Content pipeline' },
-    'calendar':  { order: 6, label: 'Calendar',   icon: 'calendar',           description: 'Schedule view' },
-    'images':    { order: 7, label: 'Images',     icon: 'images',             description: 'Reference image library' },
-    'activity':  { order: 8, label: 'Activity',   icon: 'clock-rotate-left',  description: 'Full activity log' },
-    'settings':  { order: 9, label: 'Settings',   icon: 'gear',               description: 'Workspace configuration' }
+    'dashboard': { order: 1, label: 'Dashboard',  icon: 'chart-pie',          group: 'overview', description: 'Overview & pipeline' },
+    'research':  { order: 2, label: 'Research',   icon: 'flask',              group: 'strategy', description: 'AI-powered ideation' },
+    'topics':    { order: 3, label: 'Topics',     icon: 'tags',               group: 'strategy', description: 'Themes & content pillars' },
+    'series':    { order: 4, label: 'Series',     icon: 'layer-group',        group: 'strategy', description: 'Multi-post content arcs' },
+    'posts':     { order: 5, label: 'Posts',      icon: 'thumbtack',          group: 'work',     description: 'Content pipeline' },
+    'calendar':  { order: 6, label: 'Calendar',   icon: 'calendar',           group: 'work',     description: 'Schedule view' },
+    'images':    { order: 7, label: 'Images',     icon: 'images',             group: 'work',     description: 'Reference image library' },
+    'activity':  { order: 8, label: 'Activity',   icon: 'clock-rotate-left',  group: 'system',   description: 'Full activity log' },
+    'settings':  { order: 9, label: 'Settings',   icon: 'gear',               group: 'system',   description: 'Workspace configuration' }
   };
+
+  // Sidebar groupings. Keys must match APP_VIEWS[*].group values.
+  var SIDEBAR_GROUPS = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'strategy', label: 'Strategy' },
+    { key: 'work',     label: 'Work' },
+    { key: 'system',   label: 'System' }
+  ];
 
   var POST_TYPES = {
     'image':    { key: 'image',    label: 'Single Image', icon: 'image',      color: '#1a73e8' },
@@ -935,24 +943,46 @@
 
   function renderSidebar() {
     var html = '<div class="scp-sidebar" id="scpSidebar"><div class="scp-sidebar-overlay"></div><div class="scp-sidebar-inner"><nav class="scp-nav">';
+
+    // Bucket views by group, preserving APP_VIEWS insertion order within
+    // each bucket.
+    var byGroup = {};
     for (var key in APP_VIEWS) {
       var v = APP_VIEWS[key];
-      var active = S.currentView === key ? ' scp-nav-item-active' : '';
-      var badgeHtml = '';
-      if (key === 'posts') badgeHtml = S.activePosts > 0 ? '<span class="scp-nav-badge">' + S.activePosts + '</span>' : '';
-      else if (key === 'research') {
-        var sesCount = (S.data.research && S.data.research.sessions) ? S.data.research.sessions.length : 0;
-        badgeHtml = sesCount > 0 ? '<span class="scp-nav-badge">' + sesCount + '</span>' : '';
-      }
-      else if (key === 'topics') badgeHtml = (S.data.topics || []).length > 0 ? '<span class="scp-nav-badge">' + (S.data.topics || []).length + '</span>' : '';
-      else if (key === 'series') badgeHtml = (S.data.series || []).length > 0 ? '<span class="scp-nav-badge">' + (S.data.series || []).length + '</span>' : '';
-      else if (key === 'images') badgeHtml = S.images.length > 0 ? '<span class="scp-nav-badge">' + S.images.length + '</span>' : '';
-      html += '<a href="#' + key + '" class="scp-nav-item' + active + '" data-view="' + key + '">';
-      html += '<span class="scp-nav-icon">' + icon(v.icon) + '</span>';
-      html += '<span class="scp-nav-label">' + esc(v.label) + '</span>';
-      html += badgeHtml + '</a>';
+      var g = v.group || 'overview';
+      (byGroup[g] = byGroup[g] || []).push(key);
     }
+
+    for (var gi = 0; gi < SIDEBAR_GROUPS.length; gi++) {
+      var grp = SIDEBAR_GROUPS[gi];
+      var keys = byGroup[grp.key] || [];
+      if (keys.length === 0) continue;
+      html += '<div class="scp-nav-group">';
+      html += '<div class="scp-nav-group-label">' + esc(grp.label) + '</div>';
+      for (var ki = 0; ki < keys.length; ki++) html += renderSidebarItem(keys[ki]);
+      html += '</div>';
+    }
+
     html += '</nav></div></div>';
+    return html;
+  }
+
+  function renderSidebarItem(key) {
+    var v = APP_VIEWS[key]; if (!v) return '';
+    var active = S.currentView === key ? ' scp-nav-item-active' : '';
+    var badgeHtml = '';
+    if (key === 'posts') badgeHtml = S.activePosts > 0 ? '<span class="scp-nav-badge">' + S.activePosts + '</span>' : '';
+    else if (key === 'research') {
+      var sesCount = (S.data.research && S.data.research.sessions) ? S.data.research.sessions.length : 0;
+      badgeHtml = sesCount > 0 ? '<span class="scp-nav-badge">' + sesCount + '</span>' : '';
+    }
+    else if (key === 'topics') badgeHtml = (S.data.topics || []).length > 0 ? '<span class="scp-nav-badge">' + (S.data.topics || []).length + '</span>' : '';
+    else if (key === 'series') badgeHtml = (S.data.series || []).length > 0 ? '<span class="scp-nav-badge">' + (S.data.series || []).length + '</span>' : '';
+    else if (key === 'images') badgeHtml = S.images.length > 0 ? '<span class="scp-nav-badge">' + S.images.length + '</span>' : '';
+    var html = '<a href="#' + key + '" class="scp-nav-item' + active + '" data-view="' + key + '" title="' + esc(v.description || '') + '">';
+    html += '<span class="scp-nav-icon">' + icon(v.icon) + '</span>';
+    html += '<span class="scp-nav-label">' + esc(v.label) + '</span>';
+    html += badgeHtml + '</a>';
     return html;
   }
 
