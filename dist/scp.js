@@ -2652,6 +2652,782 @@
 })(jQuery, Drupal);
 
 
+/* ----- src/editing/steps/basics.js ----- */
+
+/**
+ * @category    editing
+ * @purpose     Pipeline step 1 â€” Basics. Title, type chips, priority,
+ *              platform checkboxes, tags input, tone/audience selects, notes.
+ * @exports     window._scpRenderers.step_basics (registered at load time)
+ *              window._scpRenderBasicsStep (for part2a alias if needed)
+ * @depends-on  window._scpState, window._scpEsc, window._scpIcon,
+ *              window._scpFormatDate, window._scpConstants,
+ *              window._scpRenderers.tagInput (set by scp-part2a at init)
+ * @extracted-from  src/editing/scp-part2a.js (was SECTION 5 of v0.2.0)
+ */
+(function($) {
+  'use strict';
+
+  var S, esc, icon, formatDate, Constants;
+  function _resolveHelpers() {
+    S = window._scpState; esc = window._scpEsc; icon = window._scpIcon;
+    formatDate = window._scpFormatDate; Constants = window._scpConstants;
+  }
+  function renderTagInput(tagIds, postId) {
+    var R = window._scpRenderers; if (R && R.tagInput) return R.tagInput(tagIds, postId);
+    return '';
+  }
+
+  // ============================================================
+  // SECTION 5: STEP 1 â€” BASICS
+  // ============================================================
+
+  function renderBasicsStep(post) {
+    _resolveHelpers();
+    var stg = (S.meta && S.meta.settings) || {};
+    var html = '<div class="scp-editor-form" data-post-id="' + esc(post.id) + '">';
+
+    // Title
+    html += '<div class="scp-form-group"><label>Title</label>';
+    html += '<input type="text" class="scp-input scp-basics-field" data-field="title" value="' + esc(post.title || '') + '" placeholder="Post title..."></div>';
+
+    // Type + Priority row
+    html += '<div class="scp-form-row"><div class="scp-form-half">';
+    html += '<label>Post Type</label><div class="scp-type-selector">';
+    for (var tk in Constants.POST_TYPES) {
+      var pt = Constants.POST_TYPES[tk];
+      html += '<button class="scp-type-option' + (post.type === tk ? ' scp-type-option-active' : '') + '" data-action="set-post-type" data-type="' + tk + '" style="--opt-color:' + pt.color + '">' + icon(pt.icon) + ' ' + esc(pt.label) + '</button>';
+    }
+    html += '</div></div><div class="scp-form-half">';
+    html += '<label>Priority</label><select class="scp-select scp-basics-field" data-field="priority">';
+    for (var pk in Constants.PRIORITY_LEVELS) {
+      var pr = Constants.PRIORITY_LEVELS[pk];
+      html += '<option value="' + pk + '"' + (post.priority === pk ? ' selected' : '') + '>' + pr.label + '</option>';
+    }
+    html += '</select></div></div>';
+
+    // Platforms
+    html += '<div class="scp-form-group"><label>Target Platforms</label><div class="scp-platform-selector">';
+    for (var plk in Constants.PLATFORMS) {
+      var pl = Constants.PLATFORMS[plk];
+      var isOn = (post.platforms || []).indexOf(plk) > -1;
+      html += '<label class="scp-chip-checkbox' + (isOn ? ' scp-chip-checkbox-active' : '') + '" style="--chip-color:' + pl.color + '">';
+      html += '<input type="checkbox" class="scp-platform-check" data-platform="' + plk + '"' + (isOn ? ' checked' : '') + '>';
+      html += icon(pl.icon) + ' ' + esc(pl.label) + '</label>';
+    }
+    html += '</div></div>';
+
+    // Tags
+    html += '<div class="scp-form-group"><label>Tags</label>' + renderTagInput(post.tags || [], post.id) + '</div>';
+
+    // Tone + Audience
+    var tones = stg.tones || []; var auds = stg.audiences || [];
+    html += '<div class="scp-form-row"><div class="scp-form-half">';
+    html += '<label>Tone</label><select class="scp-select scp-content-meta-field" data-path="content.tone_id">';
+    html += '<option value="">Not set</option>';
+    for (var ti = 0; ti < tones.length; ti++) html += '<option value="' + esc(tones[ti].id) + '"' + (post.content.tone_id === tones[ti].id ? ' selected' : '') + '>' + esc(tones[ti].name) + '</option>';
+    html += '</select></div><div class="scp-form-half">';
+    html += '<label>Audience</label><select class="scp-select scp-content-meta-field" data-path="content.audience_id">';
+    html += '<option value="">Not set</option>';
+    for (var ai = 0; ai < auds.length; ai++) html += '<option value="' + esc(auds[ai].id) + '"' + (post.content.audience_id === auds[ai].id ? ' selected' : '') + '>' + esc(auds[ai].name) + '</option>';
+    html += '</select></div></div>';
+
+    // Notes
+    html += '<div class="scp-form-group"><label>Notes</label>';
+    html += '<textarea class="scp-textarea scp-basics-field" data-field="source.notes" rows="2" placeholder="Any additional context...">' + esc((post.source && post.source.notes) || '') + '</textarea></div>';
+
+    // Source info
+    if (post.source && post.source.type === 'research') {
+      html += '<div class="scp-info-strip">' + icon('flask') + ' From research session â€¢ Created ' + formatDate(post.created) + '</div>';
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  window._scpRenderers = window._scpRenderers || {};
+  window._scpRenderers.step_basics = renderBasicsStep;
+  window._scpRenderBasicsStep = renderBasicsStep;
+
+})(jQuery);
+
+
+/* ----- src/editing/steps/research.js ----- */
+
+/**
+ * @category    editing
+ * @purpose     Pipeline step 2 â€” Research. Two-phase UI: angle research
+ *              (radio-list of generated angles) which unlocks hook research
+ *              (radio-list of hooks built on the selected angle). Uses
+ *              window._scpAiSel to inject the AI provider picker.
+ * @exports     window._scpRenderers.step_research
+ *              window._scpRenderResearchStep
+ * @depends-on  window._scpEsc, window._scpIcon, window._scpAiSel
+ * @extracted-from  src/editing/scp-part2a.js (was SECTION 6 of v0.2.0)
+ */
+(function($) {
+  'use strict';
+
+  var esc, icon;
+  function _resolveHelpers() {
+    esc = window._scpEsc; icon = window._scpIcon;
+  }
+
+  // ============================================================
+  // SECTION 6: STEP 2 â€” RESEARCH (Angles + Hooks)
+  // ============================================================
+
+  function renderResearchStep(post) {
+    _resolveHelpers();
+    var r = post.research || {};
+    var angles = r.angles || [];
+    var hooks = r.hooks || [];
+    var hasSelectedAngle = !!r.selected_angle;
+    var hasSelectedHook = !!r.selected_hook;
+
+    var html = '<div class="scp-editor-form" data-post-id="' + esc(post.id) + '">';
+
+    // â”€â”€â”€ PHASE 1: ANGLE RESEARCH â”€â”€â”€
+    html += '<div class="scp-research-phase" style="border-left-color: var(--scp-accent)">';
+    html += '<div class="scp-research-phase-header"><span class="scp-phase-num">1</span><h3>' + icon('eye') + ' Angle Research</h3></div>';
+    html += '<p class="scp-text-sm scp-text-muted">Research different angles for this post. What unique perspective will you take?</p>';
+
+    // Custom input
+    html += '<div class="scp-form-row scp-research-input-row">';
+    html += '<div style="flex:1"><input type="text" class="scp-input scp-angle-custom" value="' + esc(r.angle_custom_input || '') + '" placeholder="Custom direction (optional): focus on cost-saving angle..."></div>';
+    html += '<button class="scp-btn scp-btn-ai scp-btn-sm" data-action="ai-research-angles">' + icon('sparkles') + ' Research Angles</button>';
+    html += (window._scpAiSel ? window._scpAiSel('ai-research-angles') : '');
+    html += '</div>';
+
+    // Angle list
+    if (angles.length > 0) {
+      html += '<div class="scp-radio-list">';
+      for (var a = 0; a < angles.length; a++) {
+        var isSelAngle = angles[a].selected || (r.selected_angle && r.selected_angle === angles[a].angle);
+        html += '<div class="scp-radio-item' + (isSelAngle ? ' scp-radio-item-selected' : '') + '">';
+        html += '<input type="radio" name="scp_angle" class="scp-radio" data-action="select-angle" data-index="' + a + '"' + (isSelAngle ? ' checked' : '') + '>';
+        html += '<div class="scp-radio-body"><div class="scp-radio-title">' + esc(angles[a].angle || '') + '</div>';
+        if (angles[a].description) html += '<div class="scp-radio-desc">' + esc(angles[a].description) + '</div>';
+        html += '</div>';
+        html += '<button class="scp-btn-icon scp-btn-delete-sm" data-action="remove-angle" data-index="' + a + '">' + icon('trash') + '</button>';
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+    if (angles.length > 0 && !hasSelectedAngle) {
+      html += '<p class="scp-text-sm" style="color:var(--scp-accent);margin-top:var(--scp-space-2)">' + icon('info') + ' Select an angle above to unlock hook research.</p>';
+    }
+    html += '<button class="scp-btn scp-btn-sm scp-btn-outline" data-action="add-angle-manual" style="margin-top:var(--scp-space-2)">' + icon('plus') + ' Add Manually</button>';
+    html += '</div>'; // end phase 1
+
+    // â”€â”€â”€ PHASE 2: HOOK RESEARCH (unlocked after angle) â”€â”€â”€
+    if (hasSelectedAngle) {
+      html += '<div class="scp-research-phase" style="border-left-color: #9334e9">';
+      html += '<div class="scp-research-phase-header"><span class="scp-phase-num scp-phase-num-2">2</span><h3>' + icon('bolt') + ' Hook Research</h3></div>';
+      html += '<p class="scp-text-sm scp-text-muted">Based on angle: <strong>"' + esc(r.selected_angle) + '"</strong></p>';
+
+      html += '<div class="scp-form-row scp-research-input-row">';
+      html += '<div style="flex:1"><input type="text" class="scp-input scp-hook-custom" value="' + esc(r.hook_custom_input || '') + '" placeholder="Custom direction: make it provocative, use numbers..."></div>';
+      html += '<button class="scp-btn scp-btn-ai scp-btn-sm" data-action="ai-research-hooks">' + icon('sparkles') + ' Research Hooks</button>';
+      html += (window._scpAiSel ? window._scpAiSel('ai-research-hooks') : '');
+      html += '</div>';
+
+      if (hooks.length > 0) {
+        html += '<div class="scp-radio-list">';
+        for (var h = 0; h < hooks.length; h++) {
+          var isSelHook = hooks[h].selected || (r.selected_hook && r.selected_hook === hooks[h].hook);
+          html += '<div class="scp-radio-item' + (isSelHook ? ' scp-radio-item-selected' : '') + '">';
+          html += '<input type="radio" name="scp_hook" class="scp-radio" data-action="select-hook" data-index="' + h + '"' + (isSelHook ? ' checked' : '') + '>';
+          html += '<div class="scp-radio-body"><div class="scp-radio-title">"' + esc(hooks[h].hook || '') + '"</div></div>';
+          html += '<button class="scp-btn-icon scp-btn-delete-sm" data-action="remove-hook" data-index="' + h + '">' + icon('trash') + '</button>';
+          html += '</div>';
+        }
+        html += '</div>';
+      }
+      html += '<button class="scp-btn scp-btn-sm scp-btn-outline" data-action="add-hook-manual" style="margin-top:var(--scp-space-2)">' + icon('plus') + ' Add Manually</button>';
+      html += '</div>'; // end phase 2
+    } else {
+      html += '<div class="scp-research-phase scp-phase-locked">';
+      html += '<div class="scp-research-phase-header"><span class="scp-phase-num scp-phase-num-locked">2</span><h3 class="scp-text-muted">' + icon('bolt') + ' Hook Research</h3></div>';
+      html += '<p class="scp-text-sm scp-text-muted">' + icon('lock') + ' Select an angle first to unlock hook research.</p>';
+      html += '</div>';
+    }
+
+    // Research notes
+    html += '<div class="scp-form-group" style="margin-top:var(--scp-space-4)"><label>Research Notes</label>';
+    html += '<textarea class="scp-textarea scp-research-notes" rows="2" placeholder="Notes...">' + esc(r.notes || '') + '</textarea></div>';
+
+    html += '</div>';
+    return html;
+  }
+
+  window._scpRenderers = window._scpRenderers || {};
+  window._scpRenderers.step_research = renderResearchStep;
+  window._scpRenderResearchStep = renderResearchStep;
+
+})(jQuery);
+
+
+/* ----- src/editing/steps/content.js ----- */
+
+/**
+ * @category    editing
+ * @purpose     Pipeline step 3 â€” Content. Main social composer + type-specific
+ *              extras: carousel slide planner (with AI plan button + per-slide
+ *              theme/text-overlay rows) and video details (duration, format,
+ *              concept) with timeline-visualised structured-script output.
+ * @exports     window._scpRenderers.step_content
+ *              window._scpRenderContentStep
+ * @depends-on  window._scpEsc, window._scpIcon, window._scpTruncate,
+ *              window._scpRenderers.socialComposer (from scp-part2a runtime),
+ *              window._scpPart2A.renderStructuredOutput, window._scpAiSel
+ * @extracted-from  src/editing/scp-part2a.js (was SECTION 7 of v0.2.0)
+ */
+(function($) {
+  'use strict';
+
+  var esc, icon, truncate;
+  function _resolveHelpers() {
+    esc = window._scpEsc; icon = window._scpIcon; truncate = window._scpTruncate;
+  }
+  function renderSocialComposer(id, content, opts) {
+    var R = window._scpRenderers;
+    if (R && R.socialComposer) return R.socialComposer(id, content, opts);
+    return '';
+  }
+  function renderStructuredOutput(data, schemaId, opts) {
+    var P = window._scpPart2A;
+    if (P && P.renderStructuredOutput) return P.renderStructuredOutput(data, schemaId, opts);
+    return '';
+  }
+
+  // ============================================================
+  // SECTION 7: STEP 3 â€” CONTENT
+  // ============================================================
+
+  function renderContentStep(post) {
+    _resolveHelpers();
+    var r = post.research || {};
+    var html = '<div class="scp-editor-form" data-post-id="' + esc(post.id) + '">';
+
+    // Show selected angle/hook context
+    if (r.selected_angle || r.selected_hook) {
+      html += '<div class="scp-context-strip">';
+      if (r.selected_angle) html += '<span>' + icon('eye') + ' <strong>Angle:</strong> ' + esc(r.selected_angle) + '</span>';
+      if (r.selected_hook) html += '<span>' + icon('bolt') + ' <strong>Hook:</strong> "' + esc(truncate(r.selected_hook, 60)) + '"</span>';
+      html += '</div>';
+    }
+
+    // Main social composer
+    html += '<div class="scp-form-group"><label>Write Your Post</label>';
+    html += '<p class="scp-text-sm scp-text-muted">Compose your master content â€” hook, body, CTA, and hashtags all in one place.</p>';
+    html += renderSocialComposer('master', post.content.body || '', { charLimit: 3000, label: 'Master Content', postId: post.id });
+    html += '</div>';
+
+    // Carousel slide planner
+    if (post.type === 'carousel') {
+      html += renderCarouselPlanner(post);
+    }
+
+    // Video details
+    if (post.type === 'video') {
+      html += renderVideoDetails(post);
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  function renderCarouselPlanner(post) {
+    var car = post.carousel || { slide_count: 5, slides: [] };
+    var count = car.slide_count || 5;
+    var slides = car.slides || [];
+    var visualPlans = (post.media && post.media.visual_plans) || [];
+
+    var html = '<div class="scp-carousel-planner">';
+    html += '<div class="scp-section-header"><h3>' + icon('images') + ' Slide Planner</h3>';
+    html += '<div class="scp-slide-count-row">';
+    html += '<span class="scp-text-xs scp-text-muted">Slides:</span>';
+    for (var n = 3; n <= 10; n++) {
+      html += '<button class="scp-slide-count-btn' + (count === n ? ' scp-slide-count-btn-active' : '') + '" data-action="set-slide-count" data-count="' + n + '">' + n + '</button>';
+    }
+    html += '<button class="scp-btn scp-btn-ai scp-btn-sm" data-action="ai-plan-slides">' + icon('sparkles') + ' AI Plan</button>';
+    html += (window._scpAiSel ? window._scpAiSel('ai-plan-slides') : '');
+    html += '</div></div>';
+
+    for (var i = 0; i < count; i++) {
+      var slide = slides[i] || { index: i, theme: '', text_overlay: '' };
+      var hasVP = visualPlans[i] && visualPlans[i].visual_concept && visualPlans[i].visual_concept.scene;
+      html += '<div class="scp-slide-row" data-slide-index="' + i + '">';
+      html += '<span class="scp-slide-num">' + (i + 1) + '</span>';
+      html += '<input type="text" class="scp-input scp-slide-field" data-slide-index="' + i + '" data-slide-field="theme" value="' + esc(slide.theme || '') + '" placeholder="Slide ' + (i + 1) + ' theme...">';
+      html += '<input type="text" class="scp-input scp-slide-field scp-slide-overlay" data-slide-index="' + i + '" data-slide-field="text_overlay" value="' + esc(slide.text_overlay || '') + '" placeholder="Text overlay (opt)">';
+      if (hasVP) {
+        html += '<span class="scp-slide-vp-badge" title="Visual plan exists â€” go to Media step to view">' + icon('circle-check') + '</span>';
+      }
+      html += '</div>';
+    }
+
+    // Link to media step if plans exist
+    if (visualPlans.length > 0) {
+      html += '<div class="scp-carousel-plan-link">' + icon('image') + ' <strong>' + visualPlans.length + '</strong> visual plan' + (visualPlans.length !== 1 ? 's' : '') + ' created. ';
+      html += '<a href="#" data-action="go-step" data-step="media">View in Media step ' + icon('arrow-right') + '</a></div>';
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  function renderVideoDetails(post) {
+    var vid = post.video || {};
+    var hasStructuredScript = !!(vid.structured_script && (vid.structured_script.hook || vid.structured_script.body));
+    var html = '<div class="scp-video-details">';
+    html += '<div class="scp-section-header"><h3>' + icon('video') + ' Video Details</h3></div>';
+
+    html += '<div class="scp-form-row">';
+    // Duration
+    html += '<div class="scp-form-third"><label>Duration</label><div class="scp-duration-selector">';
+    ['15', '30', '60', '90'].forEach(function(d) {
+      html += '<button class="scp-dur-btn' + (vid.duration_seconds == d ? ' scp-dur-btn-active' : '') + '" data-action="set-video-duration" data-duration="' + d + '">' + d + 's</button>';
+    });
+    html += '</div></div>';
+    // Format
+    html += '<div class="scp-form-third"><label>Format</label><div class="scp-duration-selector">';
+    ['reel', 'short', 'story'].forEach(function(f) {
+      html += '<button class="scp-dur-btn' + (vid.format === f ? ' scp-dur-btn-active' : '') + '" data-action="set-video-format" data-format="' + f + '">' + f.charAt(0).toUpperCase() + f.slice(1) + '</button>';
+    });
+    html += '</div></div>';
+    html += '<div class="scp-form-third"><label>&nbsp;</label><button class="scp-btn scp-btn-ai scp-btn-sm" data-action="ai-generate-script">' + icon('sparkles') + ' AI Script</button>';
+    html += (window._scpAiSel ? window._scpAiSel('ai-generate-script') : '') + '</div>';
+    html += '</div>';
+
+    // Concept
+    html += '<div class="scp-form-group"><label>Concept</label>';
+    html += '<input type="text" class="scp-input scp-video-field" data-video-field="concept" value="' + esc(vid.concept || '') + '" placeholder="Describe the video idea..."></div>';
+
+    // â”€â”€â”€ Structured Script Output (via AIO renderer) â”€â”€â”€
+    if (hasStructuredScript) {
+      html += '<div class="scp-video-script-output">';
+      // Duration timeline visualization
+      html += renderScriptTimeline(vid.structured_script);
+      // Structured cards
+      html += renderStructuredOutput(vid.structured_script, 'video_script', {
+        outputId: 'vs_' + post.id, postId: post.id, title: 'Video Script (' + (vid.structured_script.total_duration || vid.duration_seconds || '?') + 's)'
+      });
+      html += '</div>';
+    }
+
+    // â”€â”€â”€ Legacy plain-text script (shown if no structured script, or as fallback) â”€â”€â”€
+    if (!hasStructuredScript) {
+      html += '<div class="scp-form-group"><label>Script' + (vid.script ? '' : ' <span class="scp-text-xs scp-text-muted">â€” click AI Script above to generate</span>') + '</label>';
+      html += '<textarea class="scp-textarea scp-video-field" data-video-field="script" rows="6" placeholder="Write your video script or use AI to generate a structured one...">' + esc(vid.script || '') + '</textarea></div>';
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  /**
+   * Renders a visual duration timeline bar for structured video scripts.
+   * Shows hook (red), body sections (blue), outro (green) as proportional segments.
+   */
+  function renderScriptTimeline(script) {
+    if (!script) return '';
+    var segments = [];
+    var totalDuration = 0;
+
+    // Hook
+    var hookDur = (script.hook && script.hook.duration_seconds) || 0;
+    if (hookDur > 0) {
+      segments.push({ label: 'Hook', duration: hookDur, color: '#d93025', icon: 'bolt' });
+      totalDuration += hookDur;
+    }
+
+    // Body sections
+    if (script.body && Array.isArray(script.body)) {
+      for (var i = 0; i < script.body.length; i++) {
+        var b = script.body[i];
+        var bDur = b.duration_seconds || 0;
+        if (bDur > 0) {
+          segments.push({ label: b.section || ('Body ' + (i + 1)), duration: bDur, color: '#1a73e8', icon: 'pen-fancy' });
+          totalDuration += bDur;
+        }
+      }
+    }
+
+    // Outro
+    var outroDur = (script.outro && script.outro.duration_seconds) || 0;
+    if (outroDur > 0) {
+      segments.push({ label: 'Outro', duration: outroDur, color: '#0d904f', icon: 'rocket' });
+      totalDuration += outroDur;
+    }
+
+    if (segments.length === 0 || totalDuration === 0) return '';
+
+    // Build timeline HTML
+    var html = '<div class="scp-script-timeline">';
+    html += '<div class="scp-script-timeline-header">';
+    html += '<span class="scp-script-timeline-title">' + icon('clock') + ' Duration Timeline</span>';
+    html += '<span class="scp-script-timeline-total">' + totalDuration + 's total</span>';
+    html += '</div>';
+
+    // Bar
+    html += '<div class="scp-script-timeline-bar">';
+    var elapsed = 0;
+    for (var si = 0; si < segments.length; si++) {
+      var seg = segments[si];
+      var pct = (seg.duration / totalDuration) * 100;
+      html += '<div class="scp-script-timeline-segment" style="width:' + pct + '%;background:' + seg.color + '" title="' + esc(seg.label) + ': ' + seg.duration + 's (' + Math.round(pct) + '%)">';
+      if (pct > 10) html += '<span class="scp-script-timeline-seg-label">' + seg.duration + 's</span>';
+      html += '</div>';
+      elapsed += seg.duration;
+    }
+    html += '</div>';
+
+    // Legend
+    html += '<div class="scp-script-timeline-legend">';
+    for (var li = 0; li < segments.length; li++) {
+      var s = segments[li];
+      html += '<span class="scp-script-timeline-legend-item">';
+      html += '<span class="scp-script-timeline-legend-dot" style="background:' + s.color + '"></span>';
+      html += esc(s.label) + ' <span class="scp-text-xs scp-text-muted">' + s.duration + 's</span>';
+      html += '</span>';
+    }
+    html += '</div>';
+    html += '</div>';
+    return html;
+  }
+
+  window._scpRenderers = window._scpRenderers || {};
+  window._scpRenderers.step_content = renderContentStep;
+  window._scpRenderContentStep = renderContentStep;
+
+})(jQuery);
+
+
+/* ----- src/editing/steps/media.js ----- */
+
+/**
+ * @category    editing
+ * @purpose     Pipeline step 4 â€” Media. Style selector + custom instructions
+ *              + brand context toggle + "Plan Visual" AI button. Renders
+ *              structured-output for visual_plan / visual_plans (single image
+ *              or carousel), or legacy prompt cards for backward compat.
+ * @exports     window._scpRenderers.step_media
+ *              window._scpRenderMediaStep
+ * @depends-on  window._scpState, window._scpEsc, window._scpIcon,
+ *              window._scpTruncate, window._scpMediaPromptStatusBadge,
+ *              window._scpPart2A.renderStructuredOutput, window._scpAiSel
+ * @extracted-from  src/editing/scp-part2a.js (was SECTION 8 of v0.2.0)
+ */
+(function($) {
+  'use strict';
+
+  var S, esc, icon, truncate, mediaPromptStatusBadge;
+  function _resolveHelpers() {
+    S = window._scpState; esc = window._scpEsc; icon = window._scpIcon;
+    truncate = window._scpTruncate; mediaPromptStatusBadge = window._scpMediaPromptStatusBadge;
+  }
+  function renderStructuredOutput(data, schemaId, opts) {
+    var P = window._scpPart2A;
+    if (P && P.renderStructuredOutput) return P.renderStructuredOutput(data, schemaId, opts);
+    return '';
+  }
+
+  // ============================================================
+  // SECTION 8: STEP 4 â€” MEDIA PROMPTS
+  // ============================================================
+
+  function renderMediaStep(post) {
+    _resolveHelpers();
+    if (post.type === 'text') {
+      return '<div class="scp-empty-state scp-empty-state--compact"><p>' + icon('info') + ' Text-only posts don\'t need media. This step is skipped.</p></div>';
+    }
+
+    var media = post.media || {};
+    var config = media.config || {};
+    var styles = (S.meta.settings && S.meta.settings.image_styles) || [];
+    var hasVisualPlan = !!(media.visual_plan && media.visual_plan.visual_concept);
+    var hasCarouselPlans = !!(media.visual_plans && media.visual_plans.length > 0);
+    var hasLegacyPrompts = (media.prompts || []).length > 0;
+
+    var html = '<div class="scp-editor-form" data-post-id="' + esc(post.id) + '">';
+
+    // â”€â”€â”€ Context strip â€” show what message this visual should deliver â”€â”€â”€
+    var r = post.research || {};
+    var contentBody = (post.content && post.content.body) || '';
+    html += '<div class="scp-media-context">';
+    html += '<div class="scp-media-context-header">' + icon('lightbulb') + ' <strong>Content Context</strong> <span class="scp-text-xs scp-text-muted">â€” the AI will plan visuals that deliver this message</span></div>';
+    if (r.selected_hook) html += '<div class="scp-media-context-item"><span class="scp-media-context-label">Hook:</span> <span>"' + esc(truncate(r.selected_hook, 80)) + '"</span></div>';
+    if (r.selected_angle) html += '<div class="scp-media-context-item"><span class="scp-media-context-label">Angle:</span> <span>' + esc(r.selected_angle) + '</span></div>';
+    if (contentBody) html += '<div class="scp-media-context-item"><span class="scp-media-context-label">Content:</span> <span>' + esc(truncate(contentBody, 120)) + '</span></div>';
+    if (!r.selected_hook && !contentBody) html += '<div class="scp-media-context-item scp-text-muted">' + icon('info') + ' Complete the Research and Content steps first for better visual planning.</div>';
+    html += '</div>';
+
+    // â”€â”€â”€ Style selection â”€â”€â”€
+    html += '<div class="scp-media-style-row">';
+    html += '<div class="scp-form-group" style="flex:1"><label>Visual Style Reference</label>';
+    html += '<select class="scp-select scp-media-config-field" data-config-field="style_id">';
+    html += '<option value="">Auto (let AI decide)</option>';
+    for (var si = 0; si < styles.length; si++) html += '<option value="' + esc(styles[si].id) + '"' + (config.style_id === styles[si].id ? ' selected' : '') + '>' + esc(styles[si].name) + ' â€” ' + esc(styles[si].description || '') + '</option>';
+    html += '</select></div>';
+    html += '<div class="scp-form-group" style="flex:1"><label>Additional Direction</label>';
+    html += '<input type="text" class="scp-input scp-media-config-field" data-config-field="custom_instructions" value="' + esc(config.custom_instructions || '') + '" placeholder="Optional: specific requirements, mood, constraints..."></div>';
+    html += '</div>';
+
+    // â”€â”€â”€ Brand toggle + Generate button â”€â”€â”€
+    html += '<div class="scp-media-actions">';
+    html += '<label class="scp-toggle-label"><input type="checkbox" class="scp-media-brand-toggle"' + (config.brand_context_enabled !== false ? ' checked' : '') + '> Include Brand Context</label>';
+    var genLabel = post.type === 'carousel' ? 'Plan All Slides' : post.type === 'video' ? 'Plan Thumbnail' : 'Plan Visual';
+    html += '<button class="scp-btn scp-btn-ai" data-action="ai-generate-visual-plan">' + icon('sparkles') + ' ' + genLabel + '</button>';
+    html += (window._scpAiSel ? window._scpAiSel('ai-generate-media') : '');
+    html += '</div>';
+
+    // â”€â”€â”€ Output: Visual Plan (rendered via AIO engine) â”€â”€â”€
+    if (post.type === 'carousel' && hasCarouselPlans) {
+      // Carousel: array of per-slide visual plans
+      html += '<div class="scp-media-visual-output">';
+      html += renderStructuredOutput(media.visual_plans, 'carousel_visual_plan', {
+        outputId: 'vp_' + post.id, postId: post.id, title: 'Carousel Visual Plan (' + media.visual_plans.length + ' slides)'
+      });
+      html += '</div>';
+    } else if (hasVisualPlan) {
+      // Single image / thumbnail visual plan
+      html += '<div class="scp-media-visual-output">';
+      html += renderStructuredOutput(media.visual_plan, 'image_visual_plan', {
+        outputId: 'vp_' + post.id, postId: post.id,
+        title: post.type === 'video' ? 'Thumbnail Visual Plan' : 'Visual Content Plan'
+      });
+      html += '</div>';
+    }
+
+    // â”€â”€â”€ Legacy: Old-style prompt output (backward compat) â”€â”€â”€
+    if (hasLegacyPrompts && !hasVisualPlan && !hasCarouselPlans) {
+      html += renderLegacyPromptOutput(post, media.prompts);
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  // Legacy prompt card rendering â€” kept for backward compatibility with old data
+  function renderLegacyPromptOutput(post, prompts) {
+    var html = '<div class="scp-media-output scp-media-legacy">';
+    html += '<div class="scp-section-header"><h3>' + icon('wand-magic') + ' Generated Prompts <span class="scp-text-xs scp-text-muted">(legacy format)</span></h3>';
+    html += '<div class="scp-prompt-header-actions">';
+    html += '<button class="scp-btn scp-btn-sm scp-btn-outline" data-action="copy-all-prompts">' + icon('copy') + ' Copy All</button>';
+    html += '</div></div>';
+    for (var pi = 0; pi < prompts.length; pi++) {
+      var mp = prompts[pi];
+      html += '<div class="scp-prompt-card" data-prompt-index="' + pi + '">';
+      html += '<div class="scp-prompt-card-header">';
+      html += '<span class="scp-prompt-label">' + esc(mp.label || 'Prompt ' + (pi + 1)) + '</span>';
+      html += mediaPromptStatusBadge(mp.status || 'draft');
+      html += '</div>';
+      html += '<textarea class="scp-textarea scp-prompt-text" data-prompt-index="' + pi + '" rows="4">' + esc(mp.prompt_text || '') + '</textarea>';
+      if (mp.negative_prompt) {
+        html += '<div class="scp-prompt-negative"><label class="scp-text-xs scp-text-muted">NEGATIVE PROMPT</label>';
+        html += '<textarea class="scp-textarea scp-prompt-negative-text" data-prompt-index="' + pi + '" rows="2">' + esc(mp.negative_prompt || '') + '</textarea></div>';
+      }
+      html += '<div class="scp-prompt-card-actions">';
+      html += '<button class="scp-btn scp-btn-sm scp-btn-outline" data-action="copy-prompt" data-index="' + pi + '">' + icon('copy') + ' Copy</button>';
+      html += '</div></div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  window._scpRenderers = window._scpRenderers || {};
+  window._scpRenderers.step_media = renderMediaStep;
+  window._scpRenderMediaStep = renderMediaStep;
+
+})(jQuery);
+
+
+/* ----- src/editing/steps/platforms.js ----- */
+
+/**
+ * @category    editing
+ * @purpose     Pipeline step 5 â€” Platforms. Per-platform composer (or YouTube
+ *              title/description/tags form for video posts on YouTube) with
+ *              per-platform character limits, AI Adapt button, and enable
+ *              toggle. "Add platform" affordance at the bottom.
+ * @exports     window._scpRenderers.step_platforms
+ *              window._scpRenderPlatformsStep
+ * @depends-on  window._scpEsc, window._scpIcon, window._scpBadge,
+ *              window._scpGetPlatformConfig, window._scpConstants,
+ *              window._scpRenderers.socialComposer (from scp-part2a runtime),
+ *              window._scpAiSel
+ * @extracted-from  src/editing/scp-part2a.js (was SECTION 9 of v0.2.0)
+ */
+(function($) {
+  'use strict';
+
+  var esc, icon, badge, getPlatformConfig, Constants;
+  function _resolveHelpers() {
+    esc = window._scpEsc; icon = window._scpIcon; badge = window._scpBadge;
+    getPlatformConfig = window._scpGetPlatformConfig; Constants = window._scpConstants;
+  }
+  function renderSocialComposer(id, content, opts) {
+    var R = window._scpRenderers;
+    if (R && R.socialComposer) return R.socialComposer(id, content, opts);
+    return '';
+  }
+
+  // ============================================================
+  // SECTION 9: STEP 5 â€” PLATFORMS
+  // ============================================================
+
+  function renderPlatformsStep(post) {
+    _resolveHelpers();
+    var html = '<div class="scp-editor-form" data-post-id="' + esc(post.id) + '">';
+    html += '<p class="scp-text-sm scp-text-muted">Adapt your master content for each target platform. Write the full post for each.</p>';
+
+    var plats = post.platforms || [];
+    for (var pi = 0; pi < plats.length; pi++) {
+      var pk = plats[pi];
+      var plCfg = Constants.PLATFORMS[pk]; if (!plCfg) continue;
+      var pc = (post.platform_content && post.platform_content[pk]) || {};
+      var platformSettings = getPlatformConfig(pk);
+
+      // Skip instagram for text-only
+      if (pk === 'instagram' && post.type === 'text') {
+        html += '<div class="scp-platform-section scp-platform-disabled" style="border-left-color:' + plCfg.color + '">';
+        html += '<div class="scp-platform-header"><span style="color:' + plCfg.color + '">' + icon(plCfg.icon) + ' ' + esc(plCfg.label) + '</span>';
+        html += badge('Text posts not supported', '#9aa0a6') + '</div></div>';
+        continue;
+      }
+
+      html += '<div class="scp-platform-section" style="border-left-color:' + plCfg.color + '">';
+      html += '<div class="scp-platform-header">';
+      html += '<span style="color:' + plCfg.color + ';font-weight:700">' + icon(plCfg.icon) + ' ' + esc(plCfg.label) + '</span>';
+      html += '<button class="scp-btn scp-btn-ai scp-btn-sm" data-action="ai-adapt-platform" data-platform="' + pk + '">' + icon('sparkles') + ' AI Adapt</button>';
+      html += (window._scpAiSel ? window._scpAiSel('ai-adapt-' + pk) : '');
+      html += '</div>';
+
+      if (pk === 'youtube' && post.type === 'video') {
+        // YouTube gets title + description + tags
+        html += '<div class="scp-form-group"><label>Video Title</label>';
+        html += '<input type="text" class="scp-input scp-platform-field" data-platform="' + pk + '" data-pfield="title" value="' + esc(pc.title || '') + '" placeholder="YouTube title..."></div>';
+        html += '<div class="scp-form-group"><label>Description</label>';
+        html += '<textarea class="scp-textarea scp-platform-field" data-platform="' + pk + '" data-pfield="description" rows="4" placeholder="YouTube description...">' + esc(pc.description || '') + '</textarea></div>';
+        html += '<div class="scp-form-group"><label>Tags</label>';
+        html += '<input type="text" class="scp-input scp-platform-field" data-platform="' + pk + '" data-pfield="tags" value="' + esc((pc.tags || []).join(', ')) + '" placeholder="tag1, tag2, tag3..."></div>';
+      } else {
+        // Standard platform: social composer
+        var charLimit = platformSettings.char_limit || 3000;
+        html += renderSocialComposer('platform_' + pk, pc.body || '', { charLimit: charLimit, label: plCfg.label, platform: pk, postId: post.id, color: plCfg.color });
+      }
+
+      // Enable toggle
+      html += '<label class="scp-toggle-label scp-platform-enable"><input type="checkbox" class="scp-platform-enable-check" data-platform="' + pk + '"' + (pc.enabled ? ' checked' : '') + '> Enable for publishing</label>';
+      html += '</div>';
+    }
+
+    // Add more platforms
+    var otherPlats = Object.keys(Constants.PLATFORMS).filter(function(pk) { return plats.indexOf(pk) < 0; });
+    if (otherPlats.length > 0) {
+      html += '<div class="scp-add-platform"><span class="scp-text-xs scp-text-muted">Add platform:</span>';
+      for (var opi = 0; opi < otherPlats.length; opi++) {
+        var opk = otherPlats[opi]; var opl = Constants.PLATFORMS[opk];
+        html += '<button class="scp-btn scp-btn-sm scp-btn-outline" data-action="add-platform" data-platform="' + opk + '">' + icon(opl.icon) + ' ' + esc(opl.label) + '</button>';
+      }
+      html += '</div>';
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  window._scpRenderers = window._scpRenderers || {};
+  window._scpRenderers.step_platforms = renderPlatformsStep;
+  window._scpRenderPlatformsStep = renderPlatformsStep;
+
+})(jQuery);
+
+
+/* ----- src/editing/steps/schedule.js ----- */
+
+/**
+ * @category    editing
+ * @purpose     Pipeline step 6 â€” Schedule. Date/time/timezone inputs +
+ *              status action buttons (Mark Ready, Set Schedule, Mark Published),
+ *              published URLs per platform, and a placeholder performance grid.
+ * @exports     window._scpRenderers.step_schedule
+ *              window._scpRenderScheduleStep
+ * @depends-on  window._scpState, window._scpEsc, window._scpIcon,
+ *              window._scpConstants
+ * @extracted-from  src/editing/scp-part2a.js (was SECTION 10 of v0.2.0)
+ */
+(function($) {
+  'use strict';
+
+  var S, esc, icon, Constants;
+  function _resolveHelpers() {
+    S = window._scpState; esc = window._scpEsc; icon = window._scpIcon;
+    Constants = window._scpConstants;
+  }
+
+  // ============================================================
+  // SECTION 10: STEP 6 â€” SCHEDULE
+  // ============================================================
+
+  function renderScheduleStep(post) {
+    _resolveHelpers();
+    var sched = post.schedule || {};
+    var html = '<div class="scp-editor-form" data-post-id="' + esc(post.id) + '">';
+
+    // Schedule section
+    html += '<div class="scp-schedule-section"><div class="scp-section-header"><h3>' + icon('calendar') + ' Schedule</h3></div>';
+    html += '<div class="scp-form-row">';
+    html += '<div class="scp-form-third"><label>Date</label><input type="date" class="scp-input scp-schedule-field" data-sfield="date" value="' + esc(sched.date || '') + '"></div>';
+    html += '<div class="scp-form-third"><label>Time</label><input type="time" class="scp-input scp-schedule-field" data-sfield="time" value="' + esc(sched.time || '') + '"></div>';
+    html += '<div class="scp-form-third"><label>Timezone</label><input type="text" class="scp-input scp-schedule-field" data-sfield="timezone" value="' + esc(sched.timezone || (S.meta.settings && S.meta.settings.timezone) || '') + '" placeholder="Asia/Kolkata"></div>';
+    html += '</div>';
+    html += '<div class="scp-schedule-actions">';
+    html += '<button class="scp-btn scp-btn-primary" data-action="mark-ready">' + icon('circle-check') + ' Mark as Ready</button>';
+    html += '<button class="scp-btn scp-btn-outline" data-action="mark-scheduled">' + icon('calendar-check') + ' Set Schedule</button>';
+    html += '</div></div>';
+
+    // Published URLs
+    html += '<div class="scp-schedule-section"><div class="scp-section-header"><h3>' + icon('link') + ' Published URLs</h3></div>';
+    var plats = post.platforms || [];
+    var urls = sched.published_urls || {};
+    for (var i = 0; i < plats.length; i++) {
+      var pk = plats[i]; var plCfg = Constants.PLATFORMS[pk]; if (!plCfg) continue;
+      html += '<div class="scp-url-row">';
+      html += '<span class="scp-url-platform" style="color:' + plCfg.color + '">' + icon(plCfg.icon) + '</span>';
+      html += '<input type="url" class="scp-input scp-url-field" data-platform="' + pk + '" value="' + esc(urls[pk] || '') + '" placeholder="Paste URL after publishing...">';
+      html += '</div>';
+    }
+    html += '<button class="scp-btn scp-btn-primary" data-action="mark-published" style="margin-top:var(--scp-space-3)">' + icon('rocket') + ' Mark Published</button>';
+    html += '</div>';
+
+    // Performance
+    html += '<div class="scp-schedule-section"><div class="scp-section-header"><h3>' + icon('chart-line') + ' Performance</h3></div>';
+    if (post.status === 'published') {
+      html += '<div class="scp-perf-grid">';
+      var perfMetrics = ['Impressions', 'Likes', 'Comments', 'Shares', 'Clicks', 'Saves'];
+      for (var mi = 0; mi < perfMetrics.length; mi++) {
+        html += '<div class="scp-perf-cell"><div class="scp-perf-label">' + perfMetrics[mi] + '</div><div class="scp-perf-value">â€”</div></div>';
+      }
+      html += '</div>';
+    } else {
+      html += '<p class="scp-text-sm scp-text-muted">Performance data will appear here after publishing.</p>';
+    }
+    html += '</div>';
+
+    html += '</div>';
+    return html;
+  }
+
+  window._scpRenderers = window._scpRenderers || {};
+  window._scpRenderers.step_schedule = renderScheduleStep;
+  window._scpRenderScheduleStep = renderScheduleStep;
+
+})(jQuery);
+
+
 /* ----- src/editing/scp-part2a.js ----- */
 
 /**
@@ -2739,12 +3515,6 @@
 
     // Register step renderers
     var R = window._scpRenderers = window._scpRenderers || {};
-    R.step_basics = renderBasicsStep;
-    R.step_research = renderResearchStep;
-    R.step_content = renderContentStep;
-    R.step_media = renderMediaStep;
-    R.step_platforms = renderPlatformsStep;
-    R.step_schedule = renderScheduleStep;
     R.tagInput = renderTagInput;
     R.socialComposer = renderSocialComposer;
 
@@ -2949,573 +3719,23 @@
   }
 
   // ============================================================
-  // SECTION 5: STEP 1 â€” BASICS
+  // SECTIONS 5-10: STEP RENDERERS â€” extracted (v0.3.0)
+  //   5   Basics     -> src/editing/steps/basics.js
+  //   6   Research   -> src/editing/steps/research.js
+  //   7   Content    -> src/editing/steps/content.js
+  //   8   Media      -> src/editing/steps/media.js
+  //   9   Platforms  -> src/editing/steps/platforms.js
+  //   10  Schedule   -> src/editing/steps/schedule.js
+  // Each step file self-registers into window._scpRenderers.step_X at
+  // its own module-load time. The R.step_X = ... lines previously at the
+  // top of initPart2A are also removed in this commit.
   // ============================================================
-
-  function renderBasicsStep(post) {
-    var stg = (S.meta && S.meta.settings) || {};
-    var html = '<div class="scp-editor-form" data-post-id="' + esc(post.id) + '">';
-
-    // Title
-    html += '<div class="scp-form-group"><label>Title</label>';
-    html += '<input type="text" class="scp-input scp-basics-field" data-field="title" value="' + esc(post.title || '') + '" placeholder="Post title..."></div>';
-
-    // Type + Priority row
-    html += '<div class="scp-form-row"><div class="scp-form-half">';
-    html += '<label>Post Type</label><div class="scp-type-selector">';
-    for (var tk in Constants.POST_TYPES) {
-      var pt = Constants.POST_TYPES[tk];
-      html += '<button class="scp-type-option' + (post.type === tk ? ' scp-type-option-active' : '') + '" data-action="set-post-type" data-type="' + tk + '" style="--opt-color:' + pt.color + '">' + icon(pt.icon) + ' ' + esc(pt.label) + '</button>';
-    }
-    html += '</div></div><div class="scp-form-half">';
-    html += '<label>Priority</label><select class="scp-select scp-basics-field" data-field="priority">';
-    for (var pk in Constants.PRIORITY_LEVELS) {
-      var pr = Constants.PRIORITY_LEVELS[pk];
-      html += '<option value="' + pk + '"' + (post.priority === pk ? ' selected' : '') + '>' + pr.label + '</option>';
-    }
-    html += '</select></div></div>';
-
-    // Platforms
-    html += '<div class="scp-form-group"><label>Target Platforms</label><div class="scp-platform-selector">';
-    for (var plk in Constants.PLATFORMS) {
-      var pl = Constants.PLATFORMS[plk];
-      var isOn = (post.platforms || []).indexOf(plk) > -1;
-      html += '<label class="scp-chip-checkbox' + (isOn ? ' scp-chip-checkbox-active' : '') + '" style="--chip-color:' + pl.color + '">';
-      html += '<input type="checkbox" class="scp-platform-check" data-platform="' + plk + '"' + (isOn ? ' checked' : '') + '>';
-      html += icon(pl.icon) + ' ' + esc(pl.label) + '</label>';
-    }
-    html += '</div></div>';
-
-    // Tags
-    html += '<div class="scp-form-group"><label>Tags</label>' + renderTagInput(post.tags || [], post.id) + '</div>';
-
-    // Tone + Audience
-    var tones = stg.tones || []; var auds = stg.audiences || [];
-    html += '<div class="scp-form-row"><div class="scp-form-half">';
-    html += '<label>Tone</label><select class="scp-select scp-content-meta-field" data-path="content.tone_id">';
-    html += '<option value="">Not set</option>';
-    for (var ti = 0; ti < tones.length; ti++) html += '<option value="' + esc(tones[ti].id) + '"' + (post.content.tone_id === tones[ti].id ? ' selected' : '') + '>' + esc(tones[ti].name) + '</option>';
-    html += '</select></div><div class="scp-form-half">';
-    html += '<label>Audience</label><select class="scp-select scp-content-meta-field" data-path="content.audience_id">';
-    html += '<option value="">Not set</option>';
-    for (var ai = 0; ai < auds.length; ai++) html += '<option value="' + esc(auds[ai].id) + '"' + (post.content.audience_id === auds[ai].id ? ' selected' : '') + '>' + esc(auds[ai].name) + '</option>';
-    html += '</select></div></div>';
-
-    // Notes
-    html += '<div class="scp-form-group"><label>Notes</label>';
-    html += '<textarea class="scp-textarea scp-basics-field" data-field="source.notes" rows="2" placeholder="Any additional context...">' + esc((post.source && post.source.notes) || '') + '</textarea></div>';
-
-    // Source info
-    if (post.source && post.source.type === 'research') {
-      html += '<div class="scp-info-strip">' + icon('flask') + ' From research session â€¢ Created ' + formatDate(post.created) + '</div>';
-    }
-
-    html += '</div>';
-    return html;
-  }
-
-  // ============================================================
-  // SECTION 6: STEP 2 â€” RESEARCH (Angles + Hooks)
-  // ============================================================
-
-  function renderResearchStep(post) {
-    var r = post.research || {};
-    var angles = r.angles || [];
-    var hooks = r.hooks || [];
-    var hasSelectedAngle = !!r.selected_angle;
-    var hasSelectedHook = !!r.selected_hook;
-
-    var html = '<div class="scp-editor-form" data-post-id="' + esc(post.id) + '">';
-
-    // â”€â”€â”€ PHASE 1: ANGLE RESEARCH â”€â”€â”€
-    html += '<div class="scp-research-phase" style="border-left-color: var(--scp-accent)">';
-    html += '<div class="scp-research-phase-header"><span class="scp-phase-num">1</span><h3>' + icon('eye') + ' Angle Research</h3></div>';
-    html += '<p class="scp-text-sm scp-text-muted">Research different angles for this post. What unique perspective will you take?</p>';
-
-    // Custom input
-    html += '<div class="scp-form-row scp-research-input-row">';
-    html += '<div style="flex:1"><input type="text" class="scp-input scp-angle-custom" value="' + esc(r.angle_custom_input || '') + '" placeholder="Custom direction (optional): focus on cost-saving angle..."></div>';
-    html += '<button class="scp-btn scp-btn-ai scp-btn-sm" data-action="ai-research-angles">' + icon('sparkles') + ' Research Angles</button>';
-    html += (window._scpAiSel ? window._scpAiSel('ai-research-angles') : '');
-    html += '</div>';
-
-    // Angle list
-    if (angles.length > 0) {
-      html += '<div class="scp-radio-list">';
-      for (var a = 0; a < angles.length; a++) {
-        var isSelAngle = angles[a].selected || (r.selected_angle && r.selected_angle === angles[a].angle);
-        html += '<div class="scp-radio-item' + (isSelAngle ? ' scp-radio-item-selected' : '') + '">';
-        html += '<input type="radio" name="scp_angle" class="scp-radio" data-action="select-angle" data-index="' + a + '"' + (isSelAngle ? ' checked' : '') + '>';
-        html += '<div class="scp-radio-body"><div class="scp-radio-title">' + esc(angles[a].angle || '') + '</div>';
-        if (angles[a].description) html += '<div class="scp-radio-desc">' + esc(angles[a].description) + '</div>';
-        html += '</div>';
-        html += '<button class="scp-btn-icon scp-btn-delete-sm" data-action="remove-angle" data-index="' + a + '">' + icon('trash') + '</button>';
-        html += '</div>';
-      }
-      html += '</div>';
-    }
-    if (angles.length > 0 && !hasSelectedAngle) {
-      html += '<p class="scp-text-sm" style="color:var(--scp-accent);margin-top:var(--scp-space-2)">' + icon('info') + ' Select an angle above to unlock hook research.</p>';
-    }
-    html += '<button class="scp-btn scp-btn-sm scp-btn-outline" data-action="add-angle-manual" style="margin-top:var(--scp-space-2)">' + icon('plus') + ' Add Manually</button>';
-    html += '</div>'; // end phase 1
-
-    // â”€â”€â”€ PHASE 2: HOOK RESEARCH (unlocked after angle) â”€â”€â”€
-    if (hasSelectedAngle) {
-      html += '<div class="scp-research-phase" style="border-left-color: #9334e9">';
-      html += '<div class="scp-research-phase-header"><span class="scp-phase-num scp-phase-num-2">2</span><h3>' + icon('bolt') + ' Hook Research</h3></div>';
-      html += '<p class="scp-text-sm scp-text-muted">Based on angle: <strong>"' + esc(r.selected_angle) + '"</strong></p>';
-
-      html += '<div class="scp-form-row scp-research-input-row">';
-      html += '<div style="flex:1"><input type="text" class="scp-input scp-hook-custom" value="' + esc(r.hook_custom_input || '') + '" placeholder="Custom direction: make it provocative, use numbers..."></div>';
-      html += '<button class="scp-btn scp-btn-ai scp-btn-sm" data-action="ai-research-hooks">' + icon('sparkles') + ' Research Hooks</button>';
-      html += (window._scpAiSel ? window._scpAiSel('ai-research-hooks') : '');
-      html += '</div>';
-
-      if (hooks.length > 0) {
-        html += '<div class="scp-radio-list">';
-        for (var h = 0; h < hooks.length; h++) {
-          var isSelHook = hooks[h].selected || (r.selected_hook && r.selected_hook === hooks[h].hook);
-          html += '<div class="scp-radio-item' + (isSelHook ? ' scp-radio-item-selected' : '') + '">';
-          html += '<input type="radio" name="scp_hook" class="scp-radio" data-action="select-hook" data-index="' + h + '"' + (isSelHook ? ' checked' : '') + '>';
-          html += '<div class="scp-radio-body"><div class="scp-radio-title">"' + esc(hooks[h].hook || '') + '"</div></div>';
-          html += '<button class="scp-btn-icon scp-btn-delete-sm" data-action="remove-hook" data-index="' + h + '">' + icon('trash') + '</button>';
-          html += '</div>';
-        }
-        html += '</div>';
-      }
-      html += '<button class="scp-btn scp-btn-sm scp-btn-outline" data-action="add-hook-manual" style="margin-top:var(--scp-space-2)">' + icon('plus') + ' Add Manually</button>';
-      html += '</div>'; // end phase 2
-    } else {
-      html += '<div class="scp-research-phase scp-phase-locked">';
-      html += '<div class="scp-research-phase-header"><span class="scp-phase-num scp-phase-num-locked">2</span><h3 class="scp-text-muted">' + icon('bolt') + ' Hook Research</h3></div>';
-      html += '<p class="scp-text-sm scp-text-muted">' + icon('lock') + ' Select an angle first to unlock hook research.</p>';
-      html += '</div>';
-    }
-
-    // Research notes
-    html += '<div class="scp-form-group" style="margin-top:var(--scp-space-4)"><label>Research Notes</label>';
-    html += '<textarea class="scp-textarea scp-research-notes" rows="2" placeholder="Notes...">' + esc(r.notes || '') + '</textarea></div>';
-
-    html += '</div>';
-    return html;
-  }
-
-  // ============================================================
-  // SECTION 7: STEP 3 â€” CONTENT
-  // ============================================================
-
-  function renderContentStep(post) {
-    var r = post.research || {};
-    var html = '<div class="scp-editor-form" data-post-id="' + esc(post.id) + '">';
-
-    // Show selected angle/hook context
-    if (r.selected_angle || r.selected_hook) {
-      html += '<div class="scp-context-strip">';
-      if (r.selected_angle) html += '<span>' + icon('eye') + ' <strong>Angle:</strong> ' + esc(r.selected_angle) + '</span>';
-      if (r.selected_hook) html += '<span>' + icon('bolt') + ' <strong>Hook:</strong> "' + esc(truncate(r.selected_hook, 60)) + '"</span>';
-      html += '</div>';
-    }
-
-    // Main social composer
-    html += '<div class="scp-form-group"><label>Write Your Post</label>';
-    html += '<p class="scp-text-sm scp-text-muted">Compose your master content â€” hook, body, CTA, and hashtags all in one place.</p>';
-    html += renderSocialComposer('master', post.content.body || '', { charLimit: 3000, label: 'Master Content', postId: post.id });
-    html += '</div>';
-
-    // Carousel slide planner
-    if (post.type === 'carousel') {
-      html += renderCarouselPlanner(post);
-    }
-
-    // Video details
-    if (post.type === 'video') {
-      html += renderVideoDetails(post);
-    }
-
-    html += '</div>';
-    return html;
-  }
-
-  function renderCarouselPlanner(post) {
-    var car = post.carousel || { slide_count: 5, slides: [] };
-    var count = car.slide_count || 5;
-    var slides = car.slides || [];
-    var visualPlans = (post.media && post.media.visual_plans) || [];
-
-    var html = '<div class="scp-carousel-planner">';
-    html += '<div class="scp-section-header"><h3>' + icon('images') + ' Slide Planner</h3>';
-    html += '<div class="scp-slide-count-row">';
-    html += '<span class="scp-text-xs scp-text-muted">Slides:</span>';
-    for (var n = 3; n <= 10; n++) {
-      html += '<button class="scp-slide-count-btn' + (count === n ? ' scp-slide-count-btn-active' : '') + '" data-action="set-slide-count" data-count="' + n + '">' + n + '</button>';
-    }
-    html += '<button class="scp-btn scp-btn-ai scp-btn-sm" data-action="ai-plan-slides">' + icon('sparkles') + ' AI Plan</button>';
-    html += (window._scpAiSel ? window._scpAiSel('ai-plan-slides') : '');
-    html += '</div></div>';
-
-    for (var i = 0; i < count; i++) {
-      var slide = slides[i] || { index: i, theme: '', text_overlay: '' };
-      var hasVP = visualPlans[i] && visualPlans[i].visual_concept && visualPlans[i].visual_concept.scene;
-      html += '<div class="scp-slide-row" data-slide-index="' + i + '">';
-      html += '<span class="scp-slide-num">' + (i + 1) + '</span>';
-      html += '<input type="text" class="scp-input scp-slide-field" data-slide-index="' + i + '" data-slide-field="theme" value="' + esc(slide.theme || '') + '" placeholder="Slide ' + (i + 1) + ' theme...">';
-      html += '<input type="text" class="scp-input scp-slide-field scp-slide-overlay" data-slide-index="' + i + '" data-slide-field="text_overlay" value="' + esc(slide.text_overlay || '') + '" placeholder="Text overlay (opt)">';
-      if (hasVP) {
-        html += '<span class="scp-slide-vp-badge" title="Visual plan exists â€” go to Media step to view">' + icon('circle-check') + '</span>';
-      }
-      html += '</div>';
-    }
-
-    // Link to media step if plans exist
-    if (visualPlans.length > 0) {
-      html += '<div class="scp-carousel-plan-link">' + icon('image') + ' <strong>' + visualPlans.length + '</strong> visual plan' + (visualPlans.length !== 1 ? 's' : '') + ' created. ';
-      html += '<a href="#" data-action="go-step" data-step="media">View in Media step ' + icon('arrow-right') + '</a></div>';
-    }
-
-    html += '</div>';
-    return html;
-  }
-
-  function renderVideoDetails(post) {
-    var vid = post.video || {};
-    var hasStructuredScript = !!(vid.structured_script && (vid.structured_script.hook || vid.structured_script.body));
-    var html = '<div class="scp-video-details">';
-    html += '<div class="scp-section-header"><h3>' + icon('video') + ' Video Details</h3></div>';
-
-    html += '<div class="scp-form-row">';
-    // Duration
-    html += '<div class="scp-form-third"><label>Duration</label><div class="scp-duration-selector">';
-    ['15', '30', '60', '90'].forEach(function(d) {
-      html += '<button class="scp-dur-btn' + (vid.duration_seconds == d ? ' scp-dur-btn-active' : '') + '" data-action="set-video-duration" data-duration="' + d + '">' + d + 's</button>';
-    });
-    html += '</div></div>';
-    // Format
-    html += '<div class="scp-form-third"><label>Format</label><div class="scp-duration-selector">';
-    ['reel', 'short', 'story'].forEach(function(f) {
-      html += '<button class="scp-dur-btn' + (vid.format === f ? ' scp-dur-btn-active' : '') + '" data-action="set-video-format" data-format="' + f + '">' + f.charAt(0).toUpperCase() + f.slice(1) + '</button>';
-    });
-    html += '</div></div>';
-    html += '<div class="scp-form-third"><label>&nbsp;</label><button class="scp-btn scp-btn-ai scp-btn-sm" data-action="ai-generate-script">' + icon('sparkles') + ' AI Script</button>';
-    html += (window._scpAiSel ? window._scpAiSel('ai-generate-script') : '') + '</div>';
-    html += '</div>';
-
-    // Concept
-    html += '<div class="scp-form-group"><label>Concept</label>';
-    html += '<input type="text" class="scp-input scp-video-field" data-video-field="concept" value="' + esc(vid.concept || '') + '" placeholder="Describe the video idea..."></div>';
-
-    // â”€â”€â”€ Structured Script Output (via AIO renderer) â”€â”€â”€
-    if (hasStructuredScript) {
-      html += '<div class="scp-video-script-output">';
-      // Duration timeline visualization
-      html += renderScriptTimeline(vid.structured_script);
-      // Structured cards
-      html += renderStructuredOutput(vid.structured_script, 'video_script', {
-        outputId: 'vs_' + post.id, postId: post.id, title: 'Video Script (' + (vid.structured_script.total_duration || vid.duration_seconds || '?') + 's)'
-      });
-      html += '</div>';
-    }
-
-    // â”€â”€â”€ Legacy plain-text script (shown if no structured script, or as fallback) â”€â”€â”€
-    if (!hasStructuredScript) {
-      html += '<div class="scp-form-group"><label>Script' + (vid.script ? '' : ' <span class="scp-text-xs scp-text-muted">â€” click AI Script above to generate</span>') + '</label>';
-      html += '<textarea class="scp-textarea scp-video-field" data-video-field="script" rows="6" placeholder="Write your video script or use AI to generate a structured one...">' + esc(vid.script || '') + '</textarea></div>';
-    }
-
-    html += '</div>';
-    return html;
-  }
-
-  /**
-   * Renders a visual duration timeline bar for structured video scripts.
-   * Shows hook (red), body sections (blue), outro (green) as proportional segments.
-   */
-  function renderScriptTimeline(script) {
-    if (!script) return '';
-    var segments = [];
-    var totalDuration = 0;
-
-    // Hook
-    var hookDur = (script.hook && script.hook.duration_seconds) || 0;
-    if (hookDur > 0) {
-      segments.push({ label: 'Hook', duration: hookDur, color: '#d93025', icon: 'bolt' });
-      totalDuration += hookDur;
-    }
-
-    // Body sections
-    if (script.body && Array.isArray(script.body)) {
-      for (var i = 0; i < script.body.length; i++) {
-        var b = script.body[i];
-        var bDur = b.duration_seconds || 0;
-        if (bDur > 0) {
-          segments.push({ label: b.section || ('Body ' + (i + 1)), duration: bDur, color: '#1a73e8', icon: 'pen-fancy' });
-          totalDuration += bDur;
-        }
-      }
-    }
-
-    // Outro
-    var outroDur = (script.outro && script.outro.duration_seconds) || 0;
-    if (outroDur > 0) {
-      segments.push({ label: 'Outro', duration: outroDur, color: '#0d904f', icon: 'rocket' });
-      totalDuration += outroDur;
-    }
-
-    if (segments.length === 0 || totalDuration === 0) return '';
-
-    // Build timeline HTML
-    var html = '<div class="scp-script-timeline">';
-    html += '<div class="scp-script-timeline-header">';
-    html += '<span class="scp-script-timeline-title">' + icon('clock') + ' Duration Timeline</span>';
-    html += '<span class="scp-script-timeline-total">' + totalDuration + 's total</span>';
-    html += '</div>';
-
-    // Bar
-    html += '<div class="scp-script-timeline-bar">';
-    var elapsed = 0;
-    for (var si = 0; si < segments.length; si++) {
-      var seg = segments[si];
-      var pct = (seg.duration / totalDuration) * 100;
-      html += '<div class="scp-script-timeline-segment" style="width:' + pct + '%;background:' + seg.color + '" title="' + esc(seg.label) + ': ' + seg.duration + 's (' + Math.round(pct) + '%)">';
-      if (pct > 10) html += '<span class="scp-script-timeline-seg-label">' + seg.duration + 's</span>';
-      html += '</div>';
-      elapsed += seg.duration;
-    }
-    html += '</div>';
-
-    // Legend
-    html += '<div class="scp-script-timeline-legend">';
-    for (var li = 0; li < segments.length; li++) {
-      var s = segments[li];
-      html += '<span class="scp-script-timeline-legend-item">';
-      html += '<span class="scp-script-timeline-legend-dot" style="background:' + s.color + '"></span>';
-      html += esc(s.label) + ' <span class="scp-text-xs scp-text-muted">' + s.duration + 's</span>';
-      html += '</span>';
-    }
-    html += '</div>';
-    html += '</div>';
-    return html;
-  }
-
-  // ============================================================
-  // SECTION 8: STEP 4 â€” MEDIA PROMPTS
-  // ============================================================
-
-  function renderMediaStep(post) {
-    if (post.type === 'text') {
-      return '<div class="scp-empty-state scp-empty-state--compact"><p>' + icon('info') + ' Text-only posts don\'t need media. This step is skipped.</p></div>';
-    }
-
-    var media = post.media || {};
-    var config = media.config || {};
-    var styles = (S.meta.settings && S.meta.settings.image_styles) || [];
-    var hasVisualPlan = !!(media.visual_plan && media.visual_plan.visual_concept);
-    var hasCarouselPlans = !!(media.visual_plans && media.visual_plans.length > 0);
-    var hasLegacyPrompts = (media.prompts || []).length > 0;
-
-    var html = '<div class="scp-editor-form" data-post-id="' + esc(post.id) + '">';
-
-    // â”€â”€â”€ Context strip â€” show what message this visual should deliver â”€â”€â”€
-    var r = post.research || {};
-    var contentBody = (post.content && post.content.body) || '';
-    html += '<div class="scp-media-context">';
-    html += '<div class="scp-media-context-header">' + icon('lightbulb') + ' <strong>Content Context</strong> <span class="scp-text-xs scp-text-muted">â€” the AI will plan visuals that deliver this message</span></div>';
-    if (r.selected_hook) html += '<div class="scp-media-context-item"><span class="scp-media-context-label">Hook:</span> <span>"' + esc(truncate(r.selected_hook, 80)) + '"</span></div>';
-    if (r.selected_angle) html += '<div class="scp-media-context-item"><span class="scp-media-context-label">Angle:</span> <span>' + esc(r.selected_angle) + '</span></div>';
-    if (contentBody) html += '<div class="scp-media-context-item"><span class="scp-media-context-label">Content:</span> <span>' + esc(truncate(contentBody, 120)) + '</span></div>';
-    if (!r.selected_hook && !contentBody) html += '<div class="scp-media-context-item scp-text-muted">' + icon('info') + ' Complete the Research and Content steps first for better visual planning.</div>';
-    html += '</div>';
-
-    // â”€â”€â”€ Style selection â”€â”€â”€
-    html += '<div class="scp-media-style-row">';
-    html += '<div class="scp-form-group" style="flex:1"><label>Visual Style Reference</label>';
-    html += '<select class="scp-select scp-media-config-field" data-config-field="style_id">';
-    html += '<option value="">Auto (let AI decide)</option>';
-    for (var si = 0; si < styles.length; si++) html += '<option value="' + esc(styles[si].id) + '"' + (config.style_id === styles[si].id ? ' selected' : '') + '>' + esc(styles[si].name) + ' â€” ' + esc(styles[si].description || '') + '</option>';
-    html += '</select></div>';
-    html += '<div class="scp-form-group" style="flex:1"><label>Additional Direction</label>';
-    html += '<input type="text" class="scp-input scp-media-config-field" data-config-field="custom_instructions" value="' + esc(config.custom_instructions || '') + '" placeholder="Optional: specific requirements, mood, constraints..."></div>';
-    html += '</div>';
-
-    // â”€â”€â”€ Brand toggle + Generate button â”€â”€â”€
-    html += '<div class="scp-media-actions">';
-    html += '<label class="scp-toggle-label"><input type="checkbox" class="scp-media-brand-toggle"' + (config.brand_context_enabled !== false ? ' checked' : '') + '> Include Brand Context</label>';
-    var genLabel = post.type === 'carousel' ? 'Plan All Slides' : post.type === 'video' ? 'Plan Thumbnail' : 'Plan Visual';
-    html += '<button class="scp-btn scp-btn-ai" data-action="ai-generate-visual-plan">' + icon('sparkles') + ' ' + genLabel + '</button>';
-    html += (window._scpAiSel ? window._scpAiSel('ai-generate-media') : '');
-    html += '</div>';
-
-    // â”€â”€â”€ Output: Visual Plan (rendered via AIO engine) â”€â”€â”€
-    if (post.type === 'carousel' && hasCarouselPlans) {
-      // Carousel: array of per-slide visual plans
-      html += '<div class="scp-media-visual-output">';
-      html += renderStructuredOutput(media.visual_plans, 'carousel_visual_plan', {
-        outputId: 'vp_' + post.id, postId: post.id, title: 'Carousel Visual Plan (' + media.visual_plans.length + ' slides)'
-      });
-      html += '</div>';
-    } else if (hasVisualPlan) {
-      // Single image / thumbnail visual plan
-      html += '<div class="scp-media-visual-output">';
-      html += renderStructuredOutput(media.visual_plan, 'image_visual_plan', {
-        outputId: 'vp_' + post.id, postId: post.id,
-        title: post.type === 'video' ? 'Thumbnail Visual Plan' : 'Visual Content Plan'
-      });
-      html += '</div>';
-    }
-
-    // â”€â”€â”€ Legacy: Old-style prompt output (backward compat) â”€â”€â”€
-    if (hasLegacyPrompts && !hasVisualPlan && !hasCarouselPlans) {
-      html += renderLegacyPromptOutput(post, media.prompts);
-    }
-
-    html += '</div>';
-    return html;
-  }
-
-  // Legacy prompt card rendering â€” kept for backward compatibility with old data
-  function renderLegacyPromptOutput(post, prompts) {
-    var html = '<div class="scp-media-output scp-media-legacy">';
-    html += '<div class="scp-section-header"><h3>' + icon('wand-magic') + ' Generated Prompts <span class="scp-text-xs scp-text-muted">(legacy format)</span></h3>';
-    html += '<div class="scp-prompt-header-actions">';
-    html += '<button class="scp-btn scp-btn-sm scp-btn-outline" data-action="copy-all-prompts">' + icon('copy') + ' Copy All</button>';
-    html += '</div></div>';
-    for (var pi = 0; pi < prompts.length; pi++) {
-      var mp = prompts[pi];
-      html += '<div class="scp-prompt-card" data-prompt-index="' + pi + '">';
-      html += '<div class="scp-prompt-card-header">';
-      html += '<span class="scp-prompt-label">' + esc(mp.label || 'Prompt ' + (pi + 1)) + '</span>';
-      html += mediaPromptStatusBadge(mp.status || 'draft');
-      html += '</div>';
-      html += '<textarea class="scp-textarea scp-prompt-text" data-prompt-index="' + pi + '" rows="4">' + esc(mp.prompt_text || '') + '</textarea>';
-      if (mp.negative_prompt) {
-        html += '<div class="scp-prompt-negative"><label class="scp-text-xs scp-text-muted">NEGATIVE PROMPT</label>';
-        html += '<textarea class="scp-textarea scp-prompt-negative-text" data-prompt-index="' + pi + '" rows="2">' + esc(mp.negative_prompt || '') + '</textarea></div>';
-      }
-      html += '<div class="scp-prompt-card-actions">';
-      html += '<button class="scp-btn scp-btn-sm scp-btn-outline" data-action="copy-prompt" data-index="' + pi + '">' + icon('copy') + ' Copy</button>';
-      html += '</div></div>';
-    }
-    html += '</div>';
-    return html;
-  }
-
-  // (renderStructuredMediaForm removed â€” replaced by message-first visual planner in Phase B)
-
-  // ============================================================
-  // SECTION 9: STEP 5 â€” PLATFORMS
-  // ============================================================
-
-  function renderPlatformsStep(post) {
-    var html = '<div class="scp-editor-form" data-post-id="' + esc(post.id) + '">';
-    html += '<p class="scp-text-sm scp-text-muted">Adapt your master content for each target platform. Write the full post for each.</p>';
-
-    var plats = post.platforms || [];
-    for (var pi = 0; pi < plats.length; pi++) {
-      var pk = plats[pi];
-      var plCfg = Constants.PLATFORMS[pk]; if (!plCfg) continue;
-      var pc = (post.platform_content && post.platform_content[pk]) || {};
-      var platformSettings = getPlatformConfig(pk);
-
-      // Skip instagram for text-only
-      if (pk === 'instagram' && post.type === 'text') {
-        html += '<div class="scp-platform-section scp-platform-disabled" style="border-left-color:' + plCfg.color + '">';
-        html += '<div class="scp-platform-header"><span style="color:' + plCfg.color + '">' + icon(plCfg.icon) + ' ' + esc(plCfg.label) + '</span>';
-        html += badge('Text posts not supported', '#9aa0a6') + '</div></div>';
-        continue;
-      }
-
-      html += '<div class="scp-platform-section" style="border-left-color:' + plCfg.color + '">';
-      html += '<div class="scp-platform-header">';
-      html += '<span style="color:' + plCfg.color + ';font-weight:700">' + icon(plCfg.icon) + ' ' + esc(plCfg.label) + '</span>';
-      html += '<button class="scp-btn scp-btn-ai scp-btn-sm" data-action="ai-adapt-platform" data-platform="' + pk + '">' + icon('sparkles') + ' AI Adapt</button>';
-      html += (window._scpAiSel ? window._scpAiSel('ai-adapt-' + pk) : '');
-      html += '</div>';
-
-      if (pk === 'youtube' && post.type === 'video') {
-        // YouTube gets title + description + tags
-        html += '<div class="scp-form-group"><label>Video Title</label>';
-        html += '<input type="text" class="scp-input scp-platform-field" data-platform="' + pk + '" data-pfield="title" value="' + esc(pc.title || '') + '" placeholder="YouTube title..."></div>';
-        html += '<div class="scp-form-group"><label>Description</label>';
-        html += '<textarea class="scp-textarea scp-platform-field" data-platform="' + pk + '" data-pfield="description" rows="4" placeholder="YouTube description...">' + esc(pc.description || '') + '</textarea></div>';
-        html += '<div class="scp-form-group"><label>Tags</label>';
-        html += '<input type="text" class="scp-input scp-platform-field" data-platform="' + pk + '" data-pfield="tags" value="' + esc((pc.tags || []).join(', ')) + '" placeholder="tag1, tag2, tag3..."></div>';
-      } else {
-        // Standard platform: social composer
-        var charLimit = platformSettings.char_limit || 3000;
-        html += renderSocialComposer('platform_' + pk, pc.body || '', { charLimit: charLimit, label: plCfg.label, platform: pk, postId: post.id, color: plCfg.color });
-      }
-
-      // Enable toggle
-      html += '<label class="scp-toggle-label scp-platform-enable"><input type="checkbox" class="scp-platform-enable-check" data-platform="' + pk + '"' + (pc.enabled ? ' checked' : '') + '> Enable for publishing</label>';
-      html += '</div>';
-    }
-
-    // Add more platforms
-    var otherPlats = Object.keys(Constants.PLATFORMS).filter(function(pk) { return plats.indexOf(pk) < 0; });
-    if (otherPlats.length > 0) {
-      html += '<div class="scp-add-platform"><span class="scp-text-xs scp-text-muted">Add platform:</span>';
-      for (var opi = 0; opi < otherPlats.length; opi++) {
-        var opk = otherPlats[opi]; var opl = Constants.PLATFORMS[opk];
-        html += '<button class="scp-btn scp-btn-sm scp-btn-outline" data-action="add-platform" data-platform="' + opk + '">' + icon(opl.icon) + ' ' + esc(opl.label) + '</button>';
-      }
-      html += '</div>';
-    }
-
-    html += '</div>';
-    return html;
-  }
-
-  // ============================================================
-  // SECTION 10: STEP 6 â€” SCHEDULE
-  // ============================================================
-
-  function renderScheduleStep(post) {
-    var sched = post.schedule || {};
-    var html = '<div class="scp-editor-form" data-post-id="' + esc(post.id) + '">';
-
-    // Schedule section
-    html += '<div class="scp-schedule-section"><div class="scp-section-header"><h3>' + icon('calendar') + ' Schedule</h3></div>';
-    html += '<div class="scp-form-row">';
-    html += '<div class="scp-form-third"><label>Date</label><input type="date" class="scp-input scp-schedule-field" data-sfield="date" value="' + esc(sched.date || '') + '"></div>';
-    html += '<div class="scp-form-third"><label>Time</label><input type="time" class="scp-input scp-schedule-field" data-sfield="time" value="' + esc(sched.time || '') + '"></div>';
-    html += '<div class="scp-form-third"><label>Timezone</label><input type="text" class="scp-input scp-schedule-field" data-sfield="timezone" value="' + esc(sched.timezone || (S.meta.settings && S.meta.settings.timezone) || '') + '" placeholder="Asia/Kolkata"></div>';
-    html += '</div>';
-    html += '<div class="scp-schedule-actions">';
-    html += '<button class="scp-btn scp-btn-primary" data-action="mark-ready">' + icon('circle-check') + ' Mark as Ready</button>';
-    html += '<button class="scp-btn scp-btn-outline" data-action="mark-scheduled">' + icon('calendar-check') + ' Set Schedule</button>';
-    html += '</div></div>';
-
-    // Published URLs
-    html += '<div class="scp-schedule-section"><div class="scp-section-header"><h3>' + icon('link') + ' Published URLs</h3></div>';
-    var plats = post.platforms || [];
-    var urls = sched.published_urls || {};
-    for (var i = 0; i < plats.length; i++) {
-      var pk = plats[i]; var plCfg = Constants.PLATFORMS[pk]; if (!plCfg) continue;
-      html += '<div class="scp-url-row">';
-      html += '<span class="scp-url-platform" style="color:' + plCfg.color + '">' + icon(plCfg.icon) + '</span>';
-      html += '<input type="url" class="scp-input scp-url-field" data-platform="' + pk + '" value="' + esc(urls[pk] || '') + '" placeholder="Paste URL after publishing...">';
-      html += '</div>';
-    }
-    html += '<button class="scp-btn scp-btn-primary" data-action="mark-published" style="margin-top:var(--scp-space-3)">' + icon('rocket') + ' Mark Published</button>';
-    html += '</div>';
-
-    // Performance
-    html += '<div class="scp-schedule-section"><div class="scp-section-header"><h3>' + icon('chart-line') + ' Performance</h3></div>';
-    if (post.status === 'published') {
-      html += '<div class="scp-perf-grid">';
-      var perfMetrics = ['Impressions', 'Likes', 'Comments', 'Shares', 'Clicks', 'Saves'];
-      for (var mi = 0; mi < perfMetrics.length; mi++) {
-        html += '<div class="scp-perf-cell"><div class="scp-perf-label">' + perfMetrics[mi] + '</div><div class="scp-perf-value">â€”</div></div>';
-      }
-      html += '</div>';
-    } else {
-      html += '<p class="scp-text-sm scp-text-muted">Performance data will appear here after publishing.</p>';
-    }
-    html += '</div>';
-
-    html += '</div>';
-    return html;
-  }
+  var renderBasicsStep    = window._scpRenderBasicsStep;
+  var renderResearchStep  = window._scpRenderResearchStep;
+  var renderContentStep   = window._scpRenderContentStep;
+  var renderMediaStep     = window._scpRenderMediaStep;
+  var renderPlatformsStep = window._scpRenderPlatformsStep;
+  var renderScheduleStep  = window._scpRenderScheduleStep;
 
   // ============================================================
   // SECTION 11: SOCIAL COMPOSER COMPONENT
