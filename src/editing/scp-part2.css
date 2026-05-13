@@ -213,6 +213,9 @@
 .scp-settings-panel { max-width: 720px; }
 .scp-settings-section { background: var(--scp-white); border: 1px solid var(--scp-border-light); border-radius: var(--scp-radius-lg); padding: var(--scp-space-5); margin-bottom: var(--scp-space-5); }
 .scp-settings-section h3 { margin-bottom: var(--scp-space-4); display: flex; align-items: center; gap: var(--scp-space-2); }
+.scp-settings-section-setup { background: linear-gradient(135deg, var(--scp-primary-subtle), var(--scp-white)); border-color: var(--scp-primary-light); }
+.scp-settings-section-setup h3 { color: var(--scp-primary); margin-bottom: var(--scp-space-2); }
+.scp-settings-help { font-size: var(--scp-font-size-sm); color: var(--scp-text-secondary); line-height: 1.6; margin: 0 0 var(--scp-space-4); }
 .scp-settings-actions { display: flex; gap: var(--scp-space-3); margin-top: var(--scp-space-5); padding-top: var(--scp-space-4); border-top: 1px solid var(--scp-border-light); flex-wrap: wrap; }
 
 /* Config list (tones, audiences, image styles, templates) */

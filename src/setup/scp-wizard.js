@@ -86,6 +86,13 @@
   // ------------------------------------------------------------------
   function ensureWizardState() {
     if (!S.setupWizard) {
+      // Prefill from Drupal brand block if present — saves keystrokes for
+      // workspaces that already have brand data set up at the user level.
+      var brand = S.brand || {};
+      var brandIdentity = brand.identity || {};
+      var brandCore = brand.core || {};
+      var workspaceName = (S.meta.workspace && S.meta.workspace.name) || brandCore.brand_name || brandIdentity.name || '';
+      var workspaceNiche = (S.meta.workspace && S.meta.workspace.niche) || brandCore.industry || brandCore.niche || '';
       S.setupWizard = {
         open: false,
         currentStep: 1,
@@ -93,8 +100,8 @@
         // out; finishSetup() flushes the relevant slices to S.meta / S.data.
         data: {
           workspace: {
-            name: (S.meta.workspace && S.meta.workspace.name) || '',
-            niche: (S.meta.workspace && S.meta.workspace.niche) || '',
+            name: workspaceName,
+            niche: workspaceNiche,
             audience_description: (S.meta.workspace && S.meta.workspace.audience_description) || '',
             primary_platform: (S.meta.workspace && S.meta.workspace.primary_platform) || '',
             posting_frequency: (S.meta.workspace && S.meta.workspace.posting_frequency) || ''
@@ -217,7 +224,16 @@
     // Header — title + stepper
     html += '<div class="scp-wizard-header">';
     html += '<div class="scp-wizard-header-top">';
-    html += '<div class="scp-wizard-brand">' + icon('sparkles') + ' <span>Workspace Setup</span></div>';
+    var brand = S.brand || {};
+    var brandIdentity = brand.identity || {};
+    if (brand.configured && brandIdentity.logoUrl) {
+      html += '<div class="scp-wizard-brand">';
+      html += '<img class="scp-wizard-brand-logo" src="' + esc(brandIdentity.logoUrl) + '" alt="">';
+      html += '<span>Set up ' + esc(brandIdentity.name || 'your workspace') + '</span>';
+      html += '</div>';
+    } else {
+      html += '<div class="scp-wizard-brand">' + icon('sparkles') + ' <span>Workspace Setup</span></div>';
+    }
     html += '<button class="scp-wizard-skip" data-action="wizard-skip">Skip setup</button>';
     html += '</div>';
     html += renderStepper(step);

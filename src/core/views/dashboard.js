@@ -54,6 +54,7 @@
     html += '<button class="scp-btn scp-btn-primary" data-action="new-post">' + icon('plus') + ' New Post</button>';
     html += '<button class="scp-btn scp-btn-outline" data-action="go-view" data-view="research">' + icon('flask') + ' Research</button>';
     html += '</div></div>';
+    html += renderSeedBatchBanner();
     html += renderDashStats();
     html += renderDashPipeline();
     html += '<div class="scp-dash-grid">' + renderDashByType() + renderDashUpcoming() + '</div>';
@@ -232,6 +233,25 @@
     html += '<span class="scp-activity-time">' + formatRelativeTime(act.timestamp) + '</span>';
     if (act.timestamp) html += '<span class="scp-activity-date">' + formatDate(act.timestamp) + '</span>';
     html += '</div></div></div>';
+    return html;
+  }
+
+  function renderSeedBatchBanner() {
+    // Surface wizard-seeded posts as a one-time CTA so users see them
+    // alongside the rest of the pipeline rather than buried in the posts list.
+    var seeds = (S.data.posts || []).filter(function(p) {
+      return p && p.source && p.source.type === 'setup_wizard' && p.status === 'idea';
+    });
+    if (seeds.length === 0) return '';
+    var html = '<div class="scp-dash-seed-banner">';
+    html += '<div class="scp-dash-seed-icon">' + icon('sparkles') + '</div>';
+    html += '<div class="scp-dash-seed-text">';
+    html += '<div class="scp-dash-seed-title">' + seeds.length + ' seed post' + (seeds.length === 1 ? '' : 's') + ' from setup</div>';
+    html += '<div class="scp-dash-seed-sub">Idea-stage drafts the wizard planted for you — open them, refine, and move to drafting when ready.</div>';
+    html += '</div>';
+    html += '<button class="scp-btn scp-btn-primary scp-btn-sm" data-action="go-view" data-view="series">' + icon('layer-group') + ' Open series</button>';
+    html += '<button class="scp-btn scp-btn-outline scp-btn-sm" data-action="go-view" data-view="posts">' + icon('thumbtack') + ' All posts</button>';
+    html += '</div>';
     return html;
   }
 

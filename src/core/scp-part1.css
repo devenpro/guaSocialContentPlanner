@@ -184,6 +184,24 @@ body.scp-active .block-page-title-block { display: none !important; }
 .scp-pipeline-segment { height: 100%; transition: width var(--scp-transition-base); }
 
 /* ═══ S13: DASHBOARD ═══ */
+.scp-dash-seed-banner {
+  display: flex; align-items: center; gap: var(--scp-space-4);
+  padding: var(--scp-space-4) var(--scp-space-5);
+  background: linear-gradient(135deg, var(--scp-primary-subtle), var(--scp-white));
+  border: 1px solid var(--scp-primary-light);
+  border-radius: var(--scp-radius-lg);
+  margin-bottom: var(--scp-space-5);
+  flex-wrap: wrap;
+}
+.scp-dash-seed-icon {
+  width: 44px; height: 44px; border-radius: var(--scp-radius-full);
+  background: var(--scp-primary); color: var(--scp-white);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.scp-dash-seed-text { flex: 1; min-width: 200px; }
+.scp-dash-seed-title { font-weight: 700; color: var(--scp-text-primary); font-family: var(--scp-font-display); }
+.scp-dash-seed-sub { font-size: var(--scp-font-size-sm); color: var(--scp-text-secondary); margin-top: 2px; }
 .scp-dash-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--scp-space-4); margin-bottom: var(--scp-space-6); }
 .scp-stat-card { background: var(--scp-white); border: 1px solid var(--scp-border-light); border-radius: var(--scp-radius-md); padding: var(--scp-space-4); text-align: center; transition: all var(--scp-transition-fast); }
 .scp-stat-card:hover { box-shadow: var(--scp-shadow-sm); }

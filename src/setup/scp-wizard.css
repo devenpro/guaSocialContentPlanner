@@ -44,6 +44,11 @@
   color: var(--scp-primary);
 }
 .scp-wizard-brand svg, .scp-wizard-brand i { font-size: var(--scp-font-size-xl); }
+.scp-wizard-brand-logo {
+  height: 24px; width: auto; max-width: 88px;
+  border-radius: var(--scp-radius-sm);
+  object-fit: contain;
+}
 .scp-wizard-skip {
   background: none; border: none; cursor: pointer;
   color: var(--scp-text-secondary); font-size: var(--scp-font-size-sm);

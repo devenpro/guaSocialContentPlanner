@@ -477,9 +477,27 @@
 
   function renderWorkspaceSettings() {
     var ws = (S.meta && S.meta.workspace) || {}; var stg = (S.meta && S.meta.settings) || {};
+    var setup = (S.meta && S.meta.setup) || { firstRun: true, completedAt: '' };
     var html = '<div class="scp-settings-panel">';
     html += '<div class="scp-form-group"><label>Workspace Name</label><input type="text" class="scp-input scp-settings-field" data-path="workspace.name" value="' + esc(ws.name || '') + '"></div>';
     html += '<div class="scp-form-group"><label>Description</label><textarea class="scp-textarea scp-settings-field" data-path="workspace.description" rows="2">' + esc(ws.description || '') + '</textarea></div>';
+
+    // Brand context fields (also captured by the setup wizard, editable here forever)
+    html += '<div class="scp-form-group"><label>Niche / focus</label><input type="text" class="scp-input scp-settings-field" data-path="workspace.niche" value="' + esc(ws.niche || '') + '" placeholder="e.g. B2B SaaS for marketing teams"></div>';
+    html += '<div class="scp-form-group"><label>Target audience</label><textarea class="scp-textarea scp-settings-field" data-path="workspace.audience_description" rows="2" placeholder="Who you\'re trying to reach...">' + esc(ws.audience_description || '') + '</textarea></div>';
+    html += '<div class="scp-form-row">';
+    html += '<div class="scp-form-half"><label>Primary platform</label><select class="scp-select scp-settings-field" data-path="workspace.primary_platform">';
+    html += '<option value=""' + (!ws.primary_platform ? ' selected' : '') + '>Not set</option>';
+    for (var pk in Constants.PLATFORMS) {
+      html += '<option value="' + pk + '"' + (ws.primary_platform === pk ? ' selected' : '') + '>' + esc(Constants.PLATFORMS[pk].label) + '</option>';
+    }
+    html += '</select></div>';
+    html += '<div class="scp-form-half"><label>Posting frequency</label><select class="scp-select scp-settings-field" data-path="workspace.posting_frequency">';
+    [['', 'Not set'], ['daily', 'Daily'], ['3x_week', '3× per week'], ['weekly', 'Weekly'], ['2x_month', 'Twice a month'], ['monthly', 'Monthly']].forEach(function(p) {
+      html += '<option value="' + p[0] + '"' + (ws.posting_frequency === p[0] ? ' selected' : '') + '>' + esc(p[1]) + '</option>';
+    });
+    html += '</select></div></div>';
+
     html += '<div class="scp-form-row"><div class="scp-form-third"><label>Timezone</label><select class="scp-select scp-settings-field" data-path="settings.timezone">';
     ['UTC', 'America/New_York', 'America/Chicago', 'America/Los_Angeles', 'Europe/London', 'Europe/Paris', 'Asia/Tokyo', 'Asia/Kolkata'].forEach(function(tz) { html += '<option value="' + tz + '"' + (stg.timezone === tz ? ' selected' : '') + '>' + tz + '</option>'; });
     html += '</select></div>';
@@ -489,6 +507,22 @@
     html += '<div class="scp-form-third"><label>Default View</label><select class="scp-select scp-settings-field" data-path="settings.default_view">';
     for (var v in Constants.APP_VIEWS) html += '<option value="' + v + '"' + (stg.default_view === v ? ' selected' : '') + '>' + Constants.APP_VIEWS[v].label + '</option>';
     html += '</select></div></div>';
+
+    // Setup wizard re-run
+    html += '<div class="scp-settings-section scp-settings-section-setup">';
+    html += '<h3>' + icon('sparkles') + ' Setup wizard</h3>';
+    if (setup.completedAt) {
+      var d = new Date(setup.completedAt);
+      var when = isNaN(d) ? setup.completedAt : d.toLocaleDateString();
+      html += '<p class="scp-settings-help">Completed on ' + esc(when) + '. Re-running the wizard adds new topics, series, and seed posts on top of your existing data — nothing is deleted.</p>';
+    } else if (setup.firstRun) {
+      html += '<p class="scp-settings-help">You haven\'t finished the setup wizard yet. Run it now to scaffold topics, a series, a default tone, and a starter batch of planned posts.</p>';
+    } else {
+      html += '<p class="scp-settings-help">The setup wizard was skipped. Re-running it will add new topics, series, and seed posts on top of your existing data.</p>';
+    }
+    html += '<button class="scp-btn scp-btn-outline" data-action="rerun-setup-wizard">' + icon('refresh') + ' ' + (setup.completedAt || !setup.firstRun ? 'Re-run setup wizard' : 'Run setup wizard') + '</button>';
+    html += '</div>';
+
     html += '<div class="scp-settings-actions">';
     html += '<button class="scp-btn scp-btn-outline" data-action="export-json">' + icon('download') + ' Export All</button>';
     html += '<button class="scp-btn scp-btn-outline" data-action="import-json">' + icon('upload') + ' Import</button>';
@@ -1444,6 +1478,13 @@
   function setupPart2BEvents() {
     $(document).off('click.scp2b-stab', '[data-action="settings-tab"]').on('click.scp2b-stab', '[data-action="settings-tab"]', function(e) { e.preventDefault(); S.settingsTab = $(this).data('tab'); render(); });
     $(document).off('click.scp2b-ss', '[data-action="save-settings"]').on('click.scp2b-ss', '[data-action="save-settings"]', function(e) { e.preventDefault(); saveAllSettings(); });
+    $(document).off('click.scp2b-rs', '[data-action="rerun-setup-wizard"]').on('click.scp2b-rs', '[data-action="rerun-setup-wizard"]', function(e) {
+      e.preventDefault();
+      if (!confirm('Re-run the setup wizard? Existing topics, series, and posts are kept — the wizard will add to them.')) return;
+      if (window._scpResetSetup) window._scpResetSetup();
+      if (window._scpWizard && window._scpWizard.openWizard) window._scpWizard.openWizard();
+      else toast('Wizard not available — reload the page', 'warning');
+    });
     // AI picker dynamic model update
     $(document).off('change.scp2b-aip', '.scp-ai-provider-select').on('change.scp2b-aip', '.scp-ai-provider-select', function() {
       var actionId = $(this).data('action-id'); var pid = $(this).val();
