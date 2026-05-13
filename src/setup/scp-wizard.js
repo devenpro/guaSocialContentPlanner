@@ -29,6 +29,13 @@
   var stepRenderers = {};
   // Optional step validators — return true to allow advance.
   var stepValidators = {};
+  // Finish-time flushers — additional flush functions registered by step
+  // modules. Each receives the live wizard state and is expected to write
+  // its slice into S.data / S.meta. Runs before markSetupComplete.
+  var flushers = [];
+  // Step-bound init hooks: run on entry to a step (e.g. focus first input,
+  // kick off an AI call). Keyed by step number.
+  var stepEnterHooks = {};
   // Step metadata: title + short subtitle shown in the stepper.
   var stepMeta = {
     1: { title: 'Welcome', subtitle: 'Tell us about your brand' },
@@ -126,6 +133,11 @@
     if (n < 1 || n > TOTAL_STEPS) return;
     w.currentStep = n;
     render();
+    var hook = stepEnterHooks[n];
+    if (typeof hook === 'function') {
+      try { hook(w); }
+      catch (e) { console.error('[SCP] Wizard enter hook threw', e); }
+    }
   }
 
   function nextStep() {
@@ -133,8 +145,7 @@
     var validator = stepValidators[w.currentStep];
     if (validator && !validator()) return;
     if (w.currentStep < TOTAL_STEPS) {
-      w.currentStep++;
-      render();
+      goToStep(w.currentStep + 1);
     } else {
       finishSetup();
     }
@@ -142,10 +153,7 @@
 
   function prevStep() {
     var w = ensureWizardState();
-    if (w.currentStep > 1) {
-      w.currentStep--;
-      render();
-    }
+    if (w.currentStep > 1) goToStep(w.currentStep - 1);
   }
 
   function skipSetup() {
@@ -158,7 +166,7 @@
 
   function finishSetup() {
     var w = ensureWizardState();
-    // Flush workspace basics. Later phases also flush their slices here.
+    // Flush workspace basics. Step modules add their own flushers below.
     var ws = w.data.workspace || {};
     S.meta.workspace = S.meta.workspace || {};
     S.meta.workspace.name = (ws.name || '').trim();
@@ -166,6 +174,12 @@
     S.meta.workspace.audience_description = (ws.audience_description || '').trim();
     S.meta.workspace.primary_platform = ws.primary_platform || '';
     S.meta.workspace.posting_frequency = ws.posting_frequency || '';
+    // Run step-module flushers (topics, series, tone, planned posts, etc.)
+    for (var i = 0; i < flushers.length; i++) {
+      try { flushers[i](w); }
+      catch (e) { console.error('[SCP] Wizard flusher threw', e); }
+    }
+    if (window._scpBuildMaps) window._scpBuildMaps();
     if (markSetupComplete) markSetupComplete();
     closeWizard();
     if (syncToTextarea) syncToTextarea();
@@ -396,6 +410,20 @@
     // If the wizard is currently sitting on this step, re-render so the
     // new content shows immediately.
     if (S && S.setupWizard && S.setupWizard.open && S.setupWizard.currentStep === stepNumber) render();
+  };
+  // Step modules call this to be notified when the user enters their step
+  // (e.g. to lazily fire an AI request the first time).
+  window._scpRegisterWizardStepEnter = function(stepNumber, hookFn) {
+    if (typeof hookFn === 'function') stepEnterHooks[stepNumber] = hookFn;
+  };
+  // Step modules register a finish-time flusher to persist their slice.
+  window._scpRegisterWizardFlush = function(fn) {
+    if (typeof fn === 'function') flushers.push(fn);
+  };
+  // Step modules trigger a wizard re-render after async work (AI returns,
+  // user toggles, etc.) without needing access to the shell's render().
+  window._scpRenderWizard = function() {
+    if (S && S.setupWizard && S.setupWizard.open) render();
   };
 
 })(jQuery);

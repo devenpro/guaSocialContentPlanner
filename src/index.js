@@ -16,3 +16,4 @@ import './core/scp-part1.js';
 import './editing/scp-part2a.js';
 import './ai/scp-part2b.js';
 import './setup/scp-wizard.js';
+import './setup/scp-wizard-steps.js';

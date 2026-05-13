@@ -194,3 +194,245 @@
   font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
   font-variant-numeric: tabular-nums;
 }
+
+/* ─── Shared step affordances ─── */
+.scp-wizard-context {
+  display: inline-flex; align-items: center; gap: var(--scp-space-2);
+  background: var(--scp-primary-subtle); color: var(--scp-text-secondary);
+  padding: var(--scp-space-2) var(--scp-space-3);
+  border-radius: var(--scp-radius-md);
+  font-size: var(--scp-font-size-sm);
+  margin-bottom: var(--scp-space-5);
+}
+.scp-wizard-actions {
+  display: flex; gap: var(--scp-space-3); flex-wrap: wrap;
+  margin-bottom: var(--scp-space-5);
+}
+.scp-wizard-actions .scp-btn { white-space: nowrap; }
+.scp-wizard-ai-disabled {
+  display: inline-flex; align-items: center; gap: var(--scp-space-2);
+  font-size: var(--scp-font-size-sm); color: var(--scp-text-tertiary);
+  padding: var(--scp-space-2) var(--scp-space-3);
+  background: var(--scp-gray-50); border-radius: var(--scp-radius-md);
+}
+.scp-wizard-empty {
+  border: 1px dashed var(--scp-border-default);
+  border-radius: var(--scp-radius-lg);
+  padding: var(--scp-space-8) var(--scp-space-4);
+  text-align: center; color: var(--scp-text-secondary);
+}
+.scp-wizard-empty--compact { padding: var(--scp-space-5) var(--scp-space-4); }
+.scp-wizard-empty-icon {
+  width: 48px; height: 48px; border-radius: var(--scp-radius-full);
+  background: var(--scp-primary-light); color: var(--scp-primary);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 22px; margin-bottom: var(--scp-space-3);
+}
+.scp-wizard-error {
+  background: var(--scp-error-light); color: var(--scp-error);
+  padding: var(--scp-space-2) var(--scp-space-3);
+  border-radius: var(--scp-radius-md);
+  font-size: var(--scp-font-size-sm);
+  margin-bottom: var(--scp-space-4);
+}
+
+/* ─── Step 2 (topics) ─── */
+.scp-wizard-topic-list { display: flex; flex-direction: column; gap: var(--scp-space-3); }
+.scp-wizard-topic-row {
+  display: flex; align-items: center; gap: var(--scp-space-3);
+  padding: var(--scp-space-3);
+  background: var(--scp-bg-secondary);
+  border: 1px solid var(--scp-border-light);
+  border-radius: var(--scp-radius-md);
+}
+.scp-wizard-topic-swatch {
+  width: 24px; height: 24px; border-radius: var(--scp-radius-full);
+  flex-shrink: 0; cursor: pointer; box-shadow: var(--scp-shadow-xs);
+  border: 2px solid var(--scp-white);
+  transition: transform var(--scp-transition-fast);
+}
+.scp-wizard-topic-swatch:hover { transform: scale(1.1); }
+.scp-wizard-topic-fields {
+  flex: 1; display: grid; grid-template-columns: minmax(160px, 1fr) 2fr;
+  gap: var(--scp-space-2); min-width: 0;
+}
+.scp-wizard-topic-fields .scp-input { padding: 8px 10px; font-size: var(--scp-font-size-sm); }
+.scp-wizard-topic-delete {
+  background: none; border: none; cursor: pointer;
+  color: var(--scp-text-tertiary); padding: 6px;
+  border-radius: var(--scp-radius-sm);
+  transition: all var(--scp-transition-fast);
+}
+.scp-wizard-topic-delete:hover { color: var(--scp-error); background: var(--scp-error-light); }
+@media (max-width: 560px) {
+  .scp-wizard-topic-fields { grid-template-columns: 1fr; }
+}
+
+/* ─── Step 3 (series + assign) ─── */
+.scp-wizard-series-list {
+  display: flex; flex-direction: column; gap: var(--scp-space-3);
+  margin-bottom: var(--scp-space-6);
+}
+.scp-wizard-series-card {
+  display: flex; align-items: center; gap: var(--scp-space-3);
+  background: var(--scp-bg-primary);
+  border: 1px solid var(--scp-border-light);
+  border-left: 4px solid var(--scp-primary);
+  border-radius: var(--scp-radius-md);
+  padding: var(--scp-space-3);
+}
+.scp-wizard-series-fields {
+  flex: 1; display: grid; grid-template-columns: minmax(160px, 1fr) 2fr;
+  gap: var(--scp-space-2); min-width: 0;
+}
+.scp-wizard-series-fields .scp-input { padding: 8px 10px; font-size: var(--scp-font-size-sm); }
+.scp-wizard-assign-section h3 {
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-lg);
+  margin: 0 0 var(--scp-space-3);
+  color: var(--scp-text-primary);
+}
+.scp-wizard-assign-list { display: flex; flex-direction: column; gap: var(--scp-space-2); }
+.scp-wizard-assign-row {
+  display: grid; grid-template-columns: 12px 1fr 200px; align-items: center;
+  gap: var(--scp-space-3);
+  padding: var(--scp-space-2) var(--scp-space-3);
+  border: 1px solid var(--scp-border-light); border-radius: var(--scp-radius-md);
+}
+.scp-wizard-assign-dot {
+  width: 12px; height: 12px; border-radius: var(--scp-radius-full);
+}
+.scp-wizard-assign-name {
+  font-weight: 500; color: var(--scp-text-primary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.scp-wizard-assign-row .scp-select { padding: 6px 10px; font-size: var(--scp-font-size-sm); }
+@media (max-width: 560px) {
+  .scp-wizard-series-fields { grid-template-columns: 1fr; }
+  .scp-wizard-assign-row { grid-template-columns: 12px 1fr; }
+  .scp-wizard-assign-row .scp-select { grid-column: 1 / -1; }
+}
+
+/* ─── Step 4 (tone) ─── */
+.scp-wizard-tone-suggestion {
+  background: var(--scp-primary-subtle);
+  border: 1px solid var(--scp-primary-light);
+  border-radius: var(--scp-radius-md);
+  padding: var(--scp-space-3) var(--scp-space-4);
+  margin-bottom: var(--scp-space-4);
+}
+.scp-wizard-tone-suggestion-label {
+  font-size: var(--scp-font-size-xs); color: var(--scp-primary);
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+  margin-bottom: var(--scp-space-1);
+}
+.scp-wizard-tone-suggestion-text {
+  font-size: var(--scp-font-size-md); color: var(--scp-text-primary);
+}
+.scp-wizard-tone-suggestion-text span {
+  color: var(--scp-text-secondary); font-weight: 400;
+}
+.scp-wizard-tone-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--scp-space-3);
+}
+.scp-wizard-tone-card {
+  text-align: left; cursor: pointer;
+  padding: var(--scp-space-4);
+  background: var(--scp-bg-primary);
+  border: 2px solid var(--scp-border-light);
+  border-radius: var(--scp-radius-md);
+  font-family: inherit;
+  transition: all var(--scp-transition-fast);
+}
+.scp-wizard-tone-card:hover { border-color: var(--scp-border-dark); transform: translateY(-1px); }
+.scp-wizard-tone-active {
+  border-color: var(--scp-primary);
+  background: var(--scp-primary-subtle);
+  box-shadow: var(--scp-shadow-glow);
+}
+.scp-wizard-tone-name {
+  font-weight: 700; color: var(--scp-text-primary);
+  margin-bottom: var(--scp-space-1);
+}
+.scp-wizard-tone-desc {
+  font-size: var(--scp-font-size-sm); color: var(--scp-text-secondary);
+  line-height: 1.5;
+}
+
+/* ─── Step 5 (review + posts) ─── */
+.scp-wizard-summary {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--scp-space-3);
+  margin-bottom: var(--scp-space-6);
+}
+.scp-wizard-summary-item {
+  display: flex; align-items: center; gap: var(--scp-space-3);
+  padding: var(--scp-space-3);
+  background: var(--scp-bg-secondary);
+  border-radius: var(--scp-radius-md);
+}
+.scp-wizard-summary-icon {
+  width: 32px; height: 32px; border-radius: var(--scp-radius-full);
+  background: var(--scp-primary-light); color: var(--scp-primary);
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.scp-wizard-summary-label {
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
+  text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600;
+}
+.scp-wizard-summary-value {
+  font-size: var(--scp-font-size-sm); color: var(--scp-text-primary);
+  font-weight: 500;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.scp-wizard-posts-section {}
+.scp-wizard-posts-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: var(--scp-space-3);
+}
+.scp-wizard-posts-header h3 {
+  margin: 0; font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-lg); color: var(--scp-text-primary);
+}
+.scp-wizard-posts-count {
+  display: inline-block;
+  background: var(--scp-gray-100); color: var(--scp-text-secondary);
+  font-size: var(--scp-font-size-xs); font-weight: 700;
+  padding: 1px 8px; border-radius: var(--scp-radius-full);
+  margin-left: var(--scp-space-2);
+}
+.scp-wizard-posts-list {
+  display: flex; flex-direction: column; gap: var(--scp-space-3);
+}
+.scp-wizard-post-card {
+  background: var(--scp-bg-primary);
+  border: 1px solid var(--scp-border-light);
+  border-radius: var(--scp-radius-md);
+  padding: var(--scp-space-3);
+}
+.scp-wizard-post-head {
+  display: flex; gap: var(--scp-space-2); align-items: center;
+  margin-bottom: var(--scp-space-2);
+}
+.scp-wizard-post-head .scp-input {
+  flex: 1; padding: 8px 10px; font-size: var(--scp-font-size-sm); font-weight: 500;
+}
+.scp-wizard-post-card .scp-textarea {
+  width: 100%; padding: 8px 10px; font-size: var(--scp-font-size-sm);
+  margin-bottom: var(--scp-space-2);
+}
+.scp-wizard-post-meta {
+  display: flex; flex-wrap: wrap; gap: var(--scp-space-2);
+  align-items: center; font-size: var(--scp-font-size-xs);
+}
+.scp-wizard-post-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: var(--scp-radius-full);
+  border: 1px solid; font-weight: 500;
+}
+.scp-wizard-post-type {
+  color: var(--scp-text-tertiary); text-transform: uppercase;
+  font-weight: 700; letter-spacing: 0.04em;
+}

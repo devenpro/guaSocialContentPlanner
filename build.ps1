@@ -53,7 +53,8 @@ $jsFiles = @(
     'src/ai/actions/visual.js',
     'src/ai/actions/platform.js',
     'src/ai/scp-part2b.js',
-    'src/setup/scp-wizard.js'
+    'src/setup/scp-wizard.js',
+    'src/setup/scp-wizard-steps.js'
 )
 
 $cssFiles = @(
