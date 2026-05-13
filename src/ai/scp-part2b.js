@@ -205,177 +205,20 @@
   var BrandService = window.BrandService;
 
   // ============================================================
-  // SECTION 4: AI RESPONSE PARSING
+  // SECTIONS 4-6: AI HELPERS + RESEARCH ACTIONS — extracted (v0.1.4)
+  //   4   AI Response Parsing       -> src/ai/_helpers.js
+  //   5   Brand Prompt Helpers      -> src/ai/_helpers.js
+  //   5.5 AI Retry Wrapper          -> src/ai/_helpers.js
+  //   5.6 AI Button Loading State   -> src/ai/_helpers.js
+  //   6   Research Actions          -> src/ai/actions/research.js
   // ============================================================
-
-  function parseJSON(text) {
-    if (!text || !text.trim()) throw new Error('Empty AI response');
-    try { return JSON.parse(text); } catch(e) {}
-    var cleaned = text.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim();
-    try { return JSON.parse(cleaned); } catch(e) {}
-    var objStr = extractBraceBlock(cleaned, '{', '}');
-    if (objStr) { try { return JSON.parse(objStr); } catch(e) {} }
-    var arrStr = extractBraceBlock(cleaned, '[', ']');
-    if (arrStr) { try { return JSON.parse(arrStr); } catch(e) {} }
-    if (objStr) { var relaxed = objStr.replace(/,\s*([}\]])/g, '$1'); try { return JSON.parse(relaxed); } catch(e) {} }
-    throw new Error('Could not parse AI response as JSON');
-  }
-
-  function extractBraceBlock(text, openChar, closeChar) {
-    var start = text.indexOf(openChar); if (start === -1) return null;
-    var depth = 0, inStr = false, escaped = false;
-    for (var i = start; i < text.length; i++) {
-      var ch = text[i];
-      if (escaped) { escaped = false; continue; }
-      if (ch === '\\') { escaped = true; continue; }
-      if (ch === '"') { inStr = !inStr; continue; }
-      if (inStr) continue;
-      if (ch === openChar) depth++;
-      if (ch === closeChar) { depth--; if (depth === 0) return text.substring(start, i + 1); }
-    }
-    return null;
-  }
-
-  // ============================================================
-  // SECTION 5: BRAND PROMPT HELPERS
-  // ============================================================
-
-  function brandSnippet(type) {
-    if (!BrandService.isConfigured()) return '';
-    var lines = [], core = BrandService.getCore(), aud = BrandService.getAudience();
-    if (type === 'research' || type === 'angles') {
-      if (aud.primary) lines.push('Target audience: ' + aud.primary);
-      if (aud.pain_points) lines.push('Their pain points: ' + (Array.isArray(aud.pain_points) ? aud.pain_points.join('; ') : aud.pain_points));
-      if (core.brand_voice) lines.push('Brand voice: ' + core.brand_voice);
-      var seo = BrandService.getSeo();
-      if (seo.content_gaps) lines.push('Content gaps to exploit: ' + (Array.isArray(seo.content_gaps) ? seo.content_gaps.join(', ') : seo.content_gaps));
-    }
-    if (type === 'hooks') {
-      if (aud.primary) lines.push('Audience: ' + aud.primary);
-      if (core.brand_voice) lines.push('Voice: ' + core.brand_voice);
-      var fw = BrandService.getForbiddenWords();
-      if (fw.length) lines.push('NEVER use: ' + fw.join(', '));
-      var dos = BrandService.getDos();
-      if (dos.length) lines.push('Hook style should: ' + dos.slice(0, 3).join('; '));
-    }
-    if (type === 'content' || type === 'platform') {
-      var cnt = BrandService.getContent();
-      if (cnt.writing_style) lines.push('Writing style: ' + cnt.writing_style);
-      if (cnt.sentence_rules) lines.push('Sentence rules: ' + (Array.isArray(cnt.sentence_rules) ? cnt.sentence_rules.join('; ') : cnt.sentence_rules));
-      if (cnt.cta_style) lines.push('CTA style: ' + cnt.cta_style);
-      if (core.forbidden_words && core.forbidden_words.length) lines.push('NEVER use: ' + core.forbidden_words.join(', '));
-    }
-    if (type === 'media') {
-      var bdPrompt = BrandService.getBrandDesignPrompt();
-      if (bdPrompt) return '\n\n' + bdPrompt;
-      if (core.brand_name) lines.push('Brand: ' + core.brand_name);
-    }
-    return lines.length ? '\n\nBrand context:\n' + lines.join('\n') : '';
-  }
-
-  // ============================================================
-  // SECTION 5.5: AI RETRY WRAPPER
-  // ============================================================
-
-  function callAIWithRetry(prompt, onSuccess, onError, actionId, systemPrompt) {
-    LLMService.callAI(prompt, function(text) {
-      try {
-        onSuccess(text);
-      } catch(e) {
-        console.warn('[SCP] AI response parse failed, retrying with stricter instructions:', e.message);
-        // Retry once with stricter JSON instructions
-        var retryPrompt = prompt + '\n\nCRITICAL: Your previous response was not valid JSON. Respond with ONLY a valid JSON object. No markdown, no code fences, no explanations before or after. Just pure JSON.';
-        toast('Retrying with stricter instructions...', 'info');
-        LLMService.callAI(retryPrompt, function(text2) {
-          try {
-            onSuccess(text2);
-          } catch(e2) {
-            console.error('[SCP] AI retry also failed:', e2.message);
-            toast('AI response format error: ' + e2.message + '. Try a different AI model.', 'error');
-            if (onError) onError('Parse error after retry: ' + e2.message);
-          }
-        }, function(err) {
-          if (onError) onError(err);
-        }, actionId, systemPrompt);
-      }
-    }, function(err) {
-      if (onError) onError(err);
-    }, actionId, systemPrompt);
-  }
-
-  // ============================================================
-  // SECTION 5.6: AI BUTTON LOADING STATE MANAGEMENT
-  // ============================================================
-
-  /**
-   * Sets an AI button to loading state. Returns a restore function.
-   */
-  function aiActionLoading(actionName) {
-    var $btns = $('[data-action="' + actionName + '"]');
-    var origData = [];
-    $btns.each(function() {
-      origData.push({ el: this, html: $(this).html(), disabled: $(this).prop('disabled') });
-      $(this).prop('disabled', true).addClass('scp-btn-loading').html(icon('spinner') + ' Working...');
-    });
-    return function() {
-      for (var i = 0; i < origData.length; i++) {
-        $(origData[i].el).prop('disabled', origData[i].disabled).removeClass('scp-btn-loading').html(origData[i].html);
-      }
-    };
-  }
-
-  // ============================================================
-  // SECTION 6: AI ACTIONS — RESEARCH (Angles, Hooks)
-  // ============================================================
-
-  function aiResearchAngles(postId, customInput) {
-    var post = S.postMap[postId]; if (!post) return;
-    if (!LLMService.isConfigured()) { toast('No AI providers configured', 'warning'); return; }
-    var done = aiActionLoading('ai-research-angles');
-    toast('Researching angles...', 'info');
-    var toneObj = resolveTone(post.content.tone_id);
-    var audObj = resolveAudience(post.content.audience_id);
-    var prompt = 'You are a senior social media strategist analyzing content angles. Generate 4 unique, differentiated content angles for this post.\n\nContext:\n- Title: ' + esc(post.title || 'Untitled') + '\n- Post type: ' + (Constants.POST_TYPES[post.type] || {}).label + '\n- Platforms: ' + (post.platforms || []).join(', ') + '\n';
-    if (toneObj) prompt += '- Tone: ' + toneObj.name + ' (' + (toneObj.description || '') + ')\n';
-    if (audObj) prompt += '- Target audience: ' + audObj.name + ' (' + (audObj.description || '') + ')\n';
-    if (customInput) prompt += '- User direction: ' + customInput + '\n';
-    prompt += brandSnippet('angles');
-    prompt += '\n\nRules:\n- Each angle must be DISTINCT — different perspective, not just rewording\n- Consider: contrarian takes, data-driven, storytelling, problem-solution, aspirational, educational\n- Think about what competing content misses or gets wrong\n- Each angle should suggest a clear emotional trigger\n\nFor each angle provide:\n- angle: short memorable name (2-4 words)\n- description: 2-3 sentences explaining the perspective and WHY it works for this audience\n\nRespond ONLY as JSON: {"angles":[{"angle":"...","description":"..."}]}';
-
-    callAIWithRetry(prompt, function(text) {
-      done();
-      var parsed = parseJSON(text);
-      post.research = post.research || { angles: [], hooks: [], selected_angle: '', selected_hook: '', notes: '' };
-      (parsed.angles || []).forEach(function(a) { post.research.angles.push({ id: generateId('ang'), angle: a.angle || '', description: a.description || '', selected: false }); });
-      post.updated = new Date().toISOString();
-      logActivity('angles_researched', post.id, post.title, (parsed.angles || []).length + ' angles generated');
-      snapshot('AI angles'); if (maybeAdvanceStatus) maybeAdvanceStatus(post, 'angles researched');
-      buildMaps(); render(); syncToTextarea(); toast('Generated ' + (parsed.angles || []).length + ' angles', 'success');
-    }, function(err) { done(); toast('AI Error: ' + err, 'error'); }, 'ai-research-angles', BrandService.getSystemPrompt('social'));
-  }
-
-  function aiResearchHooks(postId, customInput) {
-    var post = S.postMap[postId]; if (!post) return;
-    if (!LLMService.isConfigured()) { toast('No AI providers configured', 'warning'); return; }
-    var doneHooks = aiActionLoading('ai-research-hooks');
-    var angle = (post.research && post.research.selected_angle) || '';
-    if (!angle) { toast('Select an angle first', 'warning'); return; }
-    toast('Generating hooks...', 'info');
-    var prompt = 'You are a copywriting expert specializing in scroll-stopping social media hooks. Generate 5 opening hooks for this post.\n\nContext:\n- Title: ' + esc(post.title || '') + '\n- Chosen angle: ' + angle + '\n- Platforms: ' + (post.platforms || []).join(', ') + '\n';
-    if (customInput) prompt += '- User direction: ' + customInput + '\n';
-    prompt += brandSnippet('hooks');
-    prompt += '\n\nRules:\n- Each hook MUST stop the scroll in under 2 seconds of reading\n- Use different hook psychology types across the 5:\n  1. Question hook (provocative question)\n  2. Bold claim / contrarian statement\n  3. Story/curiosity hook ("I was wrong about...")\n  4. Data/statistic hook (specific number)\n  5. Direct address ("If you [specific situation]...")\n- Keep each hook under 15 words\n- No generic openers like "In today\'s world" or "Have you ever wondered"\n\nRespond ONLY as JSON: {"hooks":[{"hook":"...","type":"question|bold|story|data|direct"}]}';
-
-    callAIWithRetry(prompt, function(text) {
-      doneHooks();
-      var parsed = parseJSON(text);
-      post.research = post.research || { angles: [], hooks: [], selected_angle: '', selected_hook: '', notes: '' };
-      (parsed.hooks || []).forEach(function(h) { post.research.hooks.push({ id: generateId('hk'), hook: h.hook || h.text || '', type: h.type || '', selected: false }); });
-      post.updated = new Date().toISOString();
-      logActivity('hooks_researched', post.id, post.title, (parsed.hooks || []).length + ' hooks generated');
-      snapshot('AI hooks'); buildMaps(); render(); syncToTextarea(); toast('Generated ' + (parsed.hooks || []).length + ' hooks', 'success');
-    }, function(err) { doneHooks(); toast('AI Error: ' + err, 'error'); }, 'ai-research-hooks', BrandService.getSystemPrompt('social'));
-  }
+  var parseJSON         = window._scpAIHelpers.parseJSON;
+  var extractBraceBlock = window._scpAIHelpers.extractBraceBlock;
+  var brandSnippet      = window._scpAIHelpers.brandSnippet;
+  var callAIWithRetry   = window._scpAIHelpers.callAIWithRetry;
+  var aiActionLoading   = window._scpAIHelpers.aiActionLoading;
+  var aiResearchAngles  = window._scpAIActions.research.angles;
+  var aiResearchHooks   = window._scpAIActions.research.hooks;
 
   // ============================================================
   // SECTION 7: AI ACTIONS — CONTENT
@@ -880,66 +723,10 @@
   }
 
   // ============================================================
-  // SECTION 9: AI ACTIONS — PLATFORM ADAPTATION
+  // SECTION 9: AI ACTIONS — PLATFORM ADAPTATION — extracted (v0.1.4)
+  //   -> src/ai/actions/platform.js
   // ============================================================
-
-  function aiAdaptForPlatform(postId, platformKey) {
-    var post = S.postMap[postId]; if (!post) return;
-    if (!LLMService.isConfigured()) { toast('No AI providers configured', 'warning'); return; }
-    if (!post.content || !post.content.body) { toast('Write master content first', 'warning'); return; }
-    var plCfg = Constants.PLATFORMS[platformKey]; if (!plCfg) return;
-    var platSettings = getPlatformConfig(platformKey);
-    var done = aiActionLoading('ai-adapt-platform');
-    toast('Adapting for ' + plCfg.label + '...', 'info');
-
-    if (platformKey === 'youtube') {
-      var prompt = 'You are a YouTube Shorts optimization expert. Create YouTube metadata for this content.\n\nOriginal post:\n---\n' + truncate(post.content.body, 500) + '\n---\n';
-      prompt += brandSnippet('platform');
-      prompt += '\n\nRequirements:\n- title: Compelling, keyword-rich, under 100 chars. Use power words.\n- description: SEO-optimized, 150-300 chars. Include 1-2 relevant keywords naturally.\n- tags: 8-12 relevant search tags, mix broad and specific\n\nRespond ONLY as JSON: {"title":"...","description":"...","tags":["..."]}';
-
-      callAIWithRetry(prompt, function(text) {
-        done();
-        var parsed = parseJSON(text);
-        post.platform_content = post.platform_content || {};
-        post.platform_content.youtube = { enabled: true, title: parsed.title || '', description: parsed.description || '', tags: parsed.tags || [], notes: '' };
-        post.updated = new Date().toISOString();
-        logActivity('platform_adapted', post.id, post.title, 'Adapted for YouTube');
-        snapshot('AI adapt YT'); if (maybeAdvanceStatus) maybeAdvanceStatus(post, 'YouTube adapted');
-        buildMaps(); render(); syncToTextarea(); toast('YouTube content ready!', 'success');
-      }, function(err) { done(); toast('AI Error: ' + err, 'error'); }, 'ai-adapt-platform');
-    } else {
-      var charLimit = platSettings.char_limit || 3000;
-      var hashtagLimit = platSettings.hashtag_limit || 5;
-
-      // Platform-specific formatting instructions
-      var platRules = '';
-      if (platformKey === 'linkedin') {
-        platRules = '- Professional tone, thought-leadership positioning\n- Use line breaks after every 1-2 sentences for scanability\n- Strong hook in FIRST LINE — this shows before "see more"\n- Use bullet points or numbered lists for key points\n- CTA should feel conversational, not salesy\n- 3-5 hashtags at the very end, on their own line\n- No emojis in first line, sparingly elsewhere\n';
-      } else if (platformKey === 'instagram') {
-        platRules = '- Emoji-friendly, punchy, visual-first language\n- Hook must work in 125-char preview (before "more")\n- Use short paragraphs separated by line breaks\n- Storytelling tone — personal, relatable\n- CTA: encourage saves, shares, comments with specific prompts\n- Put most hashtags at end (20-30 is fine) or in first comment\n- Use relevant emojis as visual anchors, not decoration\n';
-      } else if (platformKey === 'facebook') {
-        platRules = '- Conversational, community-focused tone\n- Ask questions to drive comments\n- Keep under 250 chars for optimal engagement (though limit is higher)\n- Shareable format — would someone tag a friend?\n- 1-3 hashtags maximum, or none\n- Emojis OK but don\'t overdo\n';
-      }
-
-      var prompt2 = 'You are a ' + plCfg.label + ' content specialist. Adapt this post for ' + plCfg.label + '.\n\nOriginal master content:\n---\n' + post.content.body + '\n---\n';
-      prompt2 += brandSnippet('platform');
-      prompt2 += '\n\n' + plCfg.label + ' formatting rules:\n' + platRules;
-      prompt2 += '- Maximum ' + charLimit + ' characters\n- Up to ' + hashtagLimit + ' hashtags\n';
-      prompt2 += '\nOutput ONLY the adapted post as plain text. Ready to copy-paste and publish. No JSON, no explanations.';
-
-      LLMService.callAI(prompt2, function(text) {
-        done();
-        post.platform_content = post.platform_content || {};
-        post.platform_content[platformKey] = post.platform_content[platformKey] || {};
-        post.platform_content[platformKey].body = cleanAIText ? cleanAIText(text) : text.trim();
-        post.platform_content[platformKey].enabled = true;
-        post.updated = new Date().toISOString();
-        logActivity('platform_adapted', post.id, post.title, 'Adapted for ' + plCfg.label);
-        snapshot('AI adapt ' + platformKey); if (maybeAdvanceStatus) maybeAdvanceStatus(post, platformKey + ' adapted');
-        buildMaps(); render(); syncToTextarea(); toast(plCfg.label + ' content ready!', 'success');
-      }, function(err) { done(); toast('AI Error: ' + err, 'error'); }, 'ai-adapt-platform', BrandService.getSystemPrompt('platform'));
-    }
-  }
+  var aiAdaptForPlatform = window._scpAIActions.platform.adapt;
 
   // ============================================================
   // SECTION 10: GLOBAL RESEARCH VIEW
