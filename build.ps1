@@ -22,6 +22,7 @@ $jsFiles = @(
     'src/core/scp-part1.js',
     'src/editing/scp-part2a.js',
     'src/ai/brand-service.js',
+    'src/ai/llm-service.js',
     'src/ai/scp-part2b.js'
 )
 

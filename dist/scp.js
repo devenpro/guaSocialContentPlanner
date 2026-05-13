@@ -4499,196 +4499,21 @@
 })(jQuery);
 
 
-/* ----- src/ai/scp-part2b.js ----- */
+/* ----- src/ai/llm-service.js ----- */
 
 /**
- * Social Content Planner v1.0 - Part 2B: AI & Advanced Features
- *
- * Multi-provider AI (LLMService), brand context (BrandService),
- * global research workspace (quick + advanced modes),
- * 12 AI action functions, settings (6 tabs), config CRUD, import/export.
- *
- * Registry: researchView, setupResearchEvents, settingsView, setupSettingsEvents
- *
- * Sections:
- *  1. Init & imports
- *  2. LLMService (multi-provider AI management)
- *  3. BrandService (brand context from Drupal divs)
- *  4. AI response parsing
- *  5. Brand prompt helpers
- *  6. AI actions â€” Research (angles, hooks)
- *  7. AI actions â€” Content (write, improve, slides, script)
- *  8. AI actions â€” Media prompts
- *  9. AI actions â€” Platform adaptation
- * 10. Global research view (quick + advanced)
- * 11. Settings view (6 tabs)
- * 12. Config CRUD (tones, audiences, image styles, research templates)
- * 13. Import/export
- * 14. Events & keyboard shortcuts
- * 15. API exports
- *
- * @version 1.0.0
+ * @category    ai
+ * @purpose     Multi-provider LLM service: provider/model discovery from Drupal
+ *              divs, per-action preference persistence, unified callAI() wrapper
+ *              over 8 chat-completion endpoints, inline picker UI, connection test.
+ * @exports     window.LLMService
+ * @depends-on  window._scpState (S), window._scpEsc, window._scpIcon,
+ *              window._scpDeepClone, window._scpSyncToTextarea, window._scpRender,
+ *              window._scpUpdateAIStatusIndicator, jQuery
+ * @extracted-from  src/ai/scp-part2b.js (was SECTION 2, lines 191â€“546 of v0.1.1)
  */
-(function($, Drupal) {
+(function($) {
   'use strict';
-
-  // ============================================================
-  // SECTION 1: INIT & IMPORTS
-  // ============================================================
-
-  var S, render, navigate, toast, generateId, buildMaps, syncToTextarea, esc, deepClone, icon;
-  var formatDate, formatRelativeTime, formatNumber, truncate, logActivity, countWords, countChars;
-  var formatCharCount, badge, statusBadge, typeBadge, priorityBadge, platformBadge, progressBar;
-  var Constants, maybeAdvanceStatus, resolveTag, resolveTone, resolveAudience, resolveImageStyle;
-  var getPlatformConfig, cleanAIText;
-  var snapshot, openModal, closeModal, openConfirmDialog, closeConfirmDialog, collectModalFields;
-  var promoteResearchIdea;
-
-  var _checkCount = 0;
-  var checkInterval = setInterval(function() {
-    _checkCount++;
-    if (window._scpPart2A && window._scpState && window._scpState.initialized) { clearInterval(checkInterval); initPart2B(); }
-    else if (_checkCount > 150) { clearInterval(checkInterval); console.error('[SCP] Part 2B: Timed out'); }
-  }, 100);
-
-  function initPart2B() {
-    try {
-    console.log('[SCP] Initializing Part 2B...');
-    S = window._scpState; render = window._scpRender; navigate = window._scpNavigate;
-    toast = window._scpToast; generateId = window._scpGenerateId; buildMaps = window._scpBuildMaps;
-    syncToTextarea = window._scpSyncToTextarea; esc = window._scpEsc; deepClone = window._scpDeepClone;
-    icon = window._scpIcon; formatDate = window._scpFormatDate; formatRelativeTime = window._scpFormatRelativeTime;
-    formatNumber = window._scpFormatNumber; truncate = window._scpTruncate; logActivity = window._scpLogActivity;
-    countWords = window._scpCountWords; countChars = window._scpCountChars;
-    formatCharCount = window._scpFormatCharCount; badge = window._scpBadge;
-    statusBadge = window._scpStatusBadge; typeBadge = window._scpTypeBadge;
-    priorityBadge = window._scpPriorityBadge; platformBadge = window._scpPlatformBadge;
-    progressBar = window._scpProgressBar; Constants = window._scpConstants;
-    maybeAdvanceStatus = window._scpMaybeAdvanceStatus;
-    resolveTag = window._scpResolveTag; resolveTone = window._scpResolveTone;
-    resolveAudience = window._scpResolveAudience; resolveImageStyle = window._scpResolveImageStyle;
-    getPlatformConfig = window._scpGetPlatformConfig;
-    cleanAIText = window._scpCleanAIText;
-
-    // Verify critical imports
-    if (!S) { console.error('[SCP] Part 2B: State not available'); return; }
-    if (!render) { console.error('[SCP] Part 2B: render not available'); return; }
-    if (!icon) { console.error('[SCP] Part 2B: icon not available'); return; }
-
-    var P2A = window._scpPart2A;
-    if (!P2A) { console.error('[SCP] Part 2B: Part 2A exports not found'); return; }
-    snapshot = P2A.snapshot; openModal = P2A.openModal; closeModal = P2A.closeModal;
-    openConfirmDialog = P2A.openConfirmDialog; closeConfirmDialog = P2A.closeConfirmDialog;
-    collectModalFields = P2A.collectModalFields;
-    promoteResearchIdea = P2A.promoteResearchIdea;
-
-    var R = window._scpRenderers = window._scpRenderers || {};
-    R.researchView = renderResearchView;
-    R.setupResearchEvents = setupResearchEvents;
-    R.settingsView = renderSettingsView;
-    R.setupSettingsEvents = setupSettingsEvents;
-    R.imagesView = renderImagesView;
-    R.setupImagesEvents = setupImagesEvents;
-    R.imagePicker = renderImagePicker;
-
-    // Register AIO inline edit save callback â€” wires structured output edits back to post data
-    window._scpAIOSaveField = function(postId, path, value) {
-      var post = S.postMap[postId]; if (!post) return;
-      // Path format: "aio_xxx.section_key.field_key" or "aio_xxx_sN.section_key.field_key"
-      // We need to resolve which data field this maps to
-
-      var $aio = $('[data-aio-id]').filter(function() {
-        return path.indexOf($(this).data('aio-id')) === 0;
-      }).first();
-      if (!$aio.length) { post.updated = new Date().toISOString(); syncToTextarea(); return; }
-
-      var schemaId = $aio.data('schema');
-      var oid = $aio.data('aio-id');
-      // Strip the output ID prefix from the path
-      var relativePath = path.replace(new RegExp('^' + oid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[._]?'), '');
-      if (!relativePath) { post.updated = new Date().toISOString(); syncToTextarea(); return; }
-
-      // Determine where to save based on schema
-      var target = null;
-      if (schemaId === 'image_visual_plan') {
-        post.media = post.media || {};
-        post.media.visual_plan = post.media.visual_plan || {};
-        target = post.media.visual_plan;
-      } else if (schemaId === 'video_script') {
-        post.video = post.video || {};
-        post.video.structured_script = post.video.structured_script || {};
-        target = post.video.structured_script;
-      } else if (schemaId === 'carousel_visual_plan') {
-        post.media = post.media || {};
-        post.media.visual_plans = post.media.visual_plans || [];
-        // For carousel, the path includes sequence index: "s0.visual_concept.scene"
-        var seqMatch = relativePath.match(/^s(\d+)\.(.*)/);
-        if (seqMatch) {
-          var seqIdx = parseInt(seqMatch[1], 10);
-          while (post.media.visual_plans.length <= seqIdx) post.media.visual_plans.push({});
-          target = post.media.visual_plans[seqIdx];
-          relativePath = seqMatch[2];
-        } else {
-          post.updated = new Date().toISOString(); syncToTextarea(); return;
-        }
-      }
-
-      if (target && relativePath) {
-        // Set value at the relative path within the target object
-        var parts = relativePath.split('.');
-        var obj = target;
-        for (var i = 0; i < parts.length - 1; i++) {
-          var part = parts[i];
-          if (/^\d+$/.test(part)) {
-            var arrIdx = parseInt(part, 10);
-            if (!Array.isArray(obj)) break;
-            while (obj.length <= arrIdx) obj.push({});
-            obj = obj[arrIdx];
-          } else {
-            obj[part] = obj[part] || {};
-            obj = obj[part];
-          }
-        }
-        var lastKey = parts[parts.length - 1];
-        if (/^\d+$/.test(lastKey)) {
-          // Numeric last key â†’ array item (shouldn't happen for field edits but handle it)
-        } else {
-          obj[lastKey] = value;
-        }
-      }
-      post.updated = new Date().toISOString();
-      syncToTextarea();
-    };
-
-    setupPart2BEvents(); setupKeyboardShortcuts();
-    LLMService.init();
-    try { BrandService.init(); BrandService.autoPopulateBrandDesign(); } catch (e) { console.error('[SCP] BrandService init error:', e); }
-
-    // Replace any AI picker loading placeholders from Part 2A's first render
-    $('.scp-ai-picker-loading').each(function() {
-      try {
-        var actionId = $(this).data('pending-action');
-        if (actionId) $(this).replaceWith(LLMService.renderInlinePicker(actionId));
-      } catch(pe) {
-        console.warn('[SCP] Failed to replace AI picker placeholder:', pe.message);
-        $(this).html(icon('warning') + ' AI');
-      }
-    });
-
-    // Update AI status indicator in header
-    updateAIStatusIndicator();
-
-    // Clear Part 1's timeout flag since we loaded successfully
-    S._part2bTimeout = false;
-
-    if (render) render();
-    console.log('[SCP] Part 2B initialized â€” renderers: research, settings, images');
-    } catch(e) {
-      console.error('[SCP] Part 2B init FAILED:', e.message, e.stack);
-      // Still try to show what we can
-      if (window._scpToast) window._scpToast('Part 2B init error: ' + e.message, 'error');
-    }
-  }
 
   // ============================================================
   // SECTION 2: LLMService
@@ -4705,10 +4530,27 @@
     'openrouter': 'https://openrouter.ai/api/v1/chat/completions'
   };
 
-  var LLMService = (function() {
+  window.LLMService = (function() {
+    // Helpers resolved lazily at first init() â€” all defined in core/scp-part1.js
+    // (esc, icon, deepClone, syncToTextarea, render) or in scp-part2b.js
+    // (updateAIStatusIndicator). Lazy resolution lets this file load before
+    // scp-part2b.js while still picking up its updateAIStatusIndicator.
+    var S, esc, icon, deepClone, syncToTextarea, render, updateAIStatusIndicator;
+
+    function _resolveHelpers() {
+      S = window._scpState;
+      esc = window._scpEsc;
+      icon = window._scpIcon;
+      deepClone = window._scpDeepClone;
+      syncToTextarea = window._scpSyncToTextarea;
+      render = window._scpRender;
+      updateAIStatusIndicator = window._scpUpdateAIStatusIndicator || function() {};
+    }
+
     var _config = null, _providerMap = {}, _initialized = false;
 
     function init() {
+      _resolveHelpers();
       _config = null; _providerMap = {};
       var raw = null;
 
@@ -5047,6 +4889,208 @@
       rescanConfig: rescanConfig, testProvider: testProvider
     };
   })();
+
+})(jQuery);
+
+
+/* ----- src/ai/scp-part2b.js ----- */
+
+/**
+ * Social Content Planner v1.0 - Part 2B: AI & Advanced Features
+ *
+ * Multi-provider AI (LLMService), brand context (BrandService),
+ * global research workspace (quick + advanced modes),
+ * 12 AI action functions, settings (6 tabs), config CRUD, import/export.
+ *
+ * Registry: researchView, setupResearchEvents, settingsView, setupSettingsEvents
+ *
+ * Sections:
+ *  1. Init & imports
+ *  2. LLMService (multi-provider AI management)
+ *  3. BrandService (brand context from Drupal divs)
+ *  4. AI response parsing
+ *  5. Brand prompt helpers
+ *  6. AI actions â€” Research (angles, hooks)
+ *  7. AI actions â€” Content (write, improve, slides, script)
+ *  8. AI actions â€” Media prompts
+ *  9. AI actions â€” Platform adaptation
+ * 10. Global research view (quick + advanced)
+ * 11. Settings view (6 tabs)
+ * 12. Config CRUD (tones, audiences, image styles, research templates)
+ * 13. Import/export
+ * 14. Events & keyboard shortcuts
+ * 15. API exports
+ *
+ * @version 1.0.0
+ */
+(function($, Drupal) {
+  'use strict';
+
+  // ============================================================
+  // SECTION 1: INIT & IMPORTS
+  // ============================================================
+
+  var S, render, navigate, toast, generateId, buildMaps, syncToTextarea, esc, deepClone, icon;
+  var formatDate, formatRelativeTime, formatNumber, truncate, logActivity, countWords, countChars;
+  var formatCharCount, badge, statusBadge, typeBadge, priorityBadge, platformBadge, progressBar;
+  var Constants, maybeAdvanceStatus, resolveTag, resolveTone, resolveAudience, resolveImageStyle;
+  var getPlatformConfig, cleanAIText;
+  var snapshot, openModal, closeModal, openConfirmDialog, closeConfirmDialog, collectModalFields;
+  var promoteResearchIdea;
+
+  var _checkCount = 0;
+  var checkInterval = setInterval(function() {
+    _checkCount++;
+    if (window._scpPart2A && window._scpState && window._scpState.initialized) { clearInterval(checkInterval); initPart2B(); }
+    else if (_checkCount > 150) { clearInterval(checkInterval); console.error('[SCP] Part 2B: Timed out'); }
+  }, 100);
+
+  function initPart2B() {
+    try {
+    console.log('[SCP] Initializing Part 2B...');
+    S = window._scpState; render = window._scpRender; navigate = window._scpNavigate;
+    toast = window._scpToast; generateId = window._scpGenerateId; buildMaps = window._scpBuildMaps;
+    syncToTextarea = window._scpSyncToTextarea; esc = window._scpEsc; deepClone = window._scpDeepClone;
+    icon = window._scpIcon; formatDate = window._scpFormatDate; formatRelativeTime = window._scpFormatRelativeTime;
+    formatNumber = window._scpFormatNumber; truncate = window._scpTruncate; logActivity = window._scpLogActivity;
+    countWords = window._scpCountWords; countChars = window._scpCountChars;
+    formatCharCount = window._scpFormatCharCount; badge = window._scpBadge;
+    statusBadge = window._scpStatusBadge; typeBadge = window._scpTypeBadge;
+    priorityBadge = window._scpPriorityBadge; platformBadge = window._scpPlatformBadge;
+    progressBar = window._scpProgressBar; Constants = window._scpConstants;
+    maybeAdvanceStatus = window._scpMaybeAdvanceStatus;
+    resolveTag = window._scpResolveTag; resolveTone = window._scpResolveTone;
+    resolveAudience = window._scpResolveAudience; resolveImageStyle = window._scpResolveImageStyle;
+    getPlatformConfig = window._scpGetPlatformConfig;
+    cleanAIText = window._scpCleanAIText;
+
+    // Verify critical imports
+    if (!S) { console.error('[SCP] Part 2B: State not available'); return; }
+    if (!render) { console.error('[SCP] Part 2B: render not available'); return; }
+    if (!icon) { console.error('[SCP] Part 2B: icon not available'); return; }
+
+    var P2A = window._scpPart2A;
+    if (!P2A) { console.error('[SCP] Part 2B: Part 2A exports not found'); return; }
+    snapshot = P2A.snapshot; openModal = P2A.openModal; closeModal = P2A.closeModal;
+    openConfirmDialog = P2A.openConfirmDialog; closeConfirmDialog = P2A.closeConfirmDialog;
+    collectModalFields = P2A.collectModalFields;
+    promoteResearchIdea = P2A.promoteResearchIdea;
+
+    var R = window._scpRenderers = window._scpRenderers || {};
+    R.researchView = renderResearchView;
+    R.setupResearchEvents = setupResearchEvents;
+    R.settingsView = renderSettingsView;
+    R.setupSettingsEvents = setupSettingsEvents;
+    R.imagesView = renderImagesView;
+    R.setupImagesEvents = setupImagesEvents;
+    R.imagePicker = renderImagePicker;
+
+    // Register AIO inline edit save callback â€” wires structured output edits back to post data
+    window._scpAIOSaveField = function(postId, path, value) {
+      var post = S.postMap[postId]; if (!post) return;
+      // Path format: "aio_xxx.section_key.field_key" or "aio_xxx_sN.section_key.field_key"
+      // We need to resolve which data field this maps to
+
+      var $aio = $('[data-aio-id]').filter(function() {
+        return path.indexOf($(this).data('aio-id')) === 0;
+      }).first();
+      if (!$aio.length) { post.updated = new Date().toISOString(); syncToTextarea(); return; }
+
+      var schemaId = $aio.data('schema');
+      var oid = $aio.data('aio-id');
+      // Strip the output ID prefix from the path
+      var relativePath = path.replace(new RegExp('^' + oid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[._]?'), '');
+      if (!relativePath) { post.updated = new Date().toISOString(); syncToTextarea(); return; }
+
+      // Determine where to save based on schema
+      var target = null;
+      if (schemaId === 'image_visual_plan') {
+        post.media = post.media || {};
+        post.media.visual_plan = post.media.visual_plan || {};
+        target = post.media.visual_plan;
+      } else if (schemaId === 'video_script') {
+        post.video = post.video || {};
+        post.video.structured_script = post.video.structured_script || {};
+        target = post.video.structured_script;
+      } else if (schemaId === 'carousel_visual_plan') {
+        post.media = post.media || {};
+        post.media.visual_plans = post.media.visual_plans || [];
+        // For carousel, the path includes sequence index: "s0.visual_concept.scene"
+        var seqMatch = relativePath.match(/^s(\d+)\.(.*)/);
+        if (seqMatch) {
+          var seqIdx = parseInt(seqMatch[1], 10);
+          while (post.media.visual_plans.length <= seqIdx) post.media.visual_plans.push({});
+          target = post.media.visual_plans[seqIdx];
+          relativePath = seqMatch[2];
+        } else {
+          post.updated = new Date().toISOString(); syncToTextarea(); return;
+        }
+      }
+
+      if (target && relativePath) {
+        // Set value at the relative path within the target object
+        var parts = relativePath.split('.');
+        var obj = target;
+        for (var i = 0; i < parts.length - 1; i++) {
+          var part = parts[i];
+          if (/^\d+$/.test(part)) {
+            var arrIdx = parseInt(part, 10);
+            if (!Array.isArray(obj)) break;
+            while (obj.length <= arrIdx) obj.push({});
+            obj = obj[arrIdx];
+          } else {
+            obj[part] = obj[part] || {};
+            obj = obj[part];
+          }
+        }
+        var lastKey = parts[parts.length - 1];
+        if (/^\d+$/.test(lastKey)) {
+          // Numeric last key â†’ array item (shouldn't happen for field edits but handle it)
+        } else {
+          obj[lastKey] = value;
+        }
+      }
+      post.updated = new Date().toISOString();
+      syncToTextarea();
+    };
+
+    setupPart2BEvents(); setupKeyboardShortcuts();
+    LLMService.init();
+    try { BrandService.init(); BrandService.autoPopulateBrandDesign(); } catch (e) { console.error('[SCP] BrandService init error:', e); }
+
+    // Replace any AI picker loading placeholders from Part 2A's first render
+    $('.scp-ai-picker-loading').each(function() {
+      try {
+        var actionId = $(this).data('pending-action');
+        if (actionId) $(this).replaceWith(LLMService.renderInlinePicker(actionId));
+      } catch(pe) {
+        console.warn('[SCP] Failed to replace AI picker placeholder:', pe.message);
+        $(this).html(icon('warning') + ' AI');
+      }
+    });
+
+    // Update AI status indicator in header
+    updateAIStatusIndicator();
+
+    // Clear Part 1's timeout flag since we loaded successfully
+    S._part2bTimeout = false;
+
+    if (render) render();
+    console.log('[SCP] Part 2B initialized â€” renderers: research, settings, images');
+    } catch(e) {
+      console.error('[SCP] Part 2B init FAILED:', e.message, e.stack);
+      // Still try to show what we can
+      if (window._scpToast) window._scpToast('Part 2B init error: ' + e.message, 'error');
+    }
+  }
+
+  // ============================================================
+  // SECTION 2: LLMService  â€” extracted to src/ai/llm-service.js (v0.1.2)
+  // AI_ENDPOINTS + LLMService now live as `window.LLMService`. All references
+  // below resolve to that global via the local alias on the next line.
+  // ============================================================
+  var LLMService = window.LLMService;
+
 
   // ============================================================
   // SECTION 3: BrandService  â€” extracted to src/ai/brand-service.js (v0.1.1)
@@ -7320,6 +7364,10 @@
   // ============================================================
   // SECTION 15: API EXPORTS
   // ============================================================
+
+  // Expose updateAIStatusIndicator so the extracted llm-service.js can
+  // call it without reaching into part2b's IIFE closure.
+  window._scpUpdateAIStatusIndicator = updateAIStatusIndicator;
 
   window._scpPart2B = {
     // AI actions (called by Part 2A delegates)
