@@ -1,17 +1,17 @@
 /**
  * Social Content Planner v1.0 - Part 2A: Pipeline Editor & CRUD
  *
- * Modals, undo/redo, post/tag CRUD, 6 pipeline step renderers,
- * social composer component, tag input, inline editing.
+ * Modals, undo/redo, post/topic CRUD, 6 pipeline step renderers,
+ * social composer component, topic input, inline editing.
  *
  * Registry: step_basics, step_research, step_content, step_media,
- *   step_platforms, step_schedule, tagInput, socialComposer
+ *   step_platforms, step_schedule, topicInput, socialComposer
  *
  * Sections:
  *  1. Init & imports
  *  2. Modal system
  *  3. Undo/redo
- *  4. Post & tag CRUD
+ *  4. Post & topic CRUD
  *  5. Step 1: Basics renderer
  *  6. Step 2: Research renderer (angles + hooks)
  *  7. Step 3: Content renderer (social composer + carousel + video)
@@ -19,7 +19,7 @@
  *  9. Step 5: Platforms renderer
  * 10. Step 6: Schedule renderer
  * 11. Social composer component
- * 12. Tag input component
+ * 12. Topic input component
  * 13. Event handlers
  * 14. Data save helpers
  * 15. API exports
@@ -37,7 +37,7 @@
   var updateSaveStatus, esc, deepClone, icon, formatDate, formatRelativeTime;
   var truncate, statusBadge, typeBadge, priorityBadge, platformBadge, mediaPromptStatusBadge;
   var logActivity, countWords, countChars, formatCharCount, formatNumber;
-  var maybeAdvanceStatus, resolveTag, resolveTone, resolveAudience, resolveImageStyle;
+  var maybeAdvanceStatus, resolveTopic, resolveTone, resolveAudience, resolveImageStyle;
   var getPlatformConfig, progressBar, badge;
   var cleanAIText, formatContentForPreview, parsePromptSections;
   var Constants;
@@ -65,7 +65,7 @@
     logActivity = window._scpLogActivity; countWords = window._scpCountWords;
     countChars = window._scpCountChars; badge = window._scpBadge;
     maybeAdvanceStatus = window._scpMaybeAdvanceStatus;
-    resolveTag = window._scpResolveTag; resolveTone = window._scpResolveTone;
+    resolveTopic = window._scpResolveTopic; resolveTone = window._scpResolveTone;
     resolveAudience = window._scpResolveAudience; resolveImageStyle = window._scpResolveImageStyle;
     getPlatformConfig = window._scpGetPlatformConfig; progressBar = window._scpProgressBar;
     cleanAIText = window._scpCleanAIText; formatContentForPreview = window._scpFormatContentForPreview;
@@ -83,7 +83,7 @@
 
     // Register step renderers
     var R = window._scpRenderers = window._scpRenderers || {};
-    R.tagInput = renderTagInput;
+    R.topicInput = renderTopicInput;
     R.socialComposer = renderSocialComposer;
 
     setupPart2AEvents();
@@ -222,66 +222,65 @@
     }
   }
 
-  function openNewTagModal() {
+  function openNewTopicModal() {
     var colors = ['#1a73e8', '#7c3aed', '#0d904f', '#e37400', '#d93025', '#0891b2', '#059669', '#be123c'];
     var html = '<div class="scp-editor-form">';
-    html += '<div class="scp-form-group"><label>Tag Name</label><input type="text" class="scp-input" data-field="name" placeholder="e.g. Product Launch Q2"></div>';
-    html += '<div class="scp-form-group"><label>Description</label><input type="text" class="scp-input" data-field="description" placeholder="What this tag represents..."></div>';
+    html += '<div class="scp-form-group"><label>Topic Name</label><input type="text" class="scp-input" data-field="name" placeholder="e.g. Product Updates"></div>';
+    html += '<div class="scp-form-group"><label>Description</label><input type="text" class="scp-input" data-field="description" placeholder="What this topic represents..."></div>';
     html += '<div class="scp-form-group"><label>Color</label><div class="scp-color-picker">';
     for (var ci = 0; ci < colors.length; ci++) {
       html += '<button class="scp-color-swatch' + (ci === 0 ? ' scp-color-swatch-active' : '') + '" data-action="pick-color" data-color="' + colors[ci] + '" style="background:' + colors[ci] + '"></button>';
     }
     html += '<input type="hidden" data-field="color" value="' + colors[0] + '">';
     html += '</div></div></div>';
-    openModal('New Tag', html, {
-      saveLabel: 'Create Tag',
+    openModal('New Topic', html, {
+      saveLabel: 'Create Topic',
       onSave: function() {
         var fields = collectModalFields();
-        if (!fields.name || !fields.name.trim()) { toast('Tag name is required', 'warning'); return; }
-        var tag = { id: generateId('tag'), name: fields.name.trim(), color: fields.color || colors[0], description: fields.description || '', created: new Date().toISOString() };
-        S.data.tags = S.data.tags || [];
-        S.data.tags.push(tag);
-        logActivity('tag_created', '', '', 'Created tag: ' + tag.name);
-        snapshot('Create tag'); buildMaps(); closeModal(); render(); syncToTextarea(); toast('Tag "' + tag.name + '" created', 'success');
+        if (!fields.name || !fields.name.trim()) { toast('Topic name is required', 'warning'); return; }
+        var topic = { id: generateId('topic'), name: fields.name.trim(), color: fields.color || colors[0], description: fields.description || '', seriesId: '', created: new Date().toISOString() };
+        S.data.topics = S.data.topics || [];
+        S.data.topics.push(topic);
+        logActivity('topic_created', '', '', 'Created topic: ' + topic.name);
+        snapshot('Create topic'); buildMaps(); closeModal(); render(); syncToTextarea(); toast('Topic "' + topic.name + '" created', 'success');
       }
     });
   }
 
-  function editTagModal(tagId) {
-    var tag = S.tagMap[tagId]; if (!tag) return;
+  function editTopicModal(topicId) {
+    var topic = S.topicMap[topicId]; if (!topic) return;
     var colors = ['#1a73e8', '#7c3aed', '#0d904f', '#e37400', '#d93025', '#0891b2', '#059669', '#be123c'];
     var html = '<div class="scp-editor-form">';
-    html += '<div class="scp-form-group"><label>Tag Name</label><input type="text" class="scp-input" data-field="name" value="' + esc(tag.name) + '"></div>';
-    html += '<div class="scp-form-group"><label>Description</label><input type="text" class="scp-input" data-field="description" value="' + esc(tag.description || '') + '"></div>';
+    html += '<div class="scp-form-group"><label>Topic Name</label><input type="text" class="scp-input" data-field="name" value="' + esc(topic.name) + '"></div>';
+    html += '<div class="scp-form-group"><label>Description</label><input type="text" class="scp-input" data-field="description" value="' + esc(topic.description || '') + '"></div>';
     html += '<div class="scp-form-group"><label>Color</label><div class="scp-color-picker">';
     for (var ci = 0; ci < colors.length; ci++) {
-      html += '<button class="scp-color-swatch' + (tag.color === colors[ci] ? ' scp-color-swatch-active' : '') + '" data-action="pick-color" data-color="' + colors[ci] + '" style="background:' + colors[ci] + '"></button>';
+      html += '<button class="scp-color-swatch' + (topic.color === colors[ci] ? ' scp-color-swatch-active' : '') + '" data-action="pick-color" data-color="' + colors[ci] + '" style="background:' + colors[ci] + '"></button>';
     }
-    html += '<input type="hidden" data-field="color" value="' + esc(tag.color) + '">';
+    html += '<input type="hidden" data-field="color" value="' + esc(topic.color) + '">';
     html += '</div></div></div>';
-    openModal('Edit Tag', html, {
+    openModal('Edit Topic', html, {
       saveLabel: 'Save',
       onSave: function() {
         var fields = collectModalFields();
-        if (!fields.name || !fields.name.trim()) { toast('Tag name is required', 'warning'); return; }
-        tag.name = fields.name.trim(); tag.color = fields.color || tag.color; tag.description = fields.description || '';
-        logActivity('tag_updated', '', '', 'Updated tag: ' + tag.name);
-        snapshot('Edit tag'); buildMaps(); closeModal(); render(); syncToTextarea(); toast('Tag updated', 'success');
+        if (!fields.name || !fields.name.trim()) { toast('Topic name is required', 'warning'); return; }
+        topic.name = fields.name.trim(); topic.color = fields.color || topic.color; topic.description = fields.description || '';
+        logActivity('topic_updated', '', '', 'Updated topic: ' + topic.name);
+        snapshot('Edit topic'); buildMaps(); closeModal(); render(); syncToTextarea(); toast('Topic updated', 'success');
       }
     });
   }
 
-  function deleteTag(tagId) {
-    var tag = S.tagMap[tagId]; if (!tag) return;
+  function deleteTopic(topicId) {
+    var topic = S.topicMap[topicId]; if (!topic) return;
     openConfirmDialog({
-      title: 'Delete Tag', message: 'Delete "' + tag.name + '"? Posts will be untagged.', confirmLabel: 'Delete', danger: true,
+      title: 'Delete Topic', message: 'Delete "' + topic.name + '"? Posts will lose this topic.', confirmLabel: 'Delete', danger: true,
       onConfirm: function() {
-        S.data.tags = (S.data.tags || []).filter(function(t) { return t.id !== tagId; });
-        // Remove tag from all posts
-        (S.data.posts || []).forEach(function(p) { p.tags = (p.tags || []).filter(function(t) { return t !== tagId; }); });
-        if (S.selectedTagId === tagId) S.selectedTagId = null;
-        logActivity('tag_deleted', '', '', 'Deleted tag: ' + tag.name);
-        snapshot('Delete tag'); buildMaps(); render(); syncToTextarea(); toast('Tag deleted', 'success');
+        S.data.topics = (S.data.topics || []).filter(function(t) { return t.id !== topicId; });
+        (S.data.posts || []).forEach(function(p) { p.topics = (p.topics || []).filter(function(t) { return t !== topicId; }); });
+        if (S.selectedTopicId === topicId) S.selectedTopicId = null;
+        logActivity('topic_deleted', '', '', 'Deleted topic: ' + topic.name);
+        snapshot('Delete topic'); buildMaps(); render(); syncToTextarea(); toast('Topic deleted', 'success');
       }
     });
   }
@@ -370,25 +369,25 @@
   }
 
   // ============================================================
-  // SECTION 12: TAG INPUT COMPONENT
+  // SECTION 12: TOPIC INPUT COMPONENT
   // ============================================================
 
-  function renderTagInput(tagIds, postId) {
-    var html = '<div class="scp-tag-input" data-post-id="' + esc(postId || '') + '">';
-    html += '<div class="scp-tag-chips">';
-    for (var i = 0; i < tagIds.length; i++) {
-      var tag = resolveTag(tagIds[i]);
-      if (tag) {
-        html += '<span class="scp-tag-input-chip" style="background:' + tag.color + '15;color:' + tag.color + ';border-color:' + tag.color + '30">';
-        html += esc(tag.name) + ' <button class="scp-tag-remove" data-action="remove-post-tag" data-tag-id="' + esc(tag.id) + '" data-post-id="' + esc(postId) + '">&times;</button></span>';
+  function renderTopicInput(topicIds, postId) {
+    var html = '<div class="scp-topic-input" data-post-id="' + esc(postId || '') + '">';
+    html += '<div class="scp-topic-chips">';
+    for (var i = 0; i < topicIds.length; i++) {
+      var topic = resolveTopic(topicIds[i]);
+      if (topic) {
+        html += '<span class="scp-topic-input-chip" style="background:' + topic.color + '15;color:' + topic.color + ';border-color:' + topic.color + '30">';
+        html += esc(topic.name) + ' <button class="scp-topic-remove" data-action="remove-post-topic" data-topic-id="' + esc(topic.id) + '" data-post-id="' + esc(postId) + '">&times;</button></span>';
       }
     }
-    // Add tag dropdown
-    var availTags = (S.data.tags || []).filter(function(t) { return tagIds.indexOf(t.id) < 0; });
-    if (availTags.length > 0) {
-      html += '<select class="scp-select scp-select-sm scp-tag-add-select" data-post-id="' + esc(postId) + '">';
-      html += '<option value="">+ Add tag</option>';
-      for (var ai = 0; ai < availTags.length; ai++) html += '<option value="' + esc(availTags[ai].id) + '">' + esc(availTags[ai].name) + '</option>';
+    // Add topic dropdown
+    var availTopics = (S.data.topics || []).filter(function(t) { return topicIds.indexOf(t.id) < 0; });
+    if (availTopics.length > 0) {
+      html += '<select class="scp-select scp-select-sm scp-topic-add-select" data-post-id="' + esc(postId) + '">';
+      html += '<option value="">+ Add topic</option>';
+      for (var ai = 0; ai < availTopics.length; ai++) html += '<option value="' + esc(availTopics[ai].id) + '">' + esc(availTopics[ai].name) + '</option>';
       html += '</select>';
     }
     html += '</div></div>';
@@ -894,10 +893,10 @@
       $(this).siblings('input[data-field="color"]').val(color);
     });
 
-    // --- Tag CRUD ---
-    $(document).off('click.scp2a-nt', '[data-action="new-tag"]').on('click.scp2a-nt', '[data-action="new-tag"]', function(e) { e.preventDefault(); openNewTagModal(); });
-    $(document).off('click.scp2a-et', '[data-action="edit-tag"]').on('click.scp2a-et', '[data-action="edit-tag"]', function(e) { e.preventDefault(); editTagModal($(this).data('id')); });
-    $(document).off('click.scp2a-dt', '[data-action="delete-tag"]').on('click.scp2a-dt', '[data-action="delete-tag"]', function(e) { e.preventDefault(); deleteTag($(this).data('id')); });
+    // --- Topic CRUD ---
+    $(document).off('click.scp2a-nt', '[data-action="new-topic"]').on('click.scp2a-nt', '[data-action="new-topic"]', function(e) { e.preventDefault(); openNewTopicModal(); });
+    $(document).off('click.scp2a-et', '[data-action="edit-topic"]').on('click.scp2a-et', '[data-action="edit-topic"]', function(e) { e.preventDefault(); editTopicModal($(this).data('id')); });
+    $(document).off('click.scp2a-dt', '[data-action="delete-topic"]').on('click.scp2a-dt', '[data-action="delete-topic"]', function(e) { e.preventDefault(); deleteTopic($(this).data('id')); });
 
     // --- Post type selector (basics step) ---
     $(document).off('click.scp2a-spt', '[data-action="set-post-type"]').on('click.scp2a-spt', '[data-action="set-post-type"]', function(e) {
@@ -929,18 +928,18 @@
       post.updated = new Date().toISOString(); syncToTextarea();
     });
 
-    // --- Tag add/remove on posts ---
-    $(document).off('change.scp2a-ta', '.scp-tag-add-select').on('change.scp2a-ta', '.scp-tag-add-select', function() {
-      var tagId = $(this).val(); var postId = $(this).data('post-id');
-      if (!tagId || !postId) return;
+    // --- Topic add/remove on posts ---
+    $(document).off('change.scp2a-ta', '.scp-topic-add-select').on('change.scp2a-ta', '.scp-topic-add-select', function() {
+      var topicId = $(this).val(); var postId = $(this).data('post-id');
+      if (!topicId || !postId) return;
       var post = S.postMap[postId]; if (!post) return;
-      post.tags = post.tags || [];
-      if (post.tags.indexOf(tagId) < 0) { post.tags.push(tagId); post.updated = new Date().toISOString(); syncToTextarea(); render(); }
+      post.topics = post.topics || [];
+      if (post.topics.indexOf(topicId) < 0) { post.topics.push(topicId); post.updated = new Date().toISOString(); syncToTextarea(); render(); }
     });
-    $(document).off('click.scp2a-tr', '[data-action="remove-post-tag"]').on('click.scp2a-tr', '[data-action="remove-post-tag"]', function(e) {
-      e.preventDefault(); var tagId = $(this).data('tag-id'); var postId = $(this).data('post-id');
+    $(document).off('click.scp2a-tr', '[data-action="remove-post-topic"]').on('click.scp2a-tr', '[data-action="remove-post-topic"]', function(e) {
+      e.preventDefault(); var topicId = $(this).data('topic-id'); var postId = $(this).data('post-id');
       var post = S.postMap[postId]; if (!post) return;
-      post.tags = (post.tags || []).filter(function(t) { return t !== tagId; });
+      post.topics = (post.topics || []).filter(function(t) { return t !== topicId; });
       post.updated = new Date().toISOString(); syncToTextarea(); render();
     });
 
@@ -1349,7 +1348,7 @@
     collectModalFields: collectModalFields,
     deletePost: deletePost, duplicatePost: duplicatePost,
     promoteResearchIdea: promoteResearchIdea,
-    openNewTagModal: openNewTagModal, editTagModal: editTagModal, deleteTag: deleteTag,
+    openNewTopicModal: openNewTopicModal, editTopicModal: editTopicModal, deleteTopic: deleteTopic,
     addResearchItem: addResearchItem, removeResearchItem: removeResearchItem,
     setPostStatus: setPostStatus,
     // AIOutputRenderer (Phase A)

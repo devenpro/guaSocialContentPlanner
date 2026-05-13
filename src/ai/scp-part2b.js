@@ -36,7 +36,7 @@
   var S, render, navigate, toast, generateId, buildMaps, syncToTextarea, esc, deepClone, icon;
   var formatDate, formatRelativeTime, formatNumber, truncate, logActivity, countWords, countChars;
   var formatCharCount, badge, statusBadge, typeBadge, priorityBadge, platformBadge, progressBar;
-  var Constants, maybeAdvanceStatus, resolveTag, resolveTone, resolveAudience, resolveImageStyle;
+  var Constants, maybeAdvanceStatus, resolveTopic, resolveTone, resolveAudience, resolveImageStyle;
   var getPlatformConfig, cleanAIText;
   var snapshot, openModal, closeModal, openConfirmDialog, closeConfirmDialog, collectModalFields;
   var promoteResearchIdea;
@@ -62,7 +62,7 @@
     priorityBadge = window._scpPriorityBadge; platformBadge = window._scpPlatformBadge;
     progressBar = window._scpProgressBar; Constants = window._scpConstants;
     maybeAdvanceStatus = window._scpMaybeAdvanceStatus;
-    resolveTag = window._scpResolveTag; resolveTone = window._scpResolveTone;
+    resolveTopic = window._scpResolveTopic; resolveTone = window._scpResolveTone;
     resolveAudience = window._scpResolveAudience; resolveImageStyle = window._scpResolveImageStyle;
     getPlatformConfig = window._scpGetPlatformConfig;
     cleanAIText = window._scpCleanAIText;
@@ -372,7 +372,7 @@
     if (platform) prompt += '- Platform: ' + (Constants.PLATFORMS[platform] || {}).label + '\n';
     if (tone) { var tObj = resolveTone(tone); if (tObj) prompt += '- Tone: ' + tObj.name + '\n'; }
     if (useBrand) prompt += brandSnippet('research');
-    prompt += '\nFor each idea provide: title, angle, hook, type (image/carousel/video/text), platforms (array), cta_suggestion, reasoning, suggested_tags (array).\n\nRespond ONLY as JSON: [{"title":"...","angle":"...","hook":"...","type":"...","platforms":[...],"cta_suggestion":"...","reasoning":"...","suggested_tags":[...]}]';
+    prompt += '\nFor each idea provide: title, angle, hook, type (image/carousel/video/text), platforms (array), cta_suggestion, reasoning, suggested_topics (array of topic names).\n\nRespond ONLY as JSON: [{"title":"...","angle":"...","hook":"...","type":"...","platforms":[...],"cta_suggestion":"...","reasoning":"...","suggested_topics":[...]}]';
 
     var sessionId = generateId('rs');
     LLMService.callAI(prompt, function(text) {
@@ -383,7 +383,7 @@
           id: sessionId, title: truncate(topic, 50), topic: topic, type: 'quick',
           input: { topic: topic, template_id: '', variables: {}, target_platforms: platform ? [platform] : [], target_types: [], custom_instructions: '', brand_context_enabled: useBrand },
           results: ideas.map(function(idea) {
-            return { id: generateId('ri'), title: idea.title || '', angle: idea.angle || '', hook: idea.hook || '', type: idea.type || 'image', platforms: idea.platforms || [], cta_suggestion: idea.cta_suggestion || '', reasoning: idea.reasoning || '', tags: idea.suggested_tags || [], promoted: false, promoted_post_id: '', rating: 0 };
+            return { id: generateId('ri'), title: idea.title || '', angle: idea.angle || '', hook: idea.hook || '', type: idea.type || 'image', platforms: idea.platforms || [], cta_suggestion: idea.cta_suggestion || '', reasoning: idea.reasoning || '', topics: idea.suggested_topics || idea.suggested_tags || [], promoted: false, promoted_post_id: '', rating: 0 };
           }),
           created: new Date().toISOString(), updated: new Date().toISOString()
         };
@@ -425,7 +425,7 @@
           id: sessionId, title: template.name + ' — ' + (vars.topic || vars.pillar || 'Research'), topic: vars.topic || vars.pillar || '', type: 'advanced',
           input: { topic: vars.topic || '', template_id: templateId, variables: vars, target_platforms: [], target_types: [], custom_instructions: '', brand_context_enabled: useBrand },
           results: ideas.map(function(idea) {
-            return { id: generateId('ri'), title: idea.title || '', angle: idea.angle || '', hook: idea.hook || '', type: idea.type || 'image', platforms: idea.platforms || [], cta_suggestion: idea.cta_suggestion || '', reasoning: idea.reasoning || '', tags: idea.suggested_tags || [], promoted: false, promoted_post_id: '', rating: 0 };
+            return { id: generateId('ri'), title: idea.title || '', angle: idea.angle || '', hook: idea.hook || '', type: idea.type || 'image', platforms: idea.platforms || [], cta_suggestion: idea.cta_suggestion || '', reasoning: idea.reasoning || '', topics: idea.suggested_topics || idea.suggested_tags || [], promoted: false, promoted_post_id: '', rating: 0 };
           }),
           created: new Date().toISOString(), updated: new Date().toISOString()
         };
@@ -1764,12 +1764,13 @@
       if ($(e.target).is('input, textarea, select, [contenteditable="true"]')) return;
       if (e.key === '1') navigate('dashboard');
       if (e.key === '2') navigate('research');
-      if (e.key === '3') navigate('posts');
-      if (e.key === '4') navigate('calendar');
-      if (e.key === '5') navigate('images');
-      if (e.key === '6') navigate('tags');
-      if (e.key === '7') navigate('activity');
-      if (e.key === '8') navigate('settings');
+      if (e.key === '3') navigate('topics');
+      if (e.key === '4') navigate('series');
+      if (e.key === '5') navigate('posts');
+      if (e.key === '6') navigate('calendar');
+      if (e.key === '7') navigate('images');
+      if (e.key === '8') navigate('activity');
+      if (e.key === '9') navigate('settings');
       if (e.key === '/' && S.currentView === 'posts') { e.preventDefault(); $('#scpPostSearch').focus(); }
     });
   }

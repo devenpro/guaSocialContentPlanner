@@ -157,10 +157,13 @@ body.scp-active .block-page-title-block { display: none !important; }
 .scp-status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; font-size: var(--scp-font-size-xs); font-weight: 600; border-radius: var(--scp-radius-full); background: var(--scp-gray-50); }
 .scp-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .scp-priority-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.scp-tag-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; font-size: var(--scp-font-size-xs); font-weight: 500; border-radius: var(--scp-radius-full); border: 1px solid; cursor: pointer; transition: all var(--scp-transition-fast); }
-.scp-tag-chip:hover { transform: translateY(-1px); box-shadow: var(--scp-shadow-xs); }
-.scp-tag-chip-count { opacity: 0.7; font-weight: 700; }
-.scp-tag-cloud { display: flex; flex-wrap: wrap; gap: var(--scp-space-2); }
+.scp-tag-chip,
+.scp-topic-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; font-size: var(--scp-font-size-xs); font-weight: 500; border-radius: var(--scp-radius-full); border: 1px solid; cursor: pointer; transition: all var(--scp-transition-fast); }
+.scp-tag-chip:hover,
+.scp-topic-chip:hover { transform: translateY(-1px); box-shadow: var(--scp-shadow-xs); }
+.scp-tag-chip-count,
+.scp-topic-chip-count { opacity: 0.7; font-weight: 700; }
+.scp-topic-cloud { display: flex; flex-wrap: wrap; gap: var(--scp-space-2); }
 
 /* ═══ S11: SECTIONS ═══ */
 .scp-section { margin-bottom: var(--scp-space-6); }
@@ -344,19 +347,19 @@ body.scp-active .block-page-title-block { display: none !important; }
 .scp-cal-pop-time { font-size: var(--scp-font-size-xs); color: var(--scp-text-muted); margin-bottom: var(--scp-space-3); display: flex; align-items: center; gap: var(--scp-space-1); }
 .scp-cal-pop-actions { display: flex; gap: var(--scp-space-2); }
 
-/* ═══ S18: TAGS VIEW ═══ */
+/* ═══ S18: TOPICS VIEW ═══ */
 .scp-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--scp-space-4); }
-.scp-tag-card { background: var(--scp-white); border: 1px solid var(--scp-border-light); border-radius: var(--scp-radius-lg); padding: var(--scp-space-4); cursor: pointer; transition: all var(--scp-transition-fast); }
-.scp-tag-card:hover { border-color: var(--scp-border-dark); box-shadow: var(--scp-shadow-sm); transform: translateY(-1px); }
-.scp-tag-card-header { display: flex; align-items: flex-start; gap: var(--scp-space-3); margin-bottom: var(--scp-space-3); }
-.scp-tag-card-color { width: 4px; border-radius: var(--scp-radius-full); align-self: stretch; flex-shrink: 0; min-height: 36px; }
-.scp-tag-card-info { flex: 1; min-width: 0; }
-.scp-tag-card-info h3 { margin: 0; font-size: var(--scp-font-size-md); }
-.scp-tag-card-info p { margin: 2px 0 0; font-size: var(--scp-font-size-xs); color: var(--scp-text-muted); }
-.scp-tag-card-count { font-size: var(--scp-font-size-2xl); font-weight: 800; font-family: var(--scp-font-display); flex-shrink: 0; }
-.scp-tag-card-badges { display: flex; gap: var(--scp-space-1); flex-wrap: wrap; }
-.scp-tag-detail-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
-.scp-tag-detail-desc { font-size: var(--scp-font-size-sm); color: var(--scp-text-secondary); line-height: 1.6; margin-bottom: var(--scp-space-4); }
+.scp-topic-card { background: var(--scp-white); border: 1px solid var(--scp-border-light); border-radius: var(--scp-radius-lg); padding: var(--scp-space-4); cursor: pointer; transition: all var(--scp-transition-fast); }
+.scp-topic-card:hover { border-color: var(--scp-border-dark); box-shadow: var(--scp-shadow-sm); transform: translateY(-1px); }
+.scp-topic-card-header { display: flex; align-items: flex-start; gap: var(--scp-space-3); margin-bottom: var(--scp-space-3); }
+.scp-topic-card-color { width: 4px; border-radius: var(--scp-radius-full); align-self: stretch; flex-shrink: 0; min-height: 36px; }
+.scp-topic-card-info { flex: 1; min-width: 0; }
+.scp-topic-card-info h3 { margin: 0; font-size: var(--scp-font-size-md); }
+.scp-topic-card-info p { margin: 2px 0 0; font-size: var(--scp-font-size-xs); color: var(--scp-text-muted); }
+.scp-topic-card-count { font-size: var(--scp-font-size-2xl); font-weight: 800; font-family: var(--scp-font-display); flex-shrink: 0; }
+.scp-topic-card-badges { display: flex; gap: var(--scp-space-1); flex-wrap: wrap; }
+.scp-topic-detail-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+.scp-topic-detail-desc { font-size: var(--scp-font-size-sm); color: var(--scp-text-secondary); line-height: 1.6; margin-bottom: var(--scp-space-4); }
 
 /* ═══ S19: ACTIVITY ═══ */
 .scp-activity-list { display: flex; flex-direction: column; }

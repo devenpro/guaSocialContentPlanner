@@ -1,21 +1,22 @@
 /**
  * @category    core
  * @purpose     Calendar view (month + week toggle). Filters by platform, type,
- *              status, tag. Renders post chips per day (drag-and-drop ready)
- *              and a hover popover with post detail.
+ *              status, topic, series. Renders post chips per day
+ *              (drag-and-drop ready) and a hover popover with post detail.
  * @exports     window._scpRenderCalendarView
  *              window._scpRenderCalendarPopover (used by event handlers)
  * @depends-on  window._scpState, window._scpEsc, window._scpIcon,
  *              window._scpTruncate, window._scpFormatDateShort,
- *              window._scpGetAllTags, window._scpStatusBadge,
- *              window._scpTypeBadge, window._scpPriorityBadge,
- *              window._scpPlatformBadge, window._scpConstants
+ *              window._scpGetAllTopics, window._scpGetAllSeries,
+ *              window._scpStatusBadge, window._scpTypeBadge,
+ *              window._scpPriorityBadge, window._scpPlatformBadge,
+ *              window._scpConstants
  * @extracted-from  src/core/scp-part1.js (was SECTION 10 of v0.1.6)
  */
 (function($) {
   'use strict';
 
-  var S, esc, icon, truncate, formatDateShort, getAllTags;
+  var S, esc, icon, truncate, formatDateShort, getAllTopics, getAllSeries;
   var statusBadge, typeBadge, priorityBadge, platformBadge, Constants;
   var POST_TYPES, POST_STATUSES, PLATFORMS;
 
@@ -25,7 +26,8 @@
     icon = window._scpIcon;
     truncate = window._scpTruncate;
     formatDateShort = window._scpFormatDateShort;
-    getAllTags = window._scpGetAllTags;
+    getAllTopics = window._scpGetAllTopics;
+    getAllSeries = window._scpGetAllSeries;
     statusBadge = window._scpStatusBadge;
     typeBadge = window._scpTypeBadge;
     priorityBadge = window._scpPriorityBadge;
@@ -106,7 +108,8 @@
     if (f.platforms && f.platforms.length > 0) posts = posts.filter(function(p) { return (p.platforms || []).some(function(pk) { return f.platforms.indexOf(pk) > -1; }); });
     if (f.types && f.types.length > 0) posts = posts.filter(function(p) { return f.types.indexOf(p.type) > -1; });
     if (f.status) posts = posts.filter(function(p) { return p.status === f.status; });
-    if (f.tag) posts = posts.filter(function(p) { return (p.tags || []).indexOf(f.tag) > -1; });
+    if (f.topic) posts = posts.filter(function(p) { return (p.topics || []).indexOf(f.topic) > -1; });
+    if (f.series) posts = posts.filter(function(p) { return p.seriesId === f.series; });
     return posts;
   }
 
@@ -143,16 +146,24 @@
       html += '<option value="' + sk + '"' + (f.status === sk ? ' selected' : '') + '>' + POST_STATUSES[sk].label + '</option>';
     }
     html += '</select>';
-    // Tag dropdown
-    var tags = getAllTags();
-    if (tags.length > 0) {
-      html += '<select class="scp-select scp-select-sm scp-cal-tag-filter">';
-      html += '<option value="">All Tags</option>';
-      for (var ti = 0; ti < tags.length; ti++) html += '<option value="' + esc(tags[ti].id) + '"' + (f.tag === tags[ti].id ? ' selected' : '') + '>' + esc(tags[ti].name) + '</option>';
+    // Topic dropdown
+    var topics = getAllTopics();
+    if (topics.length > 0) {
+      html += '<select class="scp-select scp-select-sm scp-cal-topic-filter">';
+      html += '<option value="">All Topics</option>';
+      for (var ti = 0; ti < topics.length; ti++) html += '<option value="' + esc(topics[ti].id) + '"' + (f.topic === topics[ti].id ? ' selected' : '') + '>' + esc(topics[ti].name) + '</option>';
+      html += '</select>';
+    }
+    // Series dropdown
+    var seriesList = getAllSeries();
+    if (seriesList.length > 0) {
+      html += '<select class="scp-select scp-select-sm scp-cal-series-filter">';
+      html += '<option value="">All Series</option>';
+      for (var si = 0; si < seriesList.length; si++) html += '<option value="' + esc(seriesList[si].id) + '"' + (f.series === seriesList[si].id ? ' selected' : '') + '>' + esc(seriesList[si].name) + '</option>';
       html += '</select>';
     }
     // Active filter count
-    var activeCount = (f.platforms || []).length + (f.types || []).length + (f.status ? 1 : 0) + (f.tag ? 1 : 0);
+    var activeCount = (f.platforms || []).length + (f.types || []).length + (f.status ? 1 : 0) + (f.topic ? 1 : 0) + (f.series ? 1 : 0);
     if (activeCount > 0) html += '<button class="scp-btn-link" data-action="cal-clear-filters">' + icon('x') + ' Clear (' + activeCount + ')</button>';
     html += '</div>';
     return html;

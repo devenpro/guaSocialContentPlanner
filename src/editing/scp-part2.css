@@ -190,13 +190,13 @@
 .scp-perf-label { font-size: var(--scp-font-size-xs); color: var(--scp-text-muted); }
 .scp-perf-value { font-size: var(--scp-font-size-lg); font-weight: 700; color: var(--scp-gray-300); font-family: var(--scp-font-display); }
 
-/* ═══ S13: TAG INPUT ═══ */
-.scp-tag-input { display: flex; flex-direction: column; gap: var(--scp-space-1); }
-.scp-tag-chips { display: flex; flex-wrap: wrap; gap: var(--scp-space-1); align-items: center; }
-.scp-tag-input-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: var(--scp-radius-full); font-size: var(--scp-font-size-xs); font-weight: 500; border: 1px solid; }
-.scp-tag-remove { background: none; border: none; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 0 0 2px; opacity: 0.6; color: inherit; }
-.scp-tag-remove:hover { opacity: 1; }
-.scp-tag-add-select { min-width: 100px; }
+/* ═══ S13: TOPIC INPUT ═══ */
+.scp-topic-input { display: flex; flex-direction: column; gap: var(--scp-space-1); }
+.scp-topic-chips { display: flex; flex-wrap: wrap; gap: var(--scp-space-1); align-items: center; }
+.scp-topic-input-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: var(--scp-radius-full); font-size: var(--scp-font-size-xs); font-weight: 500; border: 1px solid; }
+.scp-topic-remove { background: none; border: none; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 0 0 2px; opacity: 0.6; color: inherit; }
+.scp-topic-remove:hover { opacity: 1; }
+.scp-topic-add-select { min-width: 100px; }
 
 /* ═══ S14: COLOR PICKER ═══ */
 .scp-color-picker { display: flex; gap: var(--scp-space-2); align-items: center; flex-wrap: wrap; }
