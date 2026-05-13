@@ -15,17 +15,11 @@
   // ============================================================
   // SECTION 2: LLMService
   // ============================================================
-
-  var AI_ENDPOINTS = {
-    'gemini': 'https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent',
-    'claude': 'https://api.anthropic.com/v1/messages',
-    'openai': 'https://api.openai.com/v1/chat/completions',
-    'grok': 'https://api.x.ai/v1/chat/completions',
-    'groq': 'https://api.groq.com/openai/v1/chat/completions',
-    'nvidia': 'https://integrate.api.nvidia.com/v1/chat/completions',
-    'huggingface': 'https://router.huggingface.co/v1/chat/completions',
-    'openrouter': 'https://openrouter.ai/api/v1/chat/completions'
-  };
+  //
+  // Provider-specific HTTP shaping lives in src/ai/providers/<id>.js.
+  // This file holds only provider-agnostic logic: config discovery,
+  // default selection, preference persistence, and the picker UI.
+  // ============================================================
 
   window.LLMService = (function() {
     // Helpers resolved lazily at first init() — all defined in core/scp-part1.js
@@ -248,47 +242,21 @@
     function callAI(prompt, onSuccess, onError, actionId, systemPrompt) {
       var cfg = _getPickerSel(actionId || '');
       if (!cfg || !cfg.api_key) { if (onError) onError('No AI providers configured.'); return; }
-      var provider = cfg.provider, model = cfg.model, apiKey = cfg.api_key;
-      var endpoint = AI_ENDPOINTS[provider]; if (!endpoint) { if (onError) onError('Unknown provider'); return; }
-      systemPrompt = systemPrompt || '';
-      var body, headers;
-      switch (provider) {
-        case 'gemini':
-          endpoint = endpoint.replace('{MODEL}', model) + '?key=' + apiKey;
-          headers = { 'Content-Type': 'application/json' };
-          body = { contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: cfg.max_tokens, temperature: cfg.temperature, topP: cfg.top_p } };
-          if (systemPrompt) body.system_instruction = { parts: [{ text: systemPrompt }] };
-          break;
-        case 'claude':
-          headers = { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' };
-          body = { model: model, max_tokens: cfg.max_tokens, messages: [{ role: 'user', content: prompt }] };
-          if (cfg.temperature !== undefined) body.temperature = cfg.temperature;
-          if (systemPrompt) body.system = systemPrompt;
-          break;
-        default:
-          headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey };
-          if (provider === 'openrouter') { headers['HTTP-Referer'] = window.location.origin; headers['X-Title'] = 'Social Content Planner'; }
-          body = { model: model, max_tokens: cfg.max_tokens, messages: [{ role: 'user', content: prompt }], temperature: cfg.temperature };
-          if (systemPrompt) body.messages = [{ role: 'system', content: systemPrompt }].concat(body.messages);
-          if (provider === 'groq' && body.temperature === 0) body.temperature = 0.01;
-      }
-      fetch(endpoint, { method: 'POST', headers: headers, body: JSON.stringify(body) })
+      var adapter = window._scpAIProviders && window._scpAIProviders[cfg.provider];
+      if (!adapter) { if (onError) onError('Unknown provider: ' + cfg.provider); return; }
+
+      var req = adapter.buildRequest(prompt, cfg, systemPrompt || '');
+      fetch(req.endpoint, { method: 'POST', headers: req.headers, body: JSON.stringify(req.body) })
         .then(function(res) { if (!res.ok) return res.text().then(function(t) { var m = 'API ' + res.status; try { m = JSON.parse(t).error.message || m; } catch(e) {} throw new Error(m); }); return res.json(); })
         .then(function(data) {
-          var text = _extractText(provider, data);
-          console.log('[SCP] AI (' + provider + '/' + model + '):', text.substring(0, 200));
-          if (actionId) savePreference(actionId, provider, model);
+          var text;
+          try { text = adapter.parseResponse(data); }
+          catch(e) { text = JSON.stringify(data); }
+          console.log('[SCP] AI (' + cfg.provider + '/' + cfg.model + '):', text.substring(0, 200));
+          if (actionId) savePreference(actionId, cfg.provider, cfg.model);
           if (onSuccess) onSuccess(text);
         })
         .catch(function(err) { console.error('[SCP] AI error:', err); if (onError) onError(err.message || 'Request failed'); });
-    }
-
-    function _extractText(provider, data) {
-      try {
-        if (provider === 'gemini') { return data.candidates && data.candidates[0] && data.candidates[0].content ? data.candidates[0].content.parts.map(function(p) { return p.text || ''; }).join('') : JSON.stringify(data); }
-        if (provider === 'claude') return data.content ? data.content.filter(function(c) { return c.type === 'text'; }).map(function(c) { return c.text; }).join('') : '';
-        return (data.choices && data.choices[0] && data.choices[0].message) ? data.choices[0].message.content || '' : '';
-      } catch(e) { return JSON.stringify(data); }
     }
 
     /**
@@ -346,27 +314,12 @@
       if (!p || !p.api_key) { if (callback) callback(false, 'No API key', 0); return; }
       var model = p.activeModels[0];
       if (!model) { if (callback) callback(false, 'No models', 0); return; }
+      var adapter = window._scpAIProviders && window._scpAIProviders[pid];
+      if (!adapter || !adapter.buildTestRequest) { if (callback) callback(false, 'Unknown provider', 0); return; }
+
       var startTime = Date.now();
-      var cfg = _buildSel(pid, model);
-      var endpoint = AI_ENDPOINTS[pid]; if (!endpoint) { if (callback) callback(false, 'Unknown provider', 0); return; }
-      var body, headers;
-      var testPrompt = 'Respond with exactly: {"status":"ok"}';
-      switch (pid) {
-        case 'gemini':
-          endpoint = endpoint.replace('{MODEL}', model.id) + '?key=' + cfg.api_key;
-          headers = { 'Content-Type': 'application/json' };
-          body = { contents: [{ role: 'user', parts: [{ text: testPrompt }] }], generationConfig: { maxOutputTokens: 50, temperature: 0 } };
-          break;
-        case 'claude':
-          headers = { 'Content-Type': 'application/json', 'x-api-key': cfg.api_key, 'anthropic-version': '2023-06-01' };
-          body = { model: model.id, max_tokens: 50, messages: [{ role: 'user', content: testPrompt }] };
-          break;
-        default:
-          headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.api_key };
-          if (pid === 'openrouter') { headers['HTTP-Referer'] = window.location.origin; headers['X-Title'] = 'SCP Test'; }
-          body = { model: model.id, max_tokens: 50, messages: [{ role: 'user', content: testPrompt }], temperature: 0 };
-      }
-      fetch(endpoint, { method: 'POST', headers: headers, body: JSON.stringify(body) })
+      var req = adapter.buildTestRequest(model, p.api_key);
+      fetch(req.endpoint, { method: 'POST', headers: req.headers, body: JSON.stringify(req.body) })
         .then(function(res) {
           var elapsed = Date.now() - startTime;
           if (!res.ok) return res.text().then(function(t) { var msg = 'HTTP ' + res.status; try { msg = JSON.parse(t).error.message || msg; } catch(e) {} if (callback) callback(false, msg, elapsed); });

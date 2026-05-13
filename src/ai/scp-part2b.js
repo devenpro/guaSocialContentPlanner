@@ -189,8 +189,10 @@
 
   // ============================================================
   // SECTION 2: LLMService  — extracted to src/ai/llm-service.js (v0.1.2)
-  // AI_ENDPOINTS + LLMService now live as `window.LLMService`. All references
-  // below resolve to that global via the local alias on the next line.
+  //   plus provider adapters in src/ai/providers/*.js (v0.1.3).
+  // LLMService is now `window.LLMService`; each provider is registered
+  // on `window._scpAIProviders[<id>]`. References below resolve via the
+  // local alias on the next line.
   // ============================================================
   var LLMService = window.LLMService;
 

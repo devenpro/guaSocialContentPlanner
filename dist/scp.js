@@ -4335,6 +4335,387 @@
 })(jQuery, Drupal);
 
 
+/* ----- src/ai/providers/_registry.js ----- */
+
+/**
+ * @category    ai
+ * @purpose     Bootstrap for the AI-provider registry. Each provider file
+ *              registers itself onto `window._scpAIProviders[<id>]` with the
+ *              shape: { buildRequest, parseResponse, buildTestRequest }.
+ *              LLMService.callAI / testProvider look up the registry instead
+ *              of carrying provider-specific switch statements.
+ * @exports     window._scpAIProviders (initialised to {})
+ * @extracted-from  src/ai/scp-part2b.js â†’ src/ai/llm-service.js (v0.1.3)
+ *
+ * Adapter contract:
+ *   buildRequest(prompt: string, cfg: SelObj, systemPrompt: string)
+ *     â†’ { endpoint: string, headers: object, body: object }
+ *   parseResponse(data: any) â†’ string
+ *   buildTestRequest(model: ModelObj, apiKey: string)
+ *     â†’ { endpoint: string, headers: object, body: object }
+ *
+ *   SelObj   = { provider, model, temperature, max_tokens, top_p, api_key }
+ *   ModelObj = { id, label, temperature, max_tokens, is_default }
+ */
+(function() {
+  'use strict';
+  window._scpAIProviders = window._scpAIProviders || {};
+})();
+
+
+/* ----- src/ai/providers/gemini.js ----- */
+
+/**
+ * @category   ai
+ * @purpose    Google Gemini provider adapter. Generative Language API v1beta.
+ * @exports    window._scpAIProviders.gemini
+ * @docs       https://ai.google.dev/api/rest/v1beta/models/generateContent
+ */
+(function() {
+  'use strict';
+
+  var ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent';
+
+  window._scpAIProviders.gemini = {
+    buildRequest: function(prompt, cfg, systemPrompt) {
+      var body = {
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: cfg.max_tokens, temperature: cfg.temperature, topP: cfg.top_p }
+      };
+      if (systemPrompt) body.system_instruction = { parts: [{ text: systemPrompt }] };
+      return {
+        endpoint: ENDPOINT.replace('{MODEL}', cfg.model) + '?key=' + cfg.api_key,
+        headers: { 'Content-Type': 'application/json' },
+        body: body
+      };
+    },
+
+    parseResponse: function(data) {
+      return data.candidates && data.candidates[0] && data.candidates[0].content
+        ? data.candidates[0].content.parts.map(function(p) { return p.text || ''; }).join('')
+        : JSON.stringify(data);
+    },
+
+    buildTestRequest: function(model, apiKey) {
+      return {
+        endpoint: ENDPOINT.replace('{MODEL}', model.id) + '?key=' + apiKey,
+        headers: { 'Content-Type': 'application/json' },
+        body: {
+          contents: [{ role: 'user', parts: [{ text: 'Respond with exactly: {"status":"ok"}' }] }],
+          generationConfig: { maxOutputTokens: 50, temperature: 0 }
+        }
+      };
+    }
+  };
+})();
+
+
+/* ----- src/ai/providers/claude.js ----- */
+
+/**
+ * @category   ai
+ * @purpose    Anthropic Claude provider adapter. Messages API.
+ * @exports    window._scpAIProviders.claude
+ * @docs       https://docs.anthropic.com/en/api/messages
+ */
+(function() {
+  'use strict';
+
+  var ENDPOINT = 'https://api.anthropic.com/v1/messages';
+  var ANTHROPIC_VERSION = '2023-06-01';
+
+  window._scpAIProviders.claude = {
+    buildRequest: function(prompt, cfg, systemPrompt) {
+      var body = {
+        model: cfg.model,
+        max_tokens: cfg.max_tokens,
+        messages: [{ role: 'user', content: prompt }]
+      };
+      if (cfg.temperature !== undefined) body.temperature = cfg.temperature;
+      if (systemPrompt) body.system = systemPrompt;
+      return {
+        endpoint: ENDPOINT,
+        headers: { 'Content-Type': 'application/json', 'x-api-key': cfg.api_key, 'anthropic-version': ANTHROPIC_VERSION },
+        body: body
+      };
+    },
+
+    parseResponse: function(data) {
+      return data.content
+        ? data.content.filter(function(c) { return c.type === 'text'; })
+                      .map(function(c) { return c.text; })
+                      .join('')
+        : '';
+    },
+
+    buildTestRequest: function(model, apiKey) {
+      return {
+        endpoint: ENDPOINT,
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': ANTHROPIC_VERSION },
+        body: { model: model.id, max_tokens: 50, messages: [{ role: 'user', content: 'Respond with exactly: {"status":"ok"}' }] }
+      };
+    }
+  };
+})();
+
+
+/* ----- src/ai/providers/openai.js ----- */
+
+/**
+ * @category   ai
+ * @purpose    OpenAI chat-completions provider adapter.
+ * @exports    window._scpAIProviders.openai
+ * @docs       https://platform.openai.com/docs/api-reference/chat/create
+ */
+(function() {
+  'use strict';
+
+  var ENDPOINT = 'https://api.openai.com/v1/chat/completions';
+
+  window._scpAIProviders.openai = {
+    buildRequest: function(prompt, cfg, systemPrompt) {
+      var messages = [{ role: 'user', content: prompt }];
+      if (systemPrompt) messages = [{ role: 'system', content: systemPrompt }].concat(messages);
+      return {
+        endpoint: ENDPOINT,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.api_key },
+        body: { model: cfg.model, max_tokens: cfg.max_tokens, messages: messages, temperature: cfg.temperature }
+      };
+    },
+
+    parseResponse: function(data) {
+      return (data.choices && data.choices[0] && data.choices[0].message)
+        ? data.choices[0].message.content || ''
+        : '';
+    },
+
+    buildTestRequest: function(model, apiKey) {
+      return {
+        endpoint: ENDPOINT,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+        body: { model: model.id, max_tokens: 50, messages: [{ role: 'user', content: 'Respond with exactly: {"status":"ok"}' }], temperature: 0 }
+      };
+    }
+  };
+})();
+
+
+/* ----- src/ai/providers/grok.js ----- */
+
+/**
+ * @category   ai
+ * @purpose    xAI Grok provider adapter. OpenAI-compatible chat-completions API.
+ * @exports    window._scpAIProviders.grok
+ * @docs       https://docs.x.ai/api
+ */
+(function() {
+  'use strict';
+
+  var ENDPOINT = 'https://api.x.ai/v1/chat/completions';
+
+  window._scpAIProviders.grok = {
+    buildRequest: function(prompt, cfg, systemPrompt) {
+      var messages = [{ role: 'user', content: prompt }];
+      if (systemPrompt) messages = [{ role: 'system', content: systemPrompt }].concat(messages);
+      return {
+        endpoint: ENDPOINT,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.api_key },
+        body: { model: cfg.model, max_tokens: cfg.max_tokens, messages: messages, temperature: cfg.temperature }
+      };
+    },
+
+    parseResponse: function(data) {
+      return (data.choices && data.choices[0] && data.choices[0].message)
+        ? data.choices[0].message.content || ''
+        : '';
+    },
+
+    buildTestRequest: function(model, apiKey) {
+      return {
+        endpoint: ENDPOINT,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+        body: { model: model.id, max_tokens: 50, messages: [{ role: 'user', content: 'Respond with exactly: {"status":"ok"}' }], temperature: 0 }
+      };
+    }
+  };
+})();
+
+
+/* ----- src/ai/providers/groq.js ----- */
+
+/**
+ * @category   ai
+ * @purpose    Groq provider adapter. OpenAI-compatible. Note: rejects
+ *             temperature=0 â€” we substitute 0.01 to match upstream quirk.
+ * @exports    window._scpAIProviders.groq
+ * @docs       https://console.groq.com/docs/api-reference
+ */
+(function() {
+  'use strict';
+
+  var ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
+
+  window._scpAIProviders.groq = {
+    buildRequest: function(prompt, cfg, systemPrompt) {
+      var messages = [{ role: 'user', content: prompt }];
+      if (systemPrompt) messages = [{ role: 'system', content: systemPrompt }].concat(messages);
+      var temperature = (cfg.temperature === 0) ? 0.01 : cfg.temperature;  // Groq quirk
+      return {
+        endpoint: ENDPOINT,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.api_key },
+        body: { model: cfg.model, max_tokens: cfg.max_tokens, messages: messages, temperature: temperature }
+      };
+    },
+
+    parseResponse: function(data) {
+      return (data.choices && data.choices[0] && data.choices[0].message)
+        ? data.choices[0].message.content || ''
+        : '';
+    },
+
+    buildTestRequest: function(model, apiKey) {
+      return {
+        endpoint: ENDPOINT,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+        body: { model: model.id, max_tokens: 50, messages: [{ role: 'user', content: 'Respond with exactly: {"status":"ok"}' }], temperature: 0.01 }
+      };
+    }
+  };
+})();
+
+
+/* ----- src/ai/providers/nvidia.js ----- */
+
+/**
+ * @category   ai
+ * @purpose    NVIDIA Build provider adapter. OpenAI-compatible.
+ * @exports    window._scpAIProviders.nvidia
+ * @docs       https://docs.api.nvidia.com/nim/reference/models
+ */
+(function() {
+  'use strict';
+
+  var ENDPOINT = 'https://integrate.api.nvidia.com/v1/chat/completions';
+
+  window._scpAIProviders.nvidia = {
+    buildRequest: function(prompt, cfg, systemPrompt) {
+      var messages = [{ role: 'user', content: prompt }];
+      if (systemPrompt) messages = [{ role: 'system', content: systemPrompt }].concat(messages);
+      return {
+        endpoint: ENDPOINT,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.api_key },
+        body: { model: cfg.model, max_tokens: cfg.max_tokens, messages: messages, temperature: cfg.temperature }
+      };
+    },
+
+    parseResponse: function(data) {
+      return (data.choices && data.choices[0] && data.choices[0].message)
+        ? data.choices[0].message.content || ''
+        : '';
+    },
+
+    buildTestRequest: function(model, apiKey) {
+      return {
+        endpoint: ENDPOINT,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+        body: { model: model.id, max_tokens: 50, messages: [{ role: 'user', content: 'Respond with exactly: {"status":"ok"}' }], temperature: 0 }
+      };
+    }
+  };
+})();
+
+
+/* ----- src/ai/providers/huggingface.js ----- */
+
+/**
+ * @category   ai
+ * @purpose    Hugging Face Router provider adapter. OpenAI-compatible.
+ * @exports    window._scpAIProviders.huggingface
+ * @docs       https://huggingface.co/docs/api-inference
+ */
+(function() {
+  'use strict';
+
+  var ENDPOINT = 'https://router.huggingface.co/v1/chat/completions';
+
+  window._scpAIProviders.huggingface = {
+    buildRequest: function(prompt, cfg, systemPrompt) {
+      var messages = [{ role: 'user', content: prompt }];
+      if (systemPrompt) messages = [{ role: 'system', content: systemPrompt }].concat(messages);
+      return {
+        endpoint: ENDPOINT,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.api_key },
+        body: { model: cfg.model, max_tokens: cfg.max_tokens, messages: messages, temperature: cfg.temperature }
+      };
+    },
+
+    parseResponse: function(data) {
+      return (data.choices && data.choices[0] && data.choices[0].message)
+        ? data.choices[0].message.content || ''
+        : '';
+    },
+
+    buildTestRequest: function(model, apiKey) {
+      return {
+        endpoint: ENDPOINT,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+        body: { model: model.id, max_tokens: 50, messages: [{ role: 'user', content: 'Respond with exactly: {"status":"ok"}' }], temperature: 0 }
+      };
+    }
+  };
+})();
+
+
+/* ----- src/ai/providers/openrouter.js ----- */
+
+/**
+ * @category   ai
+ * @purpose    OpenRouter provider adapter. OpenAI-compatible, requires extra
+ *             HTTP-Referer and X-Title headers for rankings/attribution.
+ * @exports    window._scpAIProviders.openrouter
+ * @docs       https://openrouter.ai/docs/api-reference/overview
+ */
+(function() {
+  'use strict';
+
+  var ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
+  var EXTRA_HEADERS = { 'HTTP-Referer': window.location.origin, 'X-Title': 'Social Content Planner' };
+
+  function _headers(apiKey, extra) {
+    var h = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey };
+    for (var k in EXTRA_HEADERS) h[k] = EXTRA_HEADERS[k];
+    if (extra) for (var ek in extra) h[ek] = extra[ek];
+    return h;
+  }
+
+  window._scpAIProviders.openrouter = {
+    buildRequest: function(prompt, cfg, systemPrompt) {
+      var messages = [{ role: 'user', content: prompt }];
+      if (systemPrompt) messages = [{ role: 'system', content: systemPrompt }].concat(messages);
+      return {
+        endpoint: ENDPOINT,
+        headers: _headers(cfg.api_key),
+        body: { model: cfg.model, max_tokens: cfg.max_tokens, messages: messages, temperature: cfg.temperature }
+      };
+    },
+
+    parseResponse: function(data) {
+      return (data.choices && data.choices[0] && data.choices[0].message)
+        ? data.choices[0].message.content || ''
+        : '';
+    },
+
+    buildTestRequest: function(model, apiKey) {
+      return {
+        endpoint: ENDPOINT,
+        headers: _headers(apiKey, { 'X-Title': 'SCP Test' }),
+        body: { model: model.id, max_tokens: 50, messages: [{ role: 'user', content: 'Respond with exactly: {"status":"ok"}' }], temperature: 0 }
+      };
+    }
+  };
+})();
+
+
 /* ----- src/ai/brand-service.js ----- */
 
 /**
@@ -4518,17 +4899,11 @@
   // ============================================================
   // SECTION 2: LLMService
   // ============================================================
-
-  var AI_ENDPOINTS = {
-    'gemini': 'https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent',
-    'claude': 'https://api.anthropic.com/v1/messages',
-    'openai': 'https://api.openai.com/v1/chat/completions',
-    'grok': 'https://api.x.ai/v1/chat/completions',
-    'groq': 'https://api.groq.com/openai/v1/chat/completions',
-    'nvidia': 'https://integrate.api.nvidia.com/v1/chat/completions',
-    'huggingface': 'https://router.huggingface.co/v1/chat/completions',
-    'openrouter': 'https://openrouter.ai/api/v1/chat/completions'
-  };
+  //
+  // Provider-specific HTTP shaping lives in src/ai/providers/<id>.js.
+  // This file holds only provider-agnostic logic: config discovery,
+  // default selection, preference persistence, and the picker UI.
+  // ============================================================
 
   window.LLMService = (function() {
     // Helpers resolved lazily at first init() â€” all defined in core/scp-part1.js
@@ -4751,47 +5126,21 @@
     function callAI(prompt, onSuccess, onError, actionId, systemPrompt) {
       var cfg = _getPickerSel(actionId || '');
       if (!cfg || !cfg.api_key) { if (onError) onError('No AI providers configured.'); return; }
-      var provider = cfg.provider, model = cfg.model, apiKey = cfg.api_key;
-      var endpoint = AI_ENDPOINTS[provider]; if (!endpoint) { if (onError) onError('Unknown provider'); return; }
-      systemPrompt = systemPrompt || '';
-      var body, headers;
-      switch (provider) {
-        case 'gemini':
-          endpoint = endpoint.replace('{MODEL}', model) + '?key=' + apiKey;
-          headers = { 'Content-Type': 'application/json' };
-          body = { contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: cfg.max_tokens, temperature: cfg.temperature, topP: cfg.top_p } };
-          if (systemPrompt) body.system_instruction = { parts: [{ text: systemPrompt }] };
-          break;
-        case 'claude':
-          headers = { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' };
-          body = { model: model, max_tokens: cfg.max_tokens, messages: [{ role: 'user', content: prompt }] };
-          if (cfg.temperature !== undefined) body.temperature = cfg.temperature;
-          if (systemPrompt) body.system = systemPrompt;
-          break;
-        default:
-          headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey };
-          if (provider === 'openrouter') { headers['HTTP-Referer'] = window.location.origin; headers['X-Title'] = 'Social Content Planner'; }
-          body = { model: model, max_tokens: cfg.max_tokens, messages: [{ role: 'user', content: prompt }], temperature: cfg.temperature };
-          if (systemPrompt) body.messages = [{ role: 'system', content: systemPrompt }].concat(body.messages);
-          if (provider === 'groq' && body.temperature === 0) body.temperature = 0.01;
-      }
-      fetch(endpoint, { method: 'POST', headers: headers, body: JSON.stringify(body) })
+      var adapter = window._scpAIProviders && window._scpAIProviders[cfg.provider];
+      if (!adapter) { if (onError) onError('Unknown provider: ' + cfg.provider); return; }
+
+      var req = adapter.buildRequest(prompt, cfg, systemPrompt || '');
+      fetch(req.endpoint, { method: 'POST', headers: req.headers, body: JSON.stringify(req.body) })
         .then(function(res) { if (!res.ok) return res.text().then(function(t) { var m = 'API ' + res.status; try { m = JSON.parse(t).error.message || m; } catch(e) {} throw new Error(m); }); return res.json(); })
         .then(function(data) {
-          var text = _extractText(provider, data);
-          console.log('[SCP] AI (' + provider + '/' + model + '):', text.substring(0, 200));
-          if (actionId) savePreference(actionId, provider, model);
+          var text;
+          try { text = adapter.parseResponse(data); }
+          catch(e) { text = JSON.stringify(data); }
+          console.log('[SCP] AI (' + cfg.provider + '/' + cfg.model + '):', text.substring(0, 200));
+          if (actionId) savePreference(actionId, cfg.provider, cfg.model);
           if (onSuccess) onSuccess(text);
         })
         .catch(function(err) { console.error('[SCP] AI error:', err); if (onError) onError(err.message || 'Request failed'); });
-    }
-
-    function _extractText(provider, data) {
-      try {
-        if (provider === 'gemini') { return data.candidates && data.candidates[0] && data.candidates[0].content ? data.candidates[0].content.parts.map(function(p) { return p.text || ''; }).join('') : JSON.stringify(data); }
-        if (provider === 'claude') return data.content ? data.content.filter(function(c) { return c.type === 'text'; }).map(function(c) { return c.text; }).join('') : '';
-        return (data.choices && data.choices[0] && data.choices[0].message) ? data.choices[0].message.content || '' : '';
-      } catch(e) { return JSON.stringify(data); }
     }
 
     /**
@@ -4849,27 +5198,12 @@
       if (!p || !p.api_key) { if (callback) callback(false, 'No API key', 0); return; }
       var model = p.activeModels[0];
       if (!model) { if (callback) callback(false, 'No models', 0); return; }
+      var adapter = window._scpAIProviders && window._scpAIProviders[pid];
+      if (!adapter || !adapter.buildTestRequest) { if (callback) callback(false, 'Unknown provider', 0); return; }
+
       var startTime = Date.now();
-      var cfg = _buildSel(pid, model);
-      var endpoint = AI_ENDPOINTS[pid]; if (!endpoint) { if (callback) callback(false, 'Unknown provider', 0); return; }
-      var body, headers;
-      var testPrompt = 'Respond with exactly: {"status":"ok"}';
-      switch (pid) {
-        case 'gemini':
-          endpoint = endpoint.replace('{MODEL}', model.id) + '?key=' + cfg.api_key;
-          headers = { 'Content-Type': 'application/json' };
-          body = { contents: [{ role: 'user', parts: [{ text: testPrompt }] }], generationConfig: { maxOutputTokens: 50, temperature: 0 } };
-          break;
-        case 'claude':
-          headers = { 'Content-Type': 'application/json', 'x-api-key': cfg.api_key, 'anthropic-version': '2023-06-01' };
-          body = { model: model.id, max_tokens: 50, messages: [{ role: 'user', content: testPrompt }] };
-          break;
-        default:
-          headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.api_key };
-          if (pid === 'openrouter') { headers['HTTP-Referer'] = window.location.origin; headers['X-Title'] = 'SCP Test'; }
-          body = { model: model.id, max_tokens: 50, messages: [{ role: 'user', content: testPrompt }], temperature: 0 };
-      }
-      fetch(endpoint, { method: 'POST', headers: headers, body: JSON.stringify(body) })
+      var req = adapter.buildTestRequest(model, p.api_key);
+      fetch(req.endpoint, { method: 'POST', headers: req.headers, body: JSON.stringify(req.body) })
         .then(function(res) {
           var elapsed = Date.now() - startTime;
           if (!res.ok) return res.text().then(function(t) { var msg = 'HTTP ' + res.status; try { msg = JSON.parse(t).error.message || msg; } catch(e) {} if (callback) callback(false, msg, elapsed); });
@@ -5086,8 +5420,10 @@
 
   // ============================================================
   // SECTION 2: LLMService  â€” extracted to src/ai/llm-service.js (v0.1.2)
-  // AI_ENDPOINTS + LLMService now live as `window.LLMService`. All references
-  // below resolve to that global via the local alias on the next line.
+  //   plus provider adapters in src/ai/providers/*.js (v0.1.3).
+  // LLMService is now `window.LLMService`; each provider is registered
+  // on `window._scpAIProviders[<id>]`. References below resolve via the
+  // local alias on the next line.
   // ============================================================
   var LLMService = window.LLMService;
 

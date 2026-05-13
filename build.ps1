@@ -15,12 +15,24 @@ $version = $pkg.version
 $banner = "/* gua Social Content Planner v$version | https://github.com/devenpro/guaSocialContentPlanner | built via build.ps1 (concat-only, no minify) */"
 
 # Load order matters: part1 must initialise before part2a polls for it,
-# and part2a before part2b. Within ai/, brand-service.js must load before
-# scp-part2b.js because part2b aliases the global it defines.
+# and part2a before part2b. Within ai/, the providers/_registry.js must
+# bootstrap window._scpAIProviders before any provider registers; all
+# providers should load before llm-service.js so its callAI dispatcher
+# can find them; brand-service.js and llm-service.js both load before
+# scp-part2b.js because part2b aliases the globals they define.
 # If you add new files, append them here in the correct order.
 $jsFiles = @(
     'src/core/scp-part1.js',
     'src/editing/scp-part2a.js',
+    'src/ai/providers/_registry.js',
+    'src/ai/providers/gemini.js',
+    'src/ai/providers/claude.js',
+    'src/ai/providers/openai.js',
+    'src/ai/providers/grok.js',
+    'src/ai/providers/groq.js',
+    'src/ai/providers/nvidia.js',
+    'src/ai/providers/huggingface.js',
+    'src/ai/providers/openrouter.js',
     'src/ai/brand-service.js',
     'src/ai/llm-service.js',
     'src/ai/scp-part2b.js'
