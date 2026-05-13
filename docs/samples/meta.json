@@ -1,0 +1,208 @@
+{
+  "workspace": {
+    "name": "GoUltra AI",
+    "description": "Social media content for GoUltra AI — the Human + AI content planning platform. Telling the story of why we built it, how it works, and how to get the most from it.",
+    "created": "2026-03-01T08:00:00.000Z"
+  },
+  "settings": {
+    "timezone": "Asia/Kolkata",
+    "card_density": "normal",
+    "default_view": "dashboard",
+    "platforms": {
+      "linkedin": {
+        "enabled": true,
+        "handle": "@goultraai",
+        "char_limit": 3000,
+        "hashtag_limit": 5,
+        "best_times": ["09:00", "12:00", "17:00"],
+        "notes": "Primary platform — thought leadership, long-form storytelling. Target: founders, marketers, content teams."
+      },
+      "instagram": {
+        "enabled": true,
+        "handle": "@goultra.ai",
+        "char_limit": 2200,
+        "hashtag_limit": 25,
+        "best_times": ["11:00", "14:00", "19:00"],
+        "notes": "Visual-first. Carousels for education, Reels for demos and tips."
+      },
+      "facebook": {
+        "enabled": true,
+        "handle": "GoUltraAI",
+        "char_limit": 63206,
+        "hashtag_limit": 5,
+        "best_times": ["09:00", "13:00", "16:00"],
+        "notes": "Community engagement. Repurpose LinkedIn content with more casual tone."
+      },
+      "youtube": {
+        "enabled": true,
+        "handle": "@goultraai",
+        "title_limit": 100,
+        "description_limit": 5000,
+        "tag_limit": 500,
+        "notes": "Shorts for quick tips and product demos. Long-form in YVP."
+      }
+    },
+    "defaults": {
+      "type": "carousel",
+      "platforms": ["linkedin", "instagram"],
+      "tone_id": "tone_004",
+      "audience_id": "aud_001",
+      "priority": "medium",
+      "tags": []
+    },
+    "tones": [
+      { "id": "tone_001", "name": "Professional", "description": "Authoritative, data-driven, polished" },
+      { "id": "tone_002", "name": "Conversational", "description": "Friendly, relatable, like talking to a smart friend" },
+      { "id": "tone_003", "name": "Educational", "description": "Teaching, step-by-step, empowering" },
+      { "id": "tone_004", "name": "Storytelling", "description": "Narrative-driven, behind-the-scenes, vulnerable" },
+      { "id": "tone_005", "name": "Bold / Contrarian", "description": "Challenge assumptions, provocative, unapologetic" },
+      { "id": "tone_006", "name": "Visionary", "description": "Forward-looking, aspirational, future-focused" }
+    ],
+    "audiences": [
+      { "id": "aud_001", "name": "Content Creators & Marketers", "description": "Social media managers, content strategists, freelancers managing brand presence" },
+      { "id": "aud_002", "name": "Founders & Decision Makers", "description": "Startup founders, CMOs, agency owners evaluating content tools" },
+      { "id": "aud_003", "name": "AI-Curious Beginners", "description": "Want to use AI for content but overwhelmed by options and prompting" },
+      { "id": "aud_004", "name": "Agency Teams", "description": "Agencies managing multiple brands, need scalable workflows" },
+      { "id": "aud_005", "name": "Solo Entrepreneurs", "description": "Wearing all hats, need efficiency without sacrificing quality" }
+    ],
+    "image_styles": [
+      { "id": "is_001", "name": "GoUltra Clean", "description": "White/light backgrounds, blue accent, minimal, professional" },
+      { "id": "is_002", "name": "Dark Mode Premium", "description": "Dark backgrounds with glowing accent colors, techy feel" },
+      { "id": "is_003", "name": "Flat Illustration", "description": "Clean vector characters and icons, modern and friendly" },
+      { "id": "is_004", "name": "Screenshot + Overlay", "description": "Product screenshots with branded overlay frames and callouts" },
+      { "id": "is_005", "name": "Split Comparison", "description": "Before/after or vs. layouts for comparison content" },
+      { "id": "is_006", "name": "Infographic", "description": "Data-heavy with charts, stats, and visual hierarchy" }
+    ],
+    "media_prompt_templates": {
+      "image": "Create a {style} image for a {platform} post about: {topic}.\n\nBrand: GoUltra AI\nColors: Primary blue #1a73e8, Dark #1a1a2e, Accent teal #0d9488\nMood: {tone}\nKey message: {hook}\nAspect ratio: 1:1\n\n{custom_instructions}",
+      "carousel_batch": "Create {count} cohesive images for a {platform} carousel.\n\nTopic: {topic}\nStyle: {style}\nBrand: GoUltra AI (blue + dark + teal palette)\n\nSlide themes:\n{slide_themes}\n\nCRITICAL: Same header bar, font, color scheme across ALL slides.\n\n{custom_instructions}",
+      "thumbnail": "Create a YouTube Shorts thumbnail about: {topic}.\n\nBrand: GoUltra AI\nStyle: {style}\nMood: {tone}\nHigh contrast, bold text overlay, face or UI screenshot.\n\n{custom_instructions}"
+    },
+    "research_templates": [
+      {
+        "id": "rt_001",
+        "name": "Topic Ideation",
+        "description": "Generate diverse post ideas for a given topic",
+        "prompt": "You are a social media strategist for GoUltra AI, a Human + AI content planning platform. Generate {count} creative, high-performing post ideas about: {topic}.\n\nFor each idea provide:\n- title: working title\n- angle: unique perspective\n- hook: scroll-stopping first line\n- type: image/carousel/video/text\n- platforms: best platforms\n- cta_suggestion: call to action\n- reasoning: why this performs (2-3 sentences)\n- suggested_tags: relevant tags\n\nTarget: {audience}\nTone: {tone}\n\n{custom_instructions}\n\nRespond ONLY as a JSON array.",
+        "variables": ["topic", "platform", "count", "audience", "tone", "custom_instructions"]
+      },
+      {
+        "id": "rt_002",
+        "name": "Competitor Gap Analysis",
+        "description": "Find content gaps competitors miss",
+        "prompt": "Analyze how competitors in the AI content tools space ({competitor_info}) approach social media content. Identify {count} content gaps or angles they miss that GoUltra AI can own.\n\nOur positioning: {brand_info}\nTopic area: {topic}\n\nRespond ONLY as a JSON array with: title, angle, hook, type, platforms, cta_suggestion, reasoning, suggested_tags.",
+        "variables": ["competitor_info", "brand_info", "topic", "count"]
+      },
+      {
+        "id": "rt_003",
+        "name": "Content Pillar Expansion",
+        "description": "Expand a content pillar into post ideas",
+        "prompt": "Expand the content pillar '{pillar}' into {count} diverse post ideas for GoUltra AI.\n\nVary types (image, carousel, video, text), angles (educational, provocative, storytelling, data-driven), and depth.\n\nPlatforms: {platforms}\nAudience: {audience}\n\nRespond ONLY as a JSON array.",
+        "variables": ["pillar", "count", "platforms", "audience"]
+      },
+      {
+        "id": "rt_004",
+        "name": "Product Story Arc",
+        "description": "Map a multi-post narrative arc for a product story",
+        "prompt": "Create a {count}-post story arc that takes the audience on a journey:\n\nStory: {story_brief}\nArc: Problem → Exploration → Solution → Proof → Action\n\nEach post should feel complete on its own but contribute to the larger narrative.\n\nPlatforms: {platforms}\nAudience: {audience}\n\nRespond ONLY as a JSON array with: title, arc_position (1-N), angle, hook, type, platforms, cta_suggestion, reasoning.",
+        "variables": ["story_brief", "count", "platforms", "audience"]
+      }
+    ],
+    "brand_design": {
+      "colors": {
+        "primary": "#1a73e8",
+        "secondary": "#1a1a2e",
+        "accent": "#0d9488",
+        "background": "#ffffff",
+        "text": "#1a1a2e",
+        "palette_description": "Clean tech blue with dark navy depth and teal accent. Professional yet modern, never corporate-stuffy."
+      },
+      "typography": {
+        "heading_style": "Bold sans-serif (Inter/Poppins), clean and modern",
+        "body_style": "Regular sans-serif, high readability, generous line height",
+        "text_treatment": "Minimal text on images — max 6-8 words per overlay. Large headings, small supporting text."
+      },
+      "visual_style": {
+        "overall_aesthetic": "Clean tech-forward minimalism with depth. White space is our friend.",
+        "photography_style": "Not used often — prefer illustrations and UI screenshots",
+        "illustration_style": "Flat vector with subtle gradients, rounded corners, friendly characters when needed",
+        "icon_style": "Line icons 2px stroke in brand blue, consistent with app UI icons",
+        "pattern_usage": "Subtle dot grid or mesh gradient backgrounds, never busy patterns",
+        "mood": "Empowering, clear-headed, confident but not arrogant. Like a brilliant friend explaining something complex simply."
+      },
+      "layout_rules": {
+        "image_composition": "Clean negative space, content left or center-aligned, never cluttered",
+        "carousel_consistency": "Same header bar with GoUltra blue gradient, same font sizes, same padding across all slides",
+        "thumbnail_style": "Bold text overlay on dark/gradient background, product UI peek, high contrast",
+        "border_radius": "12px on cards, 8px on inner elements",
+        "spacing": "Generous — 24-32px padding minimum"
+      },
+      "reference_image_ids": {
+        "primary_style": ["img_001", "img_002"],
+        "carousel_template": ["img_003"],
+        "thumbnail_template": ["img_004"]
+      },
+      "brand_prompt_prefix": ""
+    }
+  },
+  "aiPreferences": {
+    "appDefault": { "provider": "gemini", "model": "gemini-2.0-flash" },
+    "perAction": {
+      "ai-write-content": { "provider": "claude", "model": "claude-sonnet-4-20250514" },
+      "ai-research-angles": { "provider": "gemini", "model": "gemini-2.0-flash" }
+    },
+    "lastProvider": "gemini",
+    "lastModel": "gemini-2.0-flash"
+  },
+  "reference_images": {
+    "img_001": {
+      "category": "linkedin_post",
+      "tags": ["brand-style", "clean", "blue-theme"],
+      "star": true,
+      "description": "GoUltra AI branded LinkedIn post template — blue gradient header, white body, clean typography",
+      "notes": "Primary reference for all LinkedIn single image posts",
+      "usage": [
+        { "post_id": "post_001", "used_at": "2026-03-05T10:00:00Z", "context": "media_prompt" },
+        { "post_id": "post_004", "used_at": "2026-03-12T09:00:00Z", "context": "media_prompt" }
+      ]
+    },
+    "img_002": {
+      "category": "linkedin_post",
+      "tags": ["dark-mode", "premium", "techy"],
+      "star": true,
+      "description": "Dark mode variant — navy background with teal accent glow, premium tech feel",
+      "notes": "Use for contrarian/bold posts and product announcements",
+      "usage": [
+        { "post_id": "post_003", "used_at": "2026-03-08T11:00:00Z", "context": "media_prompt" }
+      ]
+    },
+    "img_003": {
+      "category": "carousel_slide",
+      "tags": ["carousel-template", "consistent", "blue-header"],
+      "star": true,
+      "description": "Carousel slide template — blue gradient top bar, white body, numbered sections",
+      "notes": "Use as reference for ALL carousel slides to ensure visual consistency",
+      "usage": [
+        { "post_id": "post_002", "used_at": "2026-03-06T10:00:00Z", "context": "structured_prompt" },
+        { "post_id": "post_006", "used_at": "2026-03-18T09:00:00Z", "context": "structured_prompt" }
+      ]
+    },
+    "img_004": {
+      "category": "thumbnail",
+      "tags": ["youtube", "bold-text", "dark-bg"],
+      "star": false,
+      "description": "YouTube Shorts thumbnail — dark gradient background, bold white text, UI screenshot peek",
+      "notes": "High contrast for small mobile screens",
+      "usage": []
+    }
+  },
+  "image_categories": [
+    { "id": "linkedin_post", "label": "LinkedIn Post", "icon": "linkedin", "color": "#0077b5" },
+    { "id": "carousel_slide", "label": "Carousel Slide", "icon": "images", "color": "#7c3aed" },
+    { "id": "thumbnail", "label": "Thumbnail", "icon": "video", "color": "#d93025" },
+    { "id": "logo", "label": "Logo / Branding", "icon": "fingerprint", "color": "#0d904f" },
+    { "id": "pattern", "label": "Pattern / Texture", "icon": "grid-2", "color": "#e37400" },
+    { "id": "instagram_post", "label": "Instagram Post", "icon": "instagram", "color": "#e4405f" },
+    { "id": "other", "label": "Other", "icon": "image", "color": "#80868b" }
+  ]
+}

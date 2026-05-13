@@ -1,0 +1,722 @@
+{
+  "posts": [
+
+    {
+      "id": "post_001",
+      "title": "Why 90% of AI-Generated Content Looks the Same",
+      "type": "image",
+      "status": "published",
+      "priority": "high",
+      "tags": ["tag_001", "tag_006"],
+      "source": { "type": "research", "research_session_id": "rs_001", "research_idea_id": "ri_001", "notes": "From problem space research — strongest hook" },
+      "platforms": ["linkedin", "instagram"],
+      "research": {
+        "angles": [
+          { "id": "ang_001a", "angle": "The Sameness Problem", "description": "AI tools optimize for 'safe' output, producing eerily similar content across brands. The problem isn't AI — it's that everyone feeds AI the same empty context.", "selected": true },
+          { "id": "ang_001b", "angle": "The Lazy Prompt Epidemic", "description": "Most users give AI one-line prompts and expect magic. The real skill gap is in prompt engineering, not AI capability.", "selected": false },
+          { "id": "ang_001c", "angle": "The Brand Amnesia Effect", "description": "AI has no memory of your brand between sessions. Every generation starts from zero context.", "selected": false },
+          { "id": "ang_001d", "angle": "Template Trap", "description": "Content tools give you templates that make everything look the same. Differentiation requires breaking the template.", "selected": false }
+        ],
+        "selected_angle": "The Sameness Problem",
+        "angle_custom_input": "Focus on why the output looks generic — it's a context problem, not an AI problem",
+        "hooks": [
+          { "id": "hk_001a", "hook": "I can tell which posts were written by ChatGPT in under 3 seconds.", "type": "bold", "selected": true },
+          { "id": "hk_001b", "hook": "Your AI content sounds exactly like your competitor's. Here's why.", "type": "direct", "selected": false },
+          { "id": "hk_001c", "hook": "90% of AI content fails for one reason: zero brand context.", "type": "data", "selected": false },
+          { "id": "hk_001d", "hook": "I stopped using AI for content. Then I found the missing ingredient.", "type": "story", "selected": false },
+          { "id": "hk_001e", "hook": "What if the problem isn't AI — it's what you're NOT telling AI?", "type": "question", "selected": false }
+        ],
+        "selected_hook": "I can tell which posts were written by ChatGPT in under 3 seconds.",
+        "hook_custom_input": "",
+        "notes": "This is the anchor post for the series — sets up the problem clearly"
+      },
+      "content": {
+        "body": "I can tell which posts were written by ChatGPT in under 3 seconds.\n\nAnd so can your audience.\n\nHere's what makes AI content instantly recognizable:\n\n→ Generic opening (\"In today's fast-paced world...\")\n→ No specific brand voice or personality\n→ Perfectly structured but emotionally flat\n→ Hashtags that look auto-generated\n→ Could belong to ANY brand in your industry\n\nThe problem isn't that AI is bad at writing.\nThe problem is that AI has no idea who you are.\n\nEvery time you open ChatGPT and type \"write me a LinkedIn post about...\" — you're starting from absolute zero. No brand voice. No audience context. No visual identity. No history.\n\nOf course the output is generic.\nYou gave it generic input.\n\nThe fix isn't better AI models.\nIt's better context systems.\n\nWhat if your AI knew your brand voice, your audience's pain points, your visual style, and your content history — BEFORE you even typed a prompt?\n\nThat's exactly what we built.\n\nMore on this tomorrow. Drop a 🔥 if you've noticed the AI sameness problem too.\n\n#AIContent #ContentStrategy #BrandVoice #SocialMedia #GoUltraAI",
+        "tone_id": "tone_005",
+        "audience_id": "aud_001",
+        "notes": "Strong engagement — 847 likes, 156 comments on LinkedIn"
+      },
+      "carousel": { "slide_count": 0, "slides": [] },
+      "video": { "concept": "", "script": "", "duration_seconds": 0, "format": "" },
+      "media": {
+        "prompt_mode": "quick",
+        "prompts": [
+          {
+            "id": "mp_001",
+            "type": "image",
+            "label": "Main Image",
+            "prompt_text": "A clean, premium social media graphic on white background. Large bold text: '90% OF AI CONTENT LOOKS THE SAME' in dark navy (#1a1a2e). Below it, a row of 5 identical-looking social media post mockups fading into each other, all in beige/gray sameness. One post on the right breaks out in vibrant blue (#1a73e8) with a distinct visual style. Minimal, modern, tech-forward design. GoUltra AI brand colors. 1:1 aspect ratio.",
+            "negative_prompt": "cluttered, busy patterns, stock photo humans, low contrast",
+            "reference_urls": [],
+            "style_notes": "GoUltra Clean",
+            "status": "final"
+          }
+        ],
+        "config": { "style_id": "is_001", "custom_instructions": "Show contrast between generic sameness and differentiated content", "brand_context_enabled": true },
+        "structured_config": {}
+      },
+      "platform_content": {
+        "linkedin": {
+          "enabled": true,
+          "body": "I can tell which posts were written by ChatGPT in under 3 seconds.\n\nAnd so can your audience.\n\nHere's what makes AI content instantly recognizable:\n\n→ Generic opening (\"In today's fast-paced world...\")\n→ No specific brand voice or personality\n→ Perfectly structured but emotionally flat\n→ Hashtags that look auto-generated\n→ Could belong to ANY brand in your industry\n\nThe problem isn't that AI is bad at writing.\nThe problem is that AI has no idea who you are.\n\nEvery time you open ChatGPT and type \"write me a LinkedIn post about...\" — you're starting from absolute zero. No brand voice. No audience context. No visual identity. No history.\n\nOf course the output is generic. You gave it generic input.\n\nThe fix isn't better AI models. It's better context systems.\n\nWhat if your AI knew your brand voice, your audience's pain points, your visual style, and your content history — BEFORE you even typed a prompt?\n\nThat's exactly what we built. More on this tomorrow.\n\n#AIContent #ContentStrategy #BrandVoice #SocialMedia #GoUltraAI",
+          "notes": ""
+        },
+        "instagram": {
+          "enabled": true,
+          "body": "I can tell which posts were written by ChatGPT in under 3 seconds. 👀\n\nAnd so can your audience.\n\nSigns of AI-generic content:\n❌ \"In today's fast-paced world...\"\n❌ Zero brand personality\n❌ Emotionally flat\n❌ Auto-generated hashtags\n❌ Could be ANY brand\n\nThe problem? AI has no idea who you are.\n\nThe fix? Not better models.\nBetter context systems. 🧠\n\nWhat if AI knew your brand voice, audience, and visual style BEFORE you typed a single prompt?\n\nThat's what we built → Link in bio\n\n.\n.\n.\n#AIContent #ContentCreator #SocialMediaTips #BrandStrategy #ContentStrategy #AITools #GoUltraAI #DigitalMarketing #ContentPlanning #MarketingTips",
+          "notes": ""
+        }
+      },
+      "schedule": { "date": "2026-03-05", "time": "09:00", "timezone": "Asia/Kolkata", "published_urls": { "linkedin": "https://linkedin.com/posts/goultraai-001", "instagram": "https://instagram.com/p/goultra-001" } },
+      "performance": { "linkedin": { "impressions": 24500, "likes": 847, "comments": 156, "shares": 89, "clicks": 312 }, "instagram": { "impressions": 8200, "likes": 423, "comments": 67, "saves": 198 } },
+      "created": "2026-03-03T10:00:00.000Z",
+      "updated": "2026-03-05T18:30:00.000Z",
+      "created_by": "1",
+      "assigned_to": "",
+      "review_notes": ""
+    },
+
+    {
+      "id": "post_002",
+      "title": "The 7 Gaps Between Human Creativity and AI Execution",
+      "type": "carousel",
+      "status": "published",
+      "priority": "high",
+      "tags": ["tag_001", "tag_006"],
+      "source": { "type": "research", "research_session_id": "rs_001", "research_idea_id": "ri_002", "notes": "" },
+      "platforms": ["linkedin", "instagram"],
+      "research": {
+        "angles": [
+          { "id": "ang_002a", "angle": "The Gap Framework", "description": "Name and categorize the specific failure points between what humans want and what AI delivers. Gives audience a mental model to diagnose their own issues.", "selected": true },
+          { "id": "ang_002b", "angle": "Cost of the Gaps", "description": "Quantify the wasted time and missed opportunities from each gap.", "selected": false }
+        ],
+        "selected_angle": "The Gap Framework",
+        "angle_custom_input": "",
+        "hooks": [
+          { "id": "hk_002a", "hook": "There are exactly 7 places where AI drops the ball on content. Here they are.", "type": "data", "selected": true }
+        ],
+        "selected_hook": "There are exactly 7 places where AI drops the ball on content. Here they are.",
+        "hook_custom_input": "",
+        "notes": "Educational framework — high save rate expected"
+      },
+      "content": {
+        "body": "There are exactly 7 places where AI drops the ball on content. Here they are.\n\n1. BRAND CONTEXT GAP — AI doesn't know your voice, values, or visual identity\n2. AUDIENCE GAP — Generic targeting, no psychographic depth\n3. PROMPTING GAP — Users give vague inputs, get vague outputs\n4. VISUAL CONSISTENCY GAP — Every image looks different from the last\n5. WORKFLOW GAP — AI is a tool, not a system. No pipeline, no stages.\n6. FEEDBACK GAP — No way to tell AI \"more like this, less like that\"\n7. PLANNING GAP — AI generates one post at a time. No series, no arc, no strategy.\n\nFix these 7 gaps and AI becomes 10x more useful.\n\nIgnore them and you'll keep getting generic output.\n\nSave this. We'll solve each one in the coming weeks.\n\n#ContentStrategy #AIContent #SocialMediaMarketing #GoUltraAI #ContentGaps",
+        "tone_id": "tone_003",
+        "audience_id": "aud_001",
+        "notes": ""
+      },
+      "carousel": {
+        "slide_count": 9,
+        "slides": [
+          { "index": 0, "theme": "Hook slide — attention-grabbing title", "text_overlay": "7 GAPS Between Human Creativity & AI Execution" },
+          { "index": 1, "theme": "Gap 1: Brand Context", "text_overlay": "1. BRAND CONTEXT GAP" },
+          { "index": 2, "theme": "Gap 2: Audience Understanding", "text_overlay": "2. AUDIENCE GAP" },
+          { "index": 3, "theme": "Gap 3: Prompting Quality", "text_overlay": "3. PROMPTING GAP" },
+          { "index": 4, "theme": "Gap 4: Visual Consistency", "text_overlay": "4. VISUAL CONSISTENCY GAP" },
+          { "index": 5, "theme": "Gap 5: Workflow System", "text_overlay": "5. WORKFLOW GAP" },
+          { "index": 6, "theme": "Gap 6: Feedback Loop", "text_overlay": "6. FEEDBACK GAP" },
+          { "index": 7, "theme": "Gap 7: Strategic Planning", "text_overlay": "7. PLANNING GAP" },
+          { "index": 8, "theme": "CTA slide — save and follow for solutions", "text_overlay": "Fix all 7 → Follow for the solution" }
+        ]
+      },
+      "video": { "concept": "", "script": "", "duration_seconds": 0, "format": "" },
+      "media": {
+        "prompt_mode": "structured",
+        "prompts": [
+          { "id": "mp_002a", "type": "slide", "label": "Slide 1 — Hook", "prompt_text": "Bold title slide: '7 GAPS Between Human Creativity & AI Execution' in white text on deep navy (#1a1a2e) background with subtle blue mesh gradient. GoUltra AI logo small in corner. Clean, premium, authoritative.", "negative_prompt": "cluttered, colorful, playful", "reference_urls": [], "style_notes": "Dark Mode Premium", "status": "final" },
+          { "id": "mp_002b", "type": "slide", "label": "Slide 2 — Gap 1", "prompt_text": "Educational carousel slide. Blue gradient header bar with '01' in large number. Title: 'BRAND CONTEXT GAP'. Body: Icon of a blank identity card. Subtitle: 'AI doesn't know your voice'. White background, clean GoUltra typography.", "negative_prompt": "", "reference_urls": [], "style_notes": "GoUltra Clean", "status": "final" },
+          { "id": "mp_002c", "type": "slide", "label": "Slide 3-8", "prompt_text": "Continue same design system for gaps 2-7. Same header bar, numbering, icon + subtitle pattern. MAINTAIN exact same colors, fonts, spacing.", "negative_prompt": "", "reference_urls": [], "style_notes": "GoUltra Clean", "status": "final" },
+          { "id": "mp_002d", "type": "slide", "label": "Slide 9 — CTA", "prompt_text": "CTA slide: 'Fix all 7 → Follow for the solution' in bold. GoUltra AI logo centered. Blue gradient background matching slide 1. Profile tag @goultraai.", "negative_prompt": "", "reference_urls": [], "style_notes": "Dark Mode Premium", "status": "final" }
+        ],
+        "config": { "style_id": "is_001", "custom_instructions": "", "brand_context_enabled": true },
+        "structured_config": {
+          "subject": "7 gaps between human creativity and AI content execution",
+          "key_message": "AI fails at content because of context gaps, not capability gaps",
+          "text_overlay": "",
+          "visual_approach": "flat_design",
+          "background_type": "gradient",
+          "human_presence": "none",
+          "icon_usage": true,
+          "icon_style": "Line icons, 2px stroke, brand blue on white",
+          "pattern_usage": false,
+          "pattern_description": "",
+          "aspect_ratio": "1:1",
+          "layout": "centered",
+          "negative_space": "generous",
+          "text_placement": "center",
+          "color_override": "",
+          "style_override": "",
+          "reference_image_ids": ["img_003"],
+          "negative_prompt": "busy, cluttered, photorealistic"
+        }
+      },
+      "platform_content": {
+        "linkedin": { "enabled": true, "body": "", "notes": "Full carousel version" },
+        "instagram": { "enabled": true, "body": "", "notes": "Same carousel, shorter caption" }
+      },
+      "schedule": { "date": "2026-03-06", "time": "09:00", "timezone": "Asia/Kolkata", "published_urls": { "linkedin": "https://linkedin.com/posts/goultraai-002" } },
+      "performance": { "linkedin": { "impressions": 31200, "likes": 1023, "comments": 198, "shares": 245, "clicks": 567 } },
+      "created": "2026-03-03T14:00:00.000Z",
+      "updated": "2026-03-06T12:00:00.000Z",
+      "created_by": "1",
+      "assigned_to": "",
+      "review_notes": ""
+    },
+
+    {
+      "id": "post_003",
+      "title": "I Tested Every AI Content Tool. They All Miss This One Thing.",
+      "type": "image",
+      "status": "published",
+      "priority": "high",
+      "tags": ["tag_001"],
+      "source": { "type": "manual", "research_session_id": "", "research_idea_id": "", "notes": "Personal experience post — founder story" },
+      "platforms": ["linkedin"],
+      "research": {
+        "angles": [
+          { "id": "ang_003a", "angle": "Personal Journey", "description": "Founder story — tested everything, built what was missing. Authenticity + authority.", "selected": true }
+        ],
+        "selected_angle": "Personal Journey",
+        "angle_custom_input": "",
+        "hooks": [
+          { "id": "hk_003a", "hook": "200 hours testing AI content tools. One frustration kept coming back.", "type": "story", "selected": true }
+        ],
+        "selected_hook": "200 hours testing AI content tools. One frustration kept coming back.",
+        "hook_custom_input": "",
+        "notes": "Founder authenticity — sets up the 'why we built this' narrative"
+      },
+      "content": {
+        "body": "200 hours testing AI content tools. One frustration kept coming back.\n\nNone of them remembered my brand.\n\nI'd set up my tone, my audience, my colors. Then next session — blank slate. Every. Single. Time.\n\nHere's what I tried:\n\n• Jasper → Great templates. Zero brand memory between sessions.\n• Copy.ai → Fast output. Generic voice.\n• Buffer AI → Decent scheduling. Surface-level content.\n• Canva Magic Write → Visual-first. Words were an afterthought.\n• ChatGPT → Most flexible. Most manual. Zero workflow.\n\nThe pattern was clear:\n\nEvery tool treats content as a ONE-SHOT task.\nType prompt → get output → done.\n\nBut real content is a PROCESS:\nResearch → Angle → Hook → Draft → Adapt → Design → Schedule → Publish\n\nNone of them built for the full pipeline.\nNone kept brand context persistent.\nNone connected writing to visual generation.\n\nSo we built it.\n\nGoUltra AI isn't an AI writing tool.\nIt's a Human + AI content SYSTEM.\n\nBrand context that persists. A 9-stage pipeline. AI at every stage — but you drive.\n\nDoes this frustration resonate? Tell me in the comments.\n\n#ContentCreation #AITools #ProductBuilding #GoUltraAI #ContentPlanning",
+        "tone_id": "tone_004",
+        "audience_id": "aud_002",
+        "notes": ""
+      },
+      "carousel": { "slide_count": 0, "slides": [] },
+      "video": { "concept": "", "script": "", "duration_seconds": 0, "format": "" },
+      "media": {
+        "prompt_mode": "quick",
+        "prompts": [
+          {
+            "id": "mp_003",
+            "type": "image",
+            "label": "Main Image",
+            "prompt_text": "Dark premium image — navy background (#1a1a2e) with subtle blue mesh gradient glow. Center text: 'THEY ALL MISS THIS ONE THING' in bold white. Below: a faded row of AI tool logos (abstract, not real logos) in gray, with one glowing blue element breaking through. Minimal, high contrast, techy premium feel. GoUltra AI teal accent (#0d9488). 1:1 aspect ratio.",
+            "negative_prompt": "bright, colorful, busy, stock photo",
+            "reference_urls": [],
+            "style_notes": "Dark Mode Premium",
+            "status": "final"
+          }
+        ],
+        "config": { "style_id": "is_002", "custom_instructions": "Dark, premium, founder credibility feel", "brand_context_enabled": true },
+        "structured_config": {}
+      },
+      "platform_content": {
+        "linkedin": { "enabled": true, "body": "", "notes": "" }
+      },
+      "schedule": { "date": "2026-03-08", "time": "09:00", "timezone": "Asia/Kolkata", "published_urls": { "linkedin": "https://linkedin.com/posts/goultraai-003" } },
+      "performance": { "linkedin": { "impressions": 18900, "likes": 612, "comments": 134, "shares": 78 } },
+      "created": "2026-03-06T16:00:00.000Z",
+      "updated": "2026-03-08T12:00:00.000Z",
+      "created_by": "1",
+      "assigned_to": "",
+      "review_notes": ""
+    },
+
+    {
+      "id": "post_004",
+      "title": "What If Your AI Actually Knew Your Brand?",
+      "type": "image",
+      "status": "scheduled",
+      "priority": "high",
+      "tags": ["tag_002", "tag_006"],
+      "source": { "type": "research", "research_session_id": "rs_002", "research_idea_id": "ri_003", "notes": "" },
+      "platforms": ["linkedin", "instagram"],
+      "research": {
+        "angles": [
+          { "id": "ang_004a", "angle": "The Brand Memory Vision", "description": "Paint the picture of AI that actually retains and applies brand context across every interaction. Aspirational but grounded.", "selected": true }
+        ],
+        "selected_angle": "The Brand Memory Vision",
+        "angle_custom_input": "",
+        "hooks": [
+          { "id": "hk_004a", "hook": "Imagine opening an AI tool and it already knows your brand voice, audience, and visual style.", "type": "story", "selected": true }
+        ],
+        "selected_hook": "Imagine opening an AI tool and it already knows your brand voice, audience, and visual style.",
+        "hook_custom_input": "",
+        "notes": "Transition from problem to solution — aspirational"
+      },
+      "content": {
+        "body": "Imagine opening an AI tool and it already knows:\n\n• Your brand voice and forbidden words\n• Your audience's pain points and desires\n• Your visual identity — colors, fonts, composition rules\n• Your content pillars and best-performing angles\n• Your platform-specific formatting preferences\n\nNo setup. No pasting brand guidelines. No repeating yourself.\n\nEvery AI action — from research to writing to media prompts — is automatically infused with YOUR brand context.\n\nThis isn't a chatbot with a system prompt.\nThis is a persistent brand intelligence layer.\n\nIt knows that your LinkedIn posts use line breaks aggressively.\nIt knows your Instagram tone is warmer than your LinkedIn tone.\nIt knows you never use the word \"synergy.\"\nIt knows your carousel slides always have a blue header bar.\n\nThis is what we call the Brand Design Guide + Brand Context Engine in GoUltra AI.\n\nYour brand, pre-loaded. AI that works FOR your brand, not generically.\n\nWant to see it in action? Comment 'BRAND' below.\n\n#BrandStrategy #AIContent #PersonalBrand #ContentMarketing #GoUltraAI",
+        "tone_id": "tone_006",
+        "audience_id": "aud_001",
+        "notes": ""
+      },
+      "carousel": { "slide_count": 0, "slides": [] },
+      "video": { "concept": "", "script": "", "duration_seconds": 0, "format": "" },
+      "media": {
+        "prompt_mode": "quick",
+        "prompts": [
+          {
+            "id": "mp_004",
+            "type": "image",
+            "label": "Main Image",
+            "prompt_text": "Clean tech illustration: A brand identity card (like a digital passport) floating in center, glowing with brand colors (blue #1a73e8, teal #0d9488). Around it: icons representing voice, audience, colors, pillars, platforms — all connected by thin glowing lines to the central card. White background, generous negative space. Modern, aspirational, the visual metaphor of 'brand intelligence layer'. 1:1.",
+            "negative_prompt": "dark, cluttered, photorealistic, stock photo",
+            "reference_urls": [],
+            "style_notes": "Flat Illustration",
+            "status": "final"
+          }
+        ],
+        "config": { "style_id": "is_003", "custom_instructions": "Brand intelligence layer visualization", "brand_context_enabled": true },
+        "structured_config": {}
+      },
+      "platform_content": {
+        "linkedin": { "enabled": true, "body": "", "notes": "" },
+        "instagram": { "enabled": true, "body": "", "notes": "" }
+      },
+      "schedule": { "date": "2026-03-20", "time": "09:00", "timezone": "Asia/Kolkata", "published_urls": {} },
+      "performance": {},
+      "created": "2026-03-10T10:00:00.000Z",
+      "updated": "2026-03-18T09:00:00.000Z",
+      "created_by": "1",
+      "assigned_to": "",
+      "review_notes": ""
+    },
+
+    {
+      "id": "post_005",
+      "title": "The Missing Layer Between AI and Great Content",
+      "type": "carousel",
+      "status": "scheduled",
+      "priority": "high",
+      "tags": ["tag_002"],
+      "source": { "type": "research", "research_session_id": "rs_002", "research_idea_id": "ri_004", "notes": "" },
+      "platforms": ["linkedin", "instagram"],
+      "research": {
+        "angles": [
+          { "id": "ang_005a", "angle": "The Bridge Metaphor", "description": "Position GoUltra AI as the bridge/layer between raw AI capability and finished brand content. Not replacing AI or humans — connecting them.", "selected": true }
+        ],
+        "selected_angle": "The Bridge Metaphor",
+        "angle_custom_input": "",
+        "hooks": [
+          { "id": "hk_005a", "hook": "AI can write. Humans can think. The problem is the gap between them.", "type": "bold", "selected": true }
+        ],
+        "selected_hook": "AI can write. Humans can think. The problem is the gap between them.",
+        "hook_custom_input": "",
+        "notes": ""
+      },
+      "content": {
+        "body": "AI can write. Humans can think.\nThe problem is the gap between them.\n\nHere's what I mean:\n\nHumans are great at:\n→ Brand strategy & positioning\n→ Emotional intelligence & nuance\n→ Knowing what resonates with THEIR audience\n→ Quality judgment & editorial decisions\n→ Creative vision & storytelling arcs\n\nAI is great at:\n→ Speed & scale\n→ Variation & brainstorming\n→ Structured formatting\n→ Research & pattern recognition\n→ Consistent execution\n\nThe magic happens in the overlap.\nBut most tools force you to choose one or the other.\n\nThe missing layer is a SYSTEM that:\n✓ Lets humans set the strategy\n✓ Gives AI the brand context to execute well\n✓ Provides a structured pipeline (not just a text box)\n✓ Allows human review at every stage\n✓ Connects research → writing → visuals → scheduling\n\nThat's the layer we built.\n\nHuman-driven. AI-powered. Brand-consistent.\n\nSwipe to see the framework →\n\n#HumanPlusAI #ContentStrategy #AIContent #GoUltraAI #Marketing",
+        "tone_id": "tone_003",
+        "audience_id": "aud_001",
+        "notes": ""
+      },
+      "carousel": {
+        "slide_count": 7,
+        "slides": [
+          { "index": 0, "theme": "Hook — the gap between AI and humans", "text_overlay": "THE MISSING LAYER" },
+          { "index": 1, "theme": "What humans do best (5 items)", "text_overlay": "Humans excel at..." },
+          { "index": 2, "theme": "What AI does best (5 items)", "text_overlay": "AI excels at..." },
+          { "index": 3, "theme": "The overlap — where magic happens", "text_overlay": "The magic is in the overlap" },
+          { "index": 4, "theme": "Current tools force you to choose", "text_overlay": "But current tools force a choice" },
+          { "index": 5, "theme": "The missing layer — 5 requirements", "text_overlay": "The missing layer needs..." },
+          { "index": 6, "theme": "CTA — Human-driven, AI-powered", "text_overlay": "Human-driven. AI-powered." }
+        ]
+      },
+      "video": { "concept": "", "script": "", "duration_seconds": 0, "format": "" },
+      "media": {
+        "prompt_mode": "structured",
+        "prompts": [],
+        "config": { "style_id": "is_003", "custom_instructions": "", "brand_context_enabled": true },
+        "structured_config": {
+          "subject": "The bridge between human creativity and AI execution",
+          "key_message": "Neither humans nor AI alone — the magic is the system connecting them",
+          "text_overlay": "",
+          "visual_approach": "flat_design",
+          "background_type": "gradient",
+          "human_presence": "none",
+          "icon_usage": true,
+          "icon_style": "Line icons in brand blue and teal",
+          "aspect_ratio": "1:1",
+          "layout": "centered",
+          "negative_space": "generous",
+          "text_placement": "center",
+          "reference_image_ids": ["img_003"],
+          "negative_prompt": "photorealistic, stock imagery, cluttered"
+        }
+      },
+      "platform_content": {},
+      "schedule": { "date": "2026-03-22", "time": "09:00", "timezone": "Asia/Kolkata", "published_urls": {} },
+      "performance": {},
+      "created": "2026-03-12T10:00:00.000Z",
+      "updated": "2026-03-18T10:00:00.000Z",
+      "created_by": "1",
+      "assigned_to": "",
+      "review_notes": ""
+    },
+
+    {
+      "id": "post_006",
+      "title": "Human + AI: The Content Workflow That Changes Everything",
+      "type": "carousel",
+      "status": "scheduled",
+      "priority": "critical",
+      "tags": ["tag_003", "tag_006"],
+      "source": { "type": "manual", "research_session_id": "", "research_idea_id": "", "notes": "Core product vision post — the big reveal" },
+      "platforms": ["linkedin", "instagram", "facebook"],
+      "research": {
+        "angles": [
+          { "id": "ang_006a", "angle": "The Full Pipeline Reveal", "description": "Walk through the complete 9-stage pipeline showing how human decisions and AI assistance weave together at each step.", "selected": true }
+        ],
+        "selected_angle": "The Full Pipeline Reveal",
+        "angle_custom_input": "Show the 9 stages: idea → research → content writing → media prompts → platform adapt → ready → scheduled → published. Each stage shows what the human does vs what AI does.",
+        "hooks": [
+          { "id": "hk_006a", "hook": "Here's the workflow that took us from 2 posts/week to 15 — without burning out.", "type": "data", "selected": true }
+        ],
+        "selected_hook": "Here's the workflow that took us from 2 posts/week to 15 — without burning out.",
+        "hook_custom_input": "",
+        "notes": "FLAGSHIP POST — highest priority, broadest distribution"
+      },
+      "content": {
+        "body": "Here's the workflow that took us from 2 posts/week to 15 — without burning out.\n\nIt's a 9-stage pipeline where YOU make every strategic decision, and AI handles the heavy lifting at each stage.\n\nSwipe to see each stage →\n\n#ContentWorkflow #AIContent #ProductivityHacks #GoUltraAI #ContentCreation",
+        "tone_id": "tone_003",
+        "audience_id": "aud_001",
+        "notes": ""
+      },
+      "carousel": {
+        "slide_count": 11,
+        "slides": [
+          { "index": 0, "theme": "Hook slide — the result", "text_overlay": "2 posts/week → 15. Here's how." },
+          { "index": 1, "theme": "Stage 1: IDEA — AI researches, you decide", "text_overlay": "1. IDEA: AI researches, you decide" },
+          { "index": 2, "theme": "Stage 2: RESEARCH — AI finds angles & hooks", "text_overlay": "2. RESEARCH: AI finds angles & hooks" },
+          { "index": 3, "theme": "Stage 3: CONTENT — AI drafts, you edit", "text_overlay": "3. CONTENT: AI drafts, you refine" },
+          { "index": 4, "theme": "Stage 4: MEDIA — Structured prompts for visuals", "text_overlay": "4. MEDIA: Structured prompts → visuals" },
+          { "index": 5, "theme": "Stage 5: PLATFORM — Auto-adapt per channel", "text_overlay": "5. PLATFORM: Auto-adapt per channel" },
+          { "index": 6, "theme": "Stage 6: REVIEW — Human quality check", "text_overlay": "6. READY: Human quality gate" },
+          { "index": 7, "theme": "Stage 7: SCHEDULE — Plan your calendar", "text_overlay": "7. SCHEDULE: Plan & calendar" },
+          { "index": 8, "theme": "Stage 8: PUBLISH — Execute with confidence", "text_overlay": "8. PUBLISHED: Ship it" },
+          { "index": 9, "theme": "The key insight — start miles ahead", "text_overlay": "Start miles ahead. AI at every stage." },
+          { "index": 10, "theme": "CTA — try the workflow", "text_overlay": "Try the GoUltra AI workflow →" }
+        ]
+      },
+      "video": { "concept": "", "script": "", "duration_seconds": 0, "format": "" },
+      "media": {
+        "prompt_mode": "structured",
+        "prompts": [],
+        "config": { "style_id": "is_001", "custom_instructions": "", "brand_context_enabled": true },
+        "structured_config": {
+          "subject": "9-stage content pipeline with human + AI at each step",
+          "key_message": "You drive the strategy, AI handles the execution",
+          "visual_approach": "flat_design",
+          "background_type": "gradient",
+          "human_presence": "none",
+          "icon_usage": true,
+          "icon_style": "Two-color line icons: blue for AI actions, teal for human actions",
+          "aspect_ratio": "1:1",
+          "layout": "centered",
+          "negative_space": "generous",
+          "text_placement": "center",
+          "reference_image_ids": ["img_003"],
+          "negative_prompt": "photorealistic, cluttered, dark"
+        }
+      },
+      "platform_content": {},
+      "schedule": { "date": "2026-03-24", "time": "09:00", "timezone": "Asia/Kolkata", "published_urls": {} },
+      "performance": {},
+      "created": "2026-03-14T10:00:00.000Z",
+      "updated": "2026-03-18T14:00:00.000Z",
+      "created_by": "1",
+      "assigned_to": "",
+      "review_notes": ""
+    },
+
+    {
+      "id": "post_007",
+      "title": "Start Miles Ahead: Why GoUltra AI Puts Humans in the Driver's Seat",
+      "type": "image",
+      "status": "scheduled",
+      "priority": "high",
+      "tags": ["tag_003", "tag_006"],
+      "source": { "type": "manual", "research_session_id": "", "research_idea_id": "", "notes": "" },
+      "platforms": ["linkedin"],
+      "research": {
+        "angles": [
+          { "id": "ang_007a", "angle": "Miles Ahead Positioning", "description": "The core value prop — you don't start from scratch. Brand context, research, templates all pre-loaded. You start where other tools make you finish.", "selected": true }
+        ],
+        "selected_angle": "Miles Ahead Positioning",
+        "angle_custom_input": "",
+        "hooks": [
+          { "id": "hk_007a", "hook": "Most AI content tools make you start from zero. We make you start from mile 10.", "type": "bold", "selected": true }
+        ],
+        "selected_hook": "Most AI content tools make you start from zero. We make you start from mile 10.",
+        "hook_custom_input": "",
+        "notes": ""
+      },
+      "content": {
+        "body": "Most AI content tools make you start from zero.\nWe make you start from mile 10.\n\nHere's what's already loaded before you type a single prompt:\n\n✓ Your brand voice, tone variations per platform\n✓ Your audience's pain points and desires\n✓ Your visual identity — colors, typography, composition rules\n✓ Your reference image library with categorized brand visuals\n✓ Your content pillars and preferred angles\n✓ Your platform-specific formatting rules and char limits\n✓ Your research history and past winning hooks\n\nSo when you click \"AI Write\" — it doesn't ask \"what's your brand?\"\n\nIt already knows.\n\nThat's the difference between an AI chatbot and an AI content SYSTEM.\n\nOne makes you do the work upfront, every time.\nThe other invests 10 minutes once, then pays dividends forever.\n\nYou stay in control. You make every decision.\nAI just executes faster, smarter, and ON BRAND.\n\nThis is what Human + AI looks like.\n\n#GoUltraAI #ContentSystem #AIContent #ProductivityTools #ContentCreation",
+        "tone_id": "tone_005",
+        "audience_id": "aud_002",
+        "notes": ""
+      },
+      "carousel": { "slide_count": 0, "slides": [] },
+      "video": { "concept": "", "script": "", "duration_seconds": 0, "format": "" },
+      "media": { "prompt_mode": "quick", "prompts": [], "config": { "style_id": "is_001", "custom_instructions": "", "brand_context_enabled": true }, "structured_config": {} },
+      "platform_content": {},
+      "schedule": { "date": "2026-03-25", "time": "09:00", "timezone": "Asia/Kolkata", "published_urls": {} },
+      "performance": {},
+      "created": "2026-03-15T10:00:00.000Z",
+      "updated": "2026-03-18T14:30:00.000Z",
+      "created_by": "1",
+      "assigned_to": "",
+      "review_notes": ""
+    },
+
+    {
+      "id": "post_008",
+      "title": "Brand Context + Smart Prompting + Visual Planning = Content That Works",
+      "type": "video",
+      "status": "content_writing",
+      "priority": "high",
+      "tags": ["tag_003", "tag_006"],
+      "source": { "type": "manual", "research_session_id": "", "research_idea_id": "", "notes": "" },
+      "platforms": ["instagram", "youtube"],
+      "research": {
+        "angles": [
+          { "id": "ang_008a", "angle": "The Three Pillars Demo", "description": "Show the three core innovations in a fast, visual demo: brand context engine, dual prompt system, reference image library. Quick cuts, product UI.", "selected": true }
+        ],
+        "selected_angle": "The Three Pillars Demo",
+        "angle_custom_input": "",
+        "hooks": [
+          { "id": "hk_008a", "hook": "3 features that make AI content actually match your brand.", "type": "data", "selected": true }
+        ],
+        "selected_hook": "3 features that make AI content actually match your brand.",
+        "hook_custom_input": "",
+        "notes": "Product demo reel — fast cuts showing UI"
+      },
+      "content": {
+        "body": "",
+        "tone_id": "tone_003",
+        "audience_id": "aud_001",
+        "notes": "Script in progress — video concept defined, need to write"
+      },
+      "carousel": { "slide_count": 0, "slides": [] },
+      "video": {
+        "concept": "Fast-paced 45-second product demo showing three pillars: 1) Brand Design Guide setup (10s), 2) Structured prompt builder with auto brand injection (15s), 3) Reference image library feeding into media prompts (15s). End with before/after comparison of generic vs brand-consistent output (5s).",
+        "script": "",
+        "duration_seconds": 45,
+        "format": "Reel / YouTube Short"
+      },
+      "media": { "prompt_mode": "quick", "prompts": [], "config": { "style_id": "is_004", "custom_instructions": "", "brand_context_enabled": true }, "structured_config": {} },
+      "platform_content": {},
+      "schedule": { "date": "2026-03-27", "time": "14:00", "timezone": "Asia/Kolkata", "published_urls": {} },
+      "performance": {},
+      "created": "2026-03-16T10:00:00.000Z",
+      "updated": "2026-03-18T15:00:00.000Z",
+      "created_by": "1",
+      "assigned_to": "",
+      "review_notes": ""
+    },
+
+    {
+      "id": "post_009",
+      "title": "From Blank Page to Published: Inside the GoUltra AI Pipeline",
+      "type": "carousel",
+      "status": "research",
+      "priority": "medium",
+      "tags": ["tag_003", "tag_004"],
+      "source": { "type": "manual", "research_session_id": "", "research_idea_id": "", "notes": "" },
+      "platforms": ["linkedin", "instagram"],
+      "research": { "angles": [], "selected_angle": "", "angle_custom_input": "Show a real post going through all 6 pipeline steps — from idea to published. Screencast style.", "hooks": [], "selected_hook": "", "hook_custom_input": "", "notes": "Needs angle research — what's the most engaging way to show a pipeline?" },
+      "content": { "body": "", "tone_id": "tone_003", "audience_id": "aud_003", "notes": "" },
+      "carousel": { "slide_count": 8, "slides": [] },
+      "video": { "concept": "", "script": "", "duration_seconds": 0, "format": "" },
+      "media": { "prompt_mode": "quick", "prompts": [], "config": {}, "structured_config": {} },
+      "platform_content": {},
+      "schedule": { "date": "2026-03-29", "time": "", "timezone": "", "published_urls": {} },
+      "performance": {},
+      "created": "2026-03-17T10:00:00.000Z",
+      "updated": "2026-03-18T09:00:00.000Z",
+      "created_by": "1",
+      "assigned_to": "",
+      "review_notes": ""
+    },
+
+    {
+      "id": "post_010",
+      "title": "Reference Images: The Secret Weapon for Brand-Consistent AI Visuals",
+      "type": "image",
+      "status": "media_prompts",
+      "priority": "medium",
+      "tags": ["tag_003", "tag_004"],
+      "source": { "type": "manual", "research_session_id": "", "research_idea_id": "", "notes": "" },
+      "platforms": ["linkedin", "instagram"],
+      "research": {
+        "angles": [
+          { "id": "ang_010a", "angle": "Feature Spotlight", "description": "Deep dive into the reference image library — how uploading 5-10 brand visuals transforms every AI prompt.", "selected": true }
+        ],
+        "selected_angle": "Feature Spotlight",
+        "angle_custom_input": "",
+        "hooks": [
+          { "id": "hk_010a", "hook": "Upload 5 images. Every AI prompt becomes brand-consistent. Here's how.", "type": "direct", "selected": true }
+        ],
+        "selected_hook": "Upload 5 images. Every AI prompt becomes brand-consistent. Here's how.",
+        "hook_custom_input": "",
+        "notes": ""
+      },
+      "content": {
+        "body": "Upload 5 images. Every AI prompt becomes brand-consistent. Here's how.\n\nMost AI image tools generate visuals in a vacuum. No reference. No brand memory.\n\nGoUltra AI's Reference Image Library changes that.\n\nHere's the workflow:\n\n1. Upload your best brand visuals (logos, past posts, style references)\n2. Categorize them: LinkedIn Post, Carousel Template, Thumbnail, Pattern\n3. Star your favorites. Tag them. Add notes.\n4. When generating media prompts, these references auto-inject\n5. Your AI prompts now say \"match this exact visual style\" instead of hoping\n\nThe result? AI-generated image prompts that actually look like YOUR brand.\n\nNot generic stock. Not random style. YOUR style.\n\nThe secret isn't better AI models.\nIt's giving AI better references.\n\n#VisualBranding #AIContent #ContentDesign #GoUltraAI #BrandConsistency",
+        "tone_id": "tone_003",
+        "audience_id": "aud_001",
+        "notes": ""
+      },
+      "carousel": { "slide_count": 0, "slides": [] },
+      "video": { "concept": "", "script": "", "duration_seconds": 0, "format": "" },
+      "media": { "prompt_mode": "quick", "prompts": [], "config": { "style_id": "is_004", "custom_instructions": "Show the reference image library UI with categorized images", "brand_context_enabled": true }, "structured_config": {} },
+      "platform_content": {},
+      "schedule": { "date": "2026-03-31", "time": "09:00", "timezone": "Asia/Kolkata", "published_urls": {} },
+      "performance": {},
+      "created": "2026-03-17T14:00:00.000Z",
+      "updated": "2026-03-18T11:00:00.000Z",
+      "created_by": "1",
+      "assigned_to": "",
+      "review_notes": ""
+    },
+
+    {
+      "id": "post_011",
+      "title": "Tutorial: Set Up Your Brand Design Guide in 10 Minutes",
+      "type": "carousel",
+      "status": "idea",
+      "priority": "medium",
+      "tags": ["tag_004"],
+      "source": { "type": "manual", "research_session_id": "", "research_idea_id": "", "notes": "Step-by-step tutorial" },
+      "platforms": ["linkedin", "instagram"],
+      "research": { "angles": [], "selected_angle": "", "angle_custom_input": "", "hooks": [], "selected_hook": "", "hook_custom_input": "", "notes": "" },
+      "content": { "body": "", "tone_id": "tone_003", "audience_id": "aud_003", "notes": "Walk through: Colors → Typography → Visual Style → Layout → Reference Images → Preview" },
+      "carousel": { "slide_count": 8, "slides": [] },
+      "video": { "concept": "", "script": "", "duration_seconds": 0, "format": "" },
+      "media": { "prompt_mode": "quick", "prompts": [], "config": {}, "structured_config": {} },
+      "platform_content": {},
+      "schedule": { "date": "", "time": "", "timezone": "", "published_urls": {} },
+      "performance": {},
+      "created": "2026-03-18T08:00:00.000Z",
+      "updated": "2026-03-18T08:00:00.000Z",
+      "created_by": "1",
+      "assigned_to": "",
+      "review_notes": ""
+    },
+
+    {
+      "id": "post_012",
+      "title": "5 Prompting Secrets That 10x Your AI Content Quality",
+      "type": "image",
+      "status": "idea",
+      "priority": "medium",
+      "tags": ["tag_004"],
+      "source": { "type": "manual", "research_session_id": "", "research_idea_id": "", "notes": "Actionable tips" },
+      "platforms": ["linkedin", "instagram"],
+      "research": { "angles": [], "selected_angle": "", "angle_custom_input": "", "hooks": [], "selected_hook": "", "hook_custom_input": "", "notes": "1) Context before prompt 2) Structured > Quick for complex visuals 3) Negative prompts 4) Reference images 5) Iterate with AI Improve" },
+      "content": { "body": "", "tone_id": "tone_003", "audience_id": "aud_003", "notes": "" },
+      "carousel": { "slide_count": 0, "slides": [] },
+      "video": { "concept": "", "script": "", "duration_seconds": 0, "format": "" },
+      "media": { "prompt_mode": "quick", "prompts": [], "config": {}, "structured_config": {} },
+      "platform_content": {},
+      "schedule": { "date": "", "time": "", "timezone": "", "published_urls": {} },
+      "performance": {},
+      "created": "2026-03-18T08:15:00.000Z",
+      "updated": "2026-03-18T08:15:00.000Z",
+      "created_by": "1",
+      "assigned_to": "",
+      "review_notes": ""
+    },
+
+    {
+      "id": "post_013",
+      "title": "Case Study: 2 Posts/Week to 15 — Without Burning Out",
+      "type": "image",
+      "status": "idea",
+      "priority": "low",
+      "tags": ["tag_005"],
+      "source": { "type": "manual", "research_session_id": "", "research_idea_id": "", "notes": "Need real user data or our own metrics" },
+      "platforms": ["linkedin"],
+      "research": { "angles": [], "selected_angle": "", "angle_custom_input": "", "hooks": [], "selected_hook": "", "hook_custom_input": "", "notes": "" },
+      "content": { "body": "", "tone_id": "tone_004", "audience_id": "aud_005", "notes": "Show before/after metrics. Time per post. Quality comparison." },
+      "carousel": { "slide_count": 0, "slides": [] },
+      "video": { "concept": "", "script": "", "duration_seconds": 0, "format": "" },
+      "media": { "prompt_mode": "quick", "prompts": [], "config": {}, "structured_config": {} },
+      "platform_content": {},
+      "schedule": { "date": "", "time": "", "timezone": "", "published_urls": {} },
+      "performance": {},
+      "created": "2026-03-18T08:30:00.000Z",
+      "updated": "2026-03-18T08:30:00.000Z",
+      "created_by": "1",
+      "assigned_to": "",
+      "review_notes": ""
+    },
+
+    {
+      "id": "post_014",
+      "title": "Quick Mode vs Structured Mode: The Prompt Showdown",
+      "type": "video",
+      "status": "idea",
+      "priority": "low",
+      "tags": ["tag_004"],
+      "source": { "type": "manual", "research_session_id": "", "research_idea_id": "", "notes": "" },
+      "platforms": ["instagram", "youtube"],
+      "research": { "angles": [], "selected_angle": "", "angle_custom_input": "", "hooks": [], "selected_hook": "", "hook_custom_input": "", "notes": "" },
+      "content": { "body": "", "tone_id": "tone_002", "audience_id": "aud_003", "notes": "Side-by-side comparison: same post, Quick mode vs Structured mode. Show the difference in output quality." },
+      "carousel": { "slide_count": 0, "slides": [] },
+      "video": { "concept": "Split-screen comparison: Left = Quick mode (one-click, fast but less control). Right = Structured mode (5-section form, precise, brand-perfect). Show same post going through both, compare the media prompts generated.", "script": "", "duration_seconds": 60, "format": "Reel / YouTube Short" },
+      "media": { "prompt_mode": "quick", "prompts": [], "config": {}, "structured_config": {} },
+      "platform_content": {},
+      "schedule": { "date": "", "time": "", "timezone": "", "published_urls": {} },
+      "performance": {},
+      "created": "2026-03-18T08:45:00.000Z",
+      "updated": "2026-03-18T08:45:00.000Z",
+      "created_by": "1",
+      "assigned_to": "",
+      "review_notes": ""
+    }
+
+  ],
+
+  "research": {
+    "sessions": [
+      {
+        "id": "rs_001",
+        "type": "quick",
+        "topic": "Problems with AI content creation tools — why AI-generated content fails for brands",
+        "model": "gemini-2.0-flash",
+        "created": "2026-03-03T09:00:00.000Z",
+        "results": [
+          { "id": "ri_001", "title": "Why 90% of AI Content Looks the Same", "angle": "The Sameness Problem", "hook": "I can spot ChatGPT content in 3 seconds. Here's the tell.", "type": "image", "platforms": ["linkedin"], "cta_suggestion": "Comment if you've noticed this", "reasoning": "Taps into universal frustration. Bold claim generates engagement.", "suggested_tags": ["content-strategy", "ai-problems"], "rating": 5, "promoted": true },
+          { "id": "ri_002", "title": "The 7 Gaps Between Human Creativity and AI", "angle": "The Gap Framework", "hook": "There are exactly 7 places where AI fails at content.", "type": "carousel", "platforms": ["linkedin", "instagram"], "cta_suggestion": "Save this for reference", "reasoning": "Numbered framework = high save rate. Educational authority.", "suggested_tags": ["framework", "ai-gaps"], "rating": 5, "promoted": true },
+          { "id": "ri_005", "title": "The Real Cost of Generic AI Content", "angle": "Financial Impact", "hook": "Generic AI content is costing you $X per lost follower.", "type": "image", "platforms": ["linkedin"], "cta_suggestion": "Calculate your cost", "reasoning": "ROI angle appeals to decision makers.", "suggested_tags": ["roi", "ai-problems"], "rating": 3, "promoted": false },
+          { "id": "ri_006", "title": "AI Content Checklist: Is Your Post Generic?", "angle": "Self-Assessment Tool", "hook": "Score your last AI post against these 10 criteria.", "type": "carousel", "platforms": ["linkedin", "instagram"], "cta_suggestion": "Share your score", "reasoning": "Interactive, shareable, saves well.", "suggested_tags": ["checklist", "ai-quality"], "rating": 4, "promoted": false }
+        ]
+      },
+      {
+        "id": "rs_002",
+        "type": "advanced",
+        "topic": "Human + AI content workflow solutions and approaches",
+        "model": "gemini-2.0-flash",
+        "template_id": "rt_004",
+        "template_vars": { "story_brief": "How GoUltra AI solves the gap between human creativity and AI execution through brand context, structured prompting, and a unified pipeline", "count": "5", "platforms": "linkedin, instagram", "audience": "content creators and marketers frustrated with generic AI tools" },
+        "created": "2026-03-10T09:00:00.000Z",
+        "results": [
+          { "id": "ri_003", "title": "What If Your AI Actually Knew Your Brand?", "arc_position": 1, "angle": "Brand Memory Vision", "hook": "Imagine opening an AI tool that already knows your brand.", "type": "image", "platforms": ["linkedin", "instagram"], "cta_suggestion": "Comment BRAND for details", "reasoning": "Aspirational + specific. Makes audience imagine the solution before seeing it.", "rating": 5, "promoted": true },
+          { "id": "ri_004", "title": "The Missing Layer Between AI and Great Content", "arc_position": 2, "angle": "Bridge Metaphor", "hook": "AI can write. Humans can think. The problem is the gap.", "type": "carousel", "platforms": ["linkedin", "instagram"], "cta_suggestion": "Swipe to see the framework", "reasoning": "Framework content. Positions the gap as solvable, not permanent.", "rating": 5, "promoted": true },
+          { "id": "ri_007", "title": "Why I Built a Content OS Instead of Another AI Writer", "arc_position": 3, "angle": "Founder Decision", "hook": "We could have built another AI writing tool. We didn't.", "type": "image", "platforms": ["linkedin"], "cta_suggestion": "Follow for the full story", "reasoning": "Founder story creates emotional connection and differentiation.", "rating": 4, "promoted": false }
+        ]
+      }
+    ]
+  },
+
+  "tags": [
+    { "id": "tag_001", "name": "Series: The Problem", "color": "#d93025", "description": "Posts identifying the core problems with AI content tools", "created": "2026-03-03T08:00:00.000Z" },
+    { "id": "tag_002", "name": "Series: The Solution", "color": "#0d9488", "description": "Posts exploring the Human + AI approach and bridge concept", "created": "2026-03-03T08:05:00.000Z" },
+    { "id": "tag_003", "name": "Series: The Vision", "color": "#1a73e8", "description": "Posts revealing the GoUltra AI product and workflow", "created": "2026-03-03T08:10:00.000Z" },
+    { "id": "tag_004", "name": "Tutorials & Tips", "color": "#7c3aed", "description": "How-to guides, tips, and educational content", "created": "2026-03-03T08:15:00.000Z" },
+    { "id": "tag_005", "name": "Case Studies", "color": "#e37400", "description": "Real results, metrics, and user stories", "created": "2026-03-03T08:20:00.000Z" },
+    { "id": "tag_006", "name": "Product Launch", "color": "#0d904f", "description": "Core launch series — highest priority distribution", "created": "2026-03-03T08:25:00.000Z" }
+  ]
+}

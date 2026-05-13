@@ -1,0 +1,5 @@
+/* index.css — CSS bundle entry. Order matters: core defines the design
+   tokens (CSS variables) that editing/* consumes. */
+
+@import './core/scp-part1.css';
+@import './editing/scp-part2.css';

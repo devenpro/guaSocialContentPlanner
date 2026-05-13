@@ -1,0 +1,20 @@
+{
+  "name": "gua-social-content-planner",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Drupal-embedded social media content planner. Built as a single JS + single CSS file, served via jsDelivr to Drupal Asset Injector.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devenpro/guaSocialContentPlanner.git"
+  },
+  "homepage": "https://github.com/devenpro/guaSocialContentPlanner",
+  "license": "MIT",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "build:ps": "powershell -ExecutionPolicy Bypass -File ./build.ps1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}
