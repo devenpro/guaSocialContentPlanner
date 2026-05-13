@@ -460,6 +460,11 @@
   function migrateMeta() {
     var m = S.meta;
     m.workspace = m.workspace || { name: '', description: '', created: '' };
+    // Setup wizard fields — backfilled for older workspaces.
+    if (typeof m.workspace.niche === 'undefined') m.workspace.niche = '';
+    if (typeof m.workspace.audience_description === 'undefined') m.workspace.audience_description = '';
+    if (typeof m.workspace.primary_platform === 'undefined') m.workspace.primary_platform = '';
+    if (typeof m.workspace.posting_frequency === 'undefined') m.workspace.posting_frequency = '';
     m.settings = m.settings || {};
     m.settings.timezone = m.settings.timezone || 'Asia/Kolkata';
     m.settings.card_density = m.settings.card_density || 'normal';
@@ -497,7 +502,7 @@
 
   function getDefaultMeta() {
     return {
-      workspace: { name: '', description: '', created: new Date().toISOString() },
+      workspace: { name: '', description: '', niche: '', audience_description: '', primary_platform: '', posting_frequency: '', created: new Date().toISOString() },
       settings: {
         timezone: 'Asia/Kolkata', card_density: 'normal', default_view: 'dashboard',
         platforms: {

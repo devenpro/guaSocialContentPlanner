@@ -52,12 +52,14 @@ $jsFiles = @(
     'src/ai/actions/media.js',
     'src/ai/actions/visual.js',
     'src/ai/actions/platform.js',
-    'src/ai/scp-part2b.js'
+    'src/ai/scp-part2b.js',
+    'src/setup/scp-wizard.js'
 )
 
 $cssFiles = @(
     'src/core/scp-part1.css',
-    'src/editing/scp-part2.css'
+    'src/editing/scp-part2.css',
+    'src/setup/scp-wizard.css'
 )
 
 New-Item -ItemType Directory -Force -Path 'dist' | Out-Null
