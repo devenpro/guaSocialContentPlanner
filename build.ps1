@@ -22,6 +22,11 @@ $banner = "/* gua Social Content Planner v$version | https://github.com/devenpro
 # scp-part2b.js because part2b aliases the globals they define.
 # If you add new files, append them here in the correct order.
 $jsFiles = @(
+    'src/core/views/dashboard.js',
+    'src/core/views/posts.js',
+    'src/core/views/calendar.js',
+    'src/core/views/tags.js',
+    'src/core/views/activity.js',
     'src/core/scp-part1.js',
     'src/editing/scp-part2a.js',
     'src/ai/providers/_registry.js',
