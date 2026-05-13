@@ -15,10 +15,13 @@ $version = $pkg.version
 $banner = "/* gua Social Content Planner v$version | https://github.com/devenpro/guaSocialContentPlanner | built via build.ps1 (concat-only, no minify) */"
 
 # Load order matters: part1 must initialise before part2a polls for it,
-# and part2a before part2b. If you add new files, append them here.
+# and part2a before part2b. Within ai/, brand-service.js must load before
+# scp-part2b.js because part2b aliases the global it defines.
+# If you add new files, append them here in the correct order.
 $jsFiles = @(
     'src/core/scp-part1.js',
     'src/editing/scp-part2a.js',
+    'src/ai/brand-service.js',
     'src/ai/scp-part2b.js'
 )
 

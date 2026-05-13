@@ -1,4 +1,9 @@
 node_modules/
+
+# CI workflow is parked here until `gh auth refresh -h github.com -s workflow`
+# is run on the desktop. After that, remove this line and `git add .github/`.
+.github/
+
 .DS_Store
 Thumbs.db
 *.log
