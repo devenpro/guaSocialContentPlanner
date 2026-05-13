@@ -285,6 +285,104 @@
     });
   }
 
+  // --- Series CRUD ---
+  var SERIES_COLORS = ['#4c6ef5', '#9333ea', '#059669', '#dc2626', '#0891b2', '#d97706', '#0d904f', '#be123c'];
+
+  function openNewSeriesModal() {
+    var html = '<div class="scp-editor-form">';
+    html += '<div class="scp-form-group"><label>Series Name</label><input type="text" class="scp-input" data-field="name" placeholder="e.g. Founder Story Arc"></div>';
+    html += '<div class="scp-form-group"><label>Description</label><input type="text" class="scp-input" data-field="description" placeholder="What ties these posts together..."></div>';
+    html += '<div class="scp-form-group"><label>Color</label><div class="scp-color-picker">';
+    for (var ci = 0; ci < SERIES_COLORS.length; ci++) {
+      html += '<button class="scp-color-swatch' + (ci === 0 ? ' scp-color-swatch-active' : '') + '" data-action="pick-color" data-color="' + SERIES_COLORS[ci] + '" style="background:' + SERIES_COLORS[ci] + '"></button>';
+    }
+    html += '<input type="hidden" data-field="color" value="' + SERIES_COLORS[0] + '">';
+    html += '</div></div></div>';
+    openModal('New Series', html, {
+      saveLabel: 'Create Series',
+      onSave: function() {
+        var fields = collectModalFields();
+        if (!fields.name || !fields.name.trim()) { toast('Series name is required', 'warning'); return; }
+        var series = {
+          id: generateId('series'),
+          name: fields.name.trim(),
+          color: fields.color || SERIES_COLORS[0],
+          description: fields.description || '',
+          topicIds: [],
+          created: new Date().toISOString()
+        };
+        S.data.series = S.data.series || [];
+        S.data.series.push(series);
+        logActivity('series_created', '', '', 'Created series: ' + series.name);
+        snapshot('Create series'); buildMaps(); closeModal(); render(); syncToTextarea(); toast('Series "' + series.name + '" created', 'success');
+      }
+    });
+  }
+
+  function editSeriesModal(seriesId) {
+    var ser = S.seriesMap[seriesId]; if (!ser) return;
+    var html = '<div class="scp-editor-form">';
+    html += '<div class="scp-form-group"><label>Series Name</label><input type="text" class="scp-input" data-field="name" value="' + esc(ser.name) + '"></div>';
+    html += '<div class="scp-form-group"><label>Description</label><input type="text" class="scp-input" data-field="description" value="' + esc(ser.description || '') + '"></div>';
+    html += '<div class="scp-form-group"><label>Color</label><div class="scp-color-picker">';
+    for (var ci = 0; ci < SERIES_COLORS.length; ci++) {
+      html += '<button class="scp-color-swatch' + (ser.color === SERIES_COLORS[ci] ? ' scp-color-swatch-active' : '') + '" data-action="pick-color" data-color="' + SERIES_COLORS[ci] + '" style="background:' + SERIES_COLORS[ci] + '"></button>';
+    }
+    html += '<input type="hidden" data-field="color" value="' + esc(ser.color) + '">';
+    html += '</div></div></div>';
+    openModal('Edit Series', html, {
+      saveLabel: 'Save',
+      onSave: function() {
+        var fields = collectModalFields();
+        if (!fields.name || !fields.name.trim()) { toast('Series name is required', 'warning'); return; }
+        ser.name = fields.name.trim();
+        ser.color = fields.color || ser.color;
+        ser.description = fields.description || '';
+        logActivity('series_updated', '', '', 'Updated series: ' + ser.name);
+        snapshot('Edit series'); buildMaps(); closeModal(); render(); syncToTextarea(); toast('Series updated', 'success');
+      }
+    });
+  }
+
+  function deleteSeries(seriesId) {
+    var ser = S.seriesMap[seriesId]; if (!ser) return;
+    openConfirmDialog({
+      title: 'Delete Series', message: 'Delete "' + ser.name + '"? Topics and posts will keep their data but lose the series link.', confirmLabel: 'Delete', danger: true,
+      onConfirm: function() {
+        S.data.series = (S.data.series || []).filter(function(s) { return s.id !== seriesId; });
+        (S.data.topics || []).forEach(function(t) { if (t.seriesId === seriesId) t.seriesId = ''; });
+        (S.data.posts || []).forEach(function(p) { if (p.seriesId === seriesId) p.seriesId = ''; });
+        if (S.selectedSeriesId === seriesId) S.selectedSeriesId = null;
+        logActivity('series_deleted', '', '', 'Deleted series: ' + ser.name);
+        snapshot('Delete series'); buildMaps(); render(); syncToTextarea(); toast('Series deleted', 'success');
+      }
+    });
+  }
+
+  // Bulk-promote: take every status='idea' post in a series and advance
+  // it to 'drafting'. The primary affordance for graduating
+  // wizard-seeded posts into the active pipeline.
+  function promoteSeriesIdeas(seriesId) {
+    var ser = S.seriesMap[seriesId]; if (!ser) return;
+    var ideas = (S.data.posts || []).filter(function(p) { return p.seriesId === seriesId && p.status === 'idea'; });
+    if (ideas.length === 0) { toast('No idea-status posts to promote', 'info'); return; }
+    openConfirmDialog({
+      title: 'Start drafting',
+      message: 'Move ' + ideas.length + ' idea-stage post' + (ideas.length === 1 ? '' : 's') + ' in "' + ser.name + '" into the drafting pipeline?',
+      confirmLabel: 'Start drafting',
+      onConfirm: function() {
+        var now = new Date().toISOString();
+        for (var i = 0; i < ideas.length; i++) {
+          ideas[i].status = 'drafting';
+          ideas[i].updated = now;
+          logActivity('post_status_changed', ideas[i].id, ideas[i].title, 'idea → drafting (series promote)');
+        }
+        snapshot('Promote series ideas'); buildMaps(); closeModal(); render(); syncToTextarea();
+        toast(ideas.length + ' post' + (ideas.length === 1 ? '' : 's') + ' moved to drafting', 'success');
+      }
+    });
+  }
+
   // ============================================================
   // SECTIONS 5-10: STEP RENDERERS — extracted (v0.3.0)
   //   5   Basics     -> src/editing/steps/basics.js
@@ -898,6 +996,12 @@
     $(document).off('click.scp2a-et', '[data-action="edit-topic"]').on('click.scp2a-et', '[data-action="edit-topic"]', function(e) { e.preventDefault(); editTopicModal($(this).data('id')); });
     $(document).off('click.scp2a-dt', '[data-action="delete-topic"]').on('click.scp2a-dt', '[data-action="delete-topic"]', function(e) { e.preventDefault(); deleteTopic($(this).data('id')); });
 
+    // --- Series CRUD ---
+    $(document).off('click.scp2a-ns', '[data-action="new-series"]').on('click.scp2a-ns', '[data-action="new-series"]', function(e) { e.preventDefault(); openNewSeriesModal(); });
+    $(document).off('click.scp2a-es', '[data-action="edit-series"]').on('click.scp2a-es', '[data-action="edit-series"]', function(e) { e.preventDefault(); editSeriesModal($(this).data('id')); });
+    $(document).off('click.scp2a-ds', '[data-action="delete-series"]').on('click.scp2a-ds', '[data-action="delete-series"]', function(e) { e.preventDefault(); deleteSeries($(this).data('id')); });
+    $(document).off('click.scp2a-psi', '[data-action="promote-series-ideas"]').on('click.scp2a-psi', '[data-action="promote-series-ideas"]', function(e) { e.preventDefault(); promoteSeriesIdeas($(this).data('id')); });
+
     // --- Post type selector (basics step) ---
     $(document).off('click.scp2a-spt', '[data-action="set-post-type"]').on('click.scp2a-spt', '[data-action="set-post-type"]', function(e) {
       e.preventDefault(); var type = $(this).data('type');
@@ -1349,6 +1453,8 @@
     deletePost: deletePost, duplicatePost: duplicatePost,
     promoteResearchIdea: promoteResearchIdea,
     openNewTopicModal: openNewTopicModal, editTopicModal: editTopicModal, deleteTopic: deleteTopic,
+    openNewSeriesModal: openNewSeriesModal, editSeriesModal: editSeriesModal, deleteSeries: deleteSeries,
+    promoteSeriesIdeas: promoteSeriesIdeas,
     addResearchItem: addResearchItem, removeResearchItem: removeResearchItem,
     setPostStatus: setPostStatus,
     // AIOutputRenderer (Phase A)

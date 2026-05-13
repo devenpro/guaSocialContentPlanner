@@ -996,7 +996,7 @@
       case 'calendar':  html = renderCalendarView(); break;
       case 'images':    html = (R.imagesView) ? R.imagesView() : renderImagesPlaceholder(); break;
       case 'topics':    html = renderTopicsView(); break;
-      case 'series':    html = renderSeriesPlaceholder(); break;
+      case 'series':    html = renderSeriesView ? renderSeriesView() : renderSeriesPlaceholder(); break;
       case 'activity':  html = renderActivityView(); break;
       case 'settings':  html = (R.settingsView) ? R.settingsView() : renderSettingsPlaceholder(); break;
       default: html = renderDashboardView();
@@ -1015,12 +1015,14 @@
   //   9   Posts      -> src/core/views/posts.js
   //   10  Calendar   -> src/core/views/calendar.js
   //   11  Topics     -> src/core/views/topics.js
+  //   11b Series     -> src/core/views/series.js
   //   12  Activity   -> src/core/views/activity.js
   // ============================================================
   var renderDashboardView   = window._scpRenderDashboardView;
   var renderPostsView       = window._scpRenderPostsView;
   var renderCalendarView    = window._scpRenderCalendarView;
   var renderTopicsView      = window._scpRenderTopicsView;
+  var renderSeriesView      = window._scpRenderSeriesView;
   var renderActivityView    = window._scpRenderActivityView;
   var renderStatCard        = window._scpRenderStatCard;
   var renderActivityItem    = window._scpRenderActivityItem;
@@ -1401,6 +1403,10 @@
       var np = createNewPost({ schedule: { date: date, time: '', timezone: (S.meta.settings && S.meta.settings.timezone) || '' } });
       if (np) { toast('New post created for ' + date, 'success'); renderCurrentView(); }
     });
+
+    // --- Series ---
+    $(document).off('click.scp-ssr', '[data-action="select-series"]').on('click.scp-ssr', '[data-action="select-series"]', function(e) { e.preventDefault(); S.selectedSeriesId = $(this).data('id'); renderCurrentView(); });
+    $(document).off('click.scp-bsr', '[data-action="back-to-series"]').on('click.scp-bsr', '[data-action="back-to-series"]', function(e) { e.preventDefault(); S.selectedSeriesId = null; renderCurrentView(); });
 
     // --- Topics ---
     $(document).off('click.scp-st', '[data-action="select-topic"]').on('click.scp-st', '[data-action="select-topic"]', function(e) { e.preventDefault(); S.selectedTopicId = $(this).data('id'); renderCurrentView(); });

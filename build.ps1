@@ -26,6 +26,7 @@ $jsFiles = @(
     'src/core/views/posts.js',
     'src/core/views/calendar.js',
     'src/core/views/topics.js',
+    'src/core/views/series.js',
     'src/core/views/activity.js',
     'src/core/scp-part1.js',
     'src/editing/steps/basics.js',
