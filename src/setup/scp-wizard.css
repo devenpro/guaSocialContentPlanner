@@ -836,20 +836,59 @@ body.scp-wizard-open .scp-app { display: none !important; }
 /* Card states */
 .scp-wiz-card-selected {
   border-color: color-mix(in srgb, var(--card-color) 35%, var(--scp-border-light));
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.04),
+    inset 0 0 0 0 transparent;
+  transition: all var(--scp-transition-fast);
 }
 .scp-wiz-card-selected:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.10);
   border-color: color-mix(in srgb, var(--card-color) 55%, var(--scp-border-light));
 }
-.scp-wiz-card-selected .scp-wiz-card-edge { width: 6px; }
+.scp-wiz-card-selected .scp-wiz-card-edge { width: 8px; }
+.scp-wiz-card-selected:hover .scp-wiz-card-edge { width: 12px; }
 .scp-wiz-card-deselected {
   background: var(--scp-gray-50);
-  opacity: 0.6;
+  opacity: 0.55;
+  filter: saturate(0.5);
 }
-.scp-wiz-card-deselected .scp-wiz-card-edge { width: 3px; opacity: 0.4; }
-.scp-wiz-card-deselected:hover { opacity: 0.85; }
+.scp-wiz-card-deselected .scp-wiz-card-edge { width: 4px; opacity: 0.4; }
+.scp-wiz-card-deselected:hover { opacity: 0.85; filter: saturate(0.85); }
+
+/* Lead-icon "filled" variant for Series card */
+.scp-wiz-card-leadicon-filled {
+  width: 32px; height: 32px; border-radius: var(--scp-radius-sm);
+  background: color-mix(in srgb, var(--card-color) 12%, white);
+  color: var(--card-color);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: var(--scp-font-size-sm);
+  flex-shrink: 0;
+}
+
+/* Count chip in card header (series → "3 topics") */
+.scp-wiz-card-count {
+  display: inline-flex; align-items: center;
+  font-size: 10px; font-weight: 700;
+  padding: 3px 8px; border-radius: var(--scp-radius-full);
+  background: var(--scp-bg-secondary);
+  color: var(--scp-text-secondary);
+  border: 1px solid var(--scp-border-light);
+  white-space: nowrap;
+}
+
+/* AI hint line — appears on AI-generated series cards */
+.scp-wiz-series-aihint {
+  display: flex; align-items: flex-start; gap: var(--scp-space-2);
+  font-size: var(--scp-font-size-xs);
+  color: var(--scp-primary-dark);
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--scp-primary) 7%, white);
+  border: 1px solid color-mix(in srgb, var(--scp-primary) 20%, transparent);
+  border-radius: var(--scp-radius-sm);
+}
+.scp-wiz-series-aihint-icon { color: var(--scp-primary); flex-shrink: 0; }
+.scp-wiz-series-aihint-text { line-height: 1.45; }
 
 /* Topic card — edge is clickable to cycle colour */
 .scp-wiz-topic-card .scp-wiz-card-edge { cursor: pointer; }
@@ -905,7 +944,40 @@ body.scp-wizard-open .scp-app { display: none !important; }
   border-radius: var(--scp-radius-sm) !important;
 }
 
-/* Context chips */
+/* ─── Context panel (Stage 3 hero) ──────────────────────────────── */
+.scp-wiz-context-panel {
+  background: linear-gradient(180deg, var(--scp-white), var(--scp-bg-secondary));
+  border: 1px solid var(--scp-border-light);
+  border-radius: var(--scp-radius-lg);
+  padding: var(--scp-space-4) var(--scp-space-5);
+  margin-bottom: var(--scp-space-5);
+  display: flex; flex-direction: column; gap: var(--scp-space-3);
+}
+.scp-wiz-context-panel-head {
+  display: flex; align-items: center; gap: var(--scp-space-3);
+}
+.scp-wiz-context-panel-icon {
+  width: 40px; height: 40px; border-radius: var(--scp-radius-md);
+  background: var(--scp-primary-light); color: var(--scp-primary);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: var(--scp-font-size-md);
+  flex-shrink: 0;
+}
+.scp-wiz-context-panel-titles { flex: 1; min-width: 0; line-height: 1.3; }
+.scp-wiz-context-panel-title {
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-md); font-weight: 700;
+  color: var(--scp-text-primary);
+}
+.scp-wiz-context-panel-sub {
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-secondary);
+  margin-top: 1px;
+}
+.scp-wiz-context-chip-row {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+
+/* Legacy context-chips wrapper (kept for any callers not yet upgraded) */
 .scp-wiz-context-chips {
   display: flex; flex-wrap: wrap; gap: var(--scp-space-2); align-items: center;
   background: var(--scp-bg-secondary);
@@ -920,14 +992,20 @@ body.scp-wizard-open .scp-app { display: none !important; }
   text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700;
   margin-bottom: 2px;
 }
+
 .scp-wiz-context-chip {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 4px 10px; border-radius: var(--scp-radius-full);
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: var(--scp-radius-full);
   font-size: var(--scp-font-size-xs); font-weight: 600;
   --chip-color: var(--scp-primary);
   background: color-mix(in srgb, var(--chip-color) 12%, white);
   color: var(--chip-color);
-  border: 1px solid color-mix(in srgb, var(--chip-color) 35%, transparent);
+  border: 1px solid color-mix(in srgb, var(--chip-color) 30%, transparent);
+}
+.scp-wiz-context-chip-dot {
+  display: inline-block; width: 6px; height: 6px;
+  border-radius: var(--scp-radius-full);
+  background: var(--chip-color);
 }
 
 /* ─── Skeleton loading cards (shown during AI runs) ───────────────── */

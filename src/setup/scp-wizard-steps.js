@@ -592,13 +592,21 @@
       return html;
     }
 
-    html += '<div class="scp-wiz-context-chips">';
-    html += '<div class="scp-wiz-context-label">Working from these topics:</div>';
+    html += '<div class="scp-wiz-context-panel">';
+    html += '<div class="scp-wiz-context-panel-head">';
+    html += '<span class="scp-wiz-context-panel-icon">' + icon('tags') + '</span>';
+    html += '<div class="scp-wiz-context-panel-titles">';
+    html += '<div class="scp-wiz-context-panel-title">' + selectedTopics.length + ' topic' + (selectedTopics.length === 1 ? '' : 's') + ' selected from Stage 2</div>';
+    html += '<div class="scp-wiz-context-panel-sub">These are the only topics the AI will group into series.</div>';
+    html += '</div></div>';
+    html += '<div class="scp-wiz-context-chip-row">';
     for (var i = 0; i < selectedTopics.length; i++) {
       var t = selectedTopics[i];
-      html += '<span class="scp-wiz-context-chip" style="background:' + esc(t.color) + '15;color:' + esc(t.color) + ';border-color:' + esc(t.color) + '40">' + esc(t.name) + '</span>';
+      html += '<span class="scp-wiz-context-chip" style="--chip-color:' + esc(t.color) + '">';
+      html += '<span class="scp-wiz-context-chip-dot"></span>' + esc(t.name);
+      html += '</span>';
     }
-    html += '</div>';
+    html += '</div></div>';
 
     html += renderResearchPanel({
       label: 'Brief for series research',
@@ -637,18 +645,36 @@
 
   function renderSeriesCard(s, selectedTopics) {
     var stateCls = s.selected ? ' scp-wiz-card-selected' : ' scp-wiz-card-deselected';
+    var pickedCount = (s.topicTempIds || []).filter(function(tid) {
+      return selectedTopics.some(function(t) { return t.tempId === tid; });
+    }).length;
+    var pickedNames = (s.topicTempIds || []).map(function(tid) {
+      var t = selectedTopics.find(function(t) { return t.tempId === tid; });
+      return t ? t.name : null;
+    }).filter(Boolean);
+
     var html = '<article class="scp-wiz-card scp-wiz-series-card' + stateCls + '" data-temp-id="' + esc(s.tempId) + '" style="--card-color:' + esc(s.color) + '">';
     html += '<span class="scp-wiz-card-edge"></span>';
     html += '<div class="scp-wiz-card-body">';
     html += '<div class="scp-wiz-card-head">';
     html += '<label class="scp-wiz-card-select" title="Toggle selection"><input type="checkbox" class="scp-wiz-series-select"' + (s.selected ? ' checked' : '') + '></label>';
-    html += '<span class="scp-wiz-card-leadicon" aria-hidden="true">' + icon('layer-group') + '</span>';
+    html += '<span class="scp-wiz-card-leadicon scp-wiz-card-leadicon-filled" aria-hidden="true">' + icon('layer-group') + '</span>';
     html += '<input type="text" class="scp-input scp-wiz-card-title scp-wiz-series-field" data-field="name" value="' + esc(s.name) + '" placeholder="Series name">';
     html += '<div class="scp-wiz-card-actions">';
+    html += '<span class="scp-wiz-card-count" title="Topics in this series">' + pickedCount + ' ' + (pickedCount === 1 ? 'topic' : 'topics') + '</span>';
     html += '<span class="scp-wiz-card-tag scp-wiz-card-tag-' + (s.source === 'manual' ? 'manual' : 'ai') + '">' + (s.source === 'manual' ? 'Manual' : icon('sparkles') + ' AI') + '</span>';
     html += '<button class="scp-btn-icon scp-wiz-card-remove" data-action="wiz-remove-series" title="Remove">' + icon('trash') + '</button>';
     html += '</div></div>';
     html += '<input type="text" class="scp-input scp-wiz-card-desc scp-wiz-series-field" data-field="description" value="' + esc(s.description || '') + '" placeholder="What ties these posts together…">';
+
+    // AI hint line — show only when AI populated topics for this series
+    if (s.source === 'ai' && pickedNames.length) {
+      html += '<div class="scp-wiz-series-aihint">';
+      html += '<span class="scp-wiz-series-aihint-icon">' + icon('sparkles') + '</span>';
+      html += '<span class="scp-wiz-series-aihint-text">AI grouped: ' + esc(pickedNames.slice(0, 4).join(', ')) + (pickedNames.length > 4 ? ' + ' + (pickedNames.length - 4) + ' more' : '') + '</span>';
+      html += '</div>';
+    }
+
     html += '<div class="scp-wiz-topic-pickers">';
     html += '<div class="scp-wiz-topic-pickers-label">Topics in this series</div>';
     for (var i = 0; i < selectedTopics.length; i++) {
