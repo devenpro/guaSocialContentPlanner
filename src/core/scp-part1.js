@@ -1741,6 +1741,10 @@
     S.meta.setup = S.meta.setup || {};
     S.meta.setup.firstRun = true;
     S.meta.setup.completedAt = '';
+    // Drop the in-memory wizard working copy so a Settings → Re-run starts
+    // at Stage 1 with fresh fields, not whatever the user left behind on
+    // the previous pass.
+    S.setupWizard = null;
     syncToTextarea();
   }
   function isFirstRun() { return !!(S.meta.setup && S.meta.setup.firstRun); }

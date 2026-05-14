@@ -1,42 +1,42 @@
 /* ═══════════════════════════════════════════════════════════════════
-   SETUP WIZARD — full-screen overlay used on first run.
+   SETUP WIZARD — full-page takeover used on first run.
 
-   Variables are inherited from core/scp-part1.css. The wizard is
-   intentionally heavier than the standard openModal — it is a
-   one-time onboarding flow, not a CRUD dialog.
+   The wizard fills the viewport so users focus on it and only it.
+   Variables come from core/scp-part1.css.
    ═══════════════════════════════════════════════════════════════════ */
+
+/* Lock body scroll while the wizard is mounted. */
+body.scp-wizard-open { overflow: hidden; }
 
 .scp-wizard-backdrop {
   position: fixed; inset: 0; z-index: 1000;
-  background: rgba(32, 33, 36, 0.55);
-  backdrop-filter: blur(6px);
-  display: flex; align-items: center; justify-content: center;
-  padding: var(--scp-space-6);
+  background: var(--scp-bg-secondary);
+  display: flex; flex-direction: column;
+  padding: 0;
   opacity: 0; transition: opacity var(--scp-transition-base);
 }
 .scp-wizard-backdrop.scp-wizard-visible { opacity: 1; }
 
 .scp-wizard-modal {
-  width: 100%; max-width: 760px; max-height: 90vh;
+  width: 100%; height: 100%;
+  max-width: none; max-height: none;
   background: var(--scp-bg-primary);
-  border-radius: var(--scp-radius-xl);
-  box-shadow: var(--scp-shadow-xl);
+  border-radius: 0; box-shadow: none;
   display: flex; flex-direction: column;
   overflow: hidden;
-  transform: translateY(8px); transition: transform var(--scp-transition-base);
   font-family: var(--scp-font-family);
 }
-.scp-wizard-backdrop.scp-wizard-visible .scp-wizard-modal { transform: translateY(0); }
 
 /* ─── Header ─── */
 .scp-wizard-header {
-  padding: var(--scp-space-6) var(--scp-space-8) var(--scp-space-4);
+  padding: var(--scp-space-5) var(--scp-space-8) var(--scp-space-4);
   background: linear-gradient(135deg, var(--scp-primary-subtle), var(--scp-white));
   border-bottom: 1px solid var(--scp-border-light);
+  flex-shrink: 0;
 }
 .scp-wizard-header-top {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: var(--scp-space-5);
+  margin-bottom: var(--scp-space-4);
 }
 .scp-wizard-brand {
   display: inline-flex; align-items: center; gap: var(--scp-space-2);
@@ -45,7 +45,7 @@
 }
 .scp-wizard-brand svg, .scp-wizard-brand i { font-size: var(--scp-font-size-xl); }
 .scp-wizard-brand-logo {
-  height: 24px; width: auto; max-width: 88px;
+  height: 28px; width: auto; max-width: 100px;
   border-radius: var(--scp-radius-sm);
   object-fit: contain;
 }
@@ -67,9 +67,9 @@
   flex-shrink: 0; min-width: 0;
 }
 .scp-wizard-step-dot {
-  width: 32px; height: 32px; border-radius: var(--scp-radius-full);
+  width: 36px; height: 36px; border-radius: var(--scp-radius-full);
   display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: var(--scp-font-size-sm);
+  font-weight: 700; font-size: var(--scp-font-size-md);
   background: var(--scp-gray-100); color: var(--scp-text-tertiary);
   border: 2px solid transparent;
   flex-shrink: 0;
@@ -83,38 +83,38 @@
 .scp-wizard-step-done .scp-wizard-step-dot {
   background: var(--scp-success); color: var(--scp-white);
 }
-.scp-wizard-step-label { min-width: 0; padding-top: 4px; }
+.scp-wizard-step-label { min-width: 0; padding-top: 6px; }
 .scp-wizard-step-title {
   font-size: var(--scp-font-size-sm); font-weight: 600;
   color: var(--scp-text-secondary);
   white-space: nowrap;
 }
 .scp-wizard-step-active .scp-wizard-step-title { color: var(--scp-text-primary); }
-.scp-wizard-step-done .scp-wizard-step-title { color: var(--scp-text-secondary); }
+.scp-wizard-step-done   .scp-wizard-step-title { color: var(--scp-text-secondary); }
 .scp-wizard-step-subtitle {
   font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
   white-space: nowrap;
 }
 .scp-wizard-step-line {
-  flex: 1; min-width: 24px; height: 2px; margin-top: 15px;
+  flex: 1; min-width: 32px; height: 2px; margin-top: 17px;
   background: var(--scp-gray-200); border-radius: var(--scp-radius-full);
   transition: background var(--scp-transition-base);
 }
 .scp-wizard-step-line-done { background: var(--scp-success); }
 
-/* On narrow viewports drop step labels, keep dots + line. */
 @media (max-width: 720px) {
   .scp-wizard-step-label { display: none; }
-  .scp-wizard-step-line { margin-top: 14px; min-width: 12px; }
+  .scp-wizard-step-line { margin-top: 16px; min-width: 16px; }
+  .scp-wizard-header { padding: var(--scp-space-4) var(--scp-space-5); }
 }
 
 /* ─── Body ─── */
 .scp-wizard-body {
-  padding: var(--scp-space-8);
+  padding: var(--scp-space-8) var(--scp-space-6);
   overflow-y: auto;
   flex: 1;
 }
-.scp-wizard-step-content { max-width: 560px; margin: 0 auto; }
+.scp-wizard-step-content { max-width: 720px; margin: 0 auto; }
 .scp-wizard-headline {
   margin: 0 0 var(--scp-space-2);
   font-family: var(--scp-font-display);
@@ -125,20 +125,26 @@
   margin: 0 0 var(--scp-space-6);
   color: var(--scp-text-secondary); font-size: var(--scp-font-size-md);
 }
+
+/* Form basics inside wizard */
 .scp-wizard-form { display: flex; flex-direction: column; gap: var(--scp-space-5); }
 .scp-wizard-form .scp-form-group { margin: 0; }
-.scp-wizard-form label {
+.scp-wizard-form label,
+.scp-wiz-discovered label {
   display: block; margin-bottom: var(--scp-space-2);
   font-size: var(--scp-font-size-sm); font-weight: 600;
   color: var(--scp-text-primary);
 }
-.scp-wizard-form .scp-form-hint {
-  margin: var(--scp-space-1) 0 0;
-  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
+.scp-wiz-meta {
+  font-weight: 400; color: var(--scp-text-tertiary);
+  font-size: var(--scp-font-size-xs); margin-left: var(--scp-space-2);
 }
 .scp-wizard-form .scp-input,
 .scp-wizard-form .scp-textarea,
-.scp-wizard-form .scp-select {
+.scp-wizard-form .scp-select,
+.scp-wiz-discovered .scp-input,
+.scp-wiz-discovered .scp-textarea,
+.scp-wiz-discovered .scp-select {
   width: 100%; padding: 10px 12px;
   font-size: var(--scp-font-size-base);
   border: 1px solid var(--scp-border-default); border-radius: var(--scp-radius-md);
@@ -148,24 +154,336 @@
 }
 .scp-wizard-form .scp-input:focus,
 .scp-wizard-form .scp-textarea:focus,
-.scp-wizard-form .scp-select:focus {
+.scp-wizard-form .scp-select:focus,
+.scp-wiz-discovered .scp-input:focus,
+.scp-wiz-discovered .scp-textarea:focus,
+.scp-wiz-discovered .scp-select:focus {
   outline: none; border-color: var(--scp-border-focus);
   box-shadow: var(--scp-shadow-glow);
 }
-.scp-wizard-form .scp-form-row {
+.scp-wizard-form .scp-form-row,
+.scp-wiz-discovered .scp-form-row {
   display: grid; grid-template-columns: 1fr 1fr; gap: var(--scp-space-4);
 }
-.scp-wizard-form .scp-form-half { display: flex; flex-direction: column; }
 @media (max-width: 560px) {
-  .scp-wizard-form .scp-form-row { grid-template-columns: 1fr; }
+  .scp-wizard-form .scp-form-row,
+  .scp-wiz-discovered .scp-form-row { grid-template-columns: 1fr; }
 }
 .scp-wizard-required { color: var(--scp-error); font-weight: 700; }
 
-/* ─── Placeholder steps (used for steps not yet implemented) ─── */
-.scp-wizard-step-placeholder {
-  text-align: center;
-  padding: var(--scp-space-10) var(--scp-space-4);
+/* ─── Brand context card ─── */
+.scp-wiz-brand-card {
+  background: var(--scp-white);
+  border: 1px solid var(--scp-border-light);
+  border-radius: var(--scp-radius-lg);
+  padding: var(--scp-space-4);
+  margin-bottom: var(--scp-space-5);
 }
+.scp-wiz-brand-card-head {
+  display: flex; align-items: center; gap: var(--scp-space-3);
+  margin-bottom: var(--scp-space-2);
+}
+.scp-wiz-brand-card-logo {
+  width: 44px; height: 44px; border-radius: var(--scp-radius-md);
+  object-fit: contain; background: var(--scp-gray-50);
+}
+.scp-wiz-brand-card-name {
+  font-family: var(--scp-font-display); font-weight: 700;
+  color: var(--scp-text-primary); font-size: var(--scp-font-size-md);
+}
+.scp-wiz-brand-card-industry {
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.scp-wiz-brand-card-desc {
+  margin: var(--scp-space-2) 0;
+  color: var(--scp-text-secondary); font-size: var(--scp-font-size-sm);
+}
+.scp-wiz-brand-card-foot {
+  display: flex; align-items: center; gap: var(--scp-space-2);
+  font-size: var(--scp-font-size-xs); color: var(--scp-success);
+  margin-top: var(--scp-space-2);
+}
+
+/* ─── Research panel (shared by all stages) ─── */
+.scp-wiz-research {
+  background: var(--scp-white);
+  border: 1px solid var(--scp-border-light);
+  border-radius: var(--scp-radius-lg);
+  padding: var(--scp-space-4);
+  margin: var(--scp-space-5) 0;
+  display: flex; flex-direction: column; gap: var(--scp-space-3);
+}
+.scp-wiz-research-label {
+  font-size: var(--scp-font-size-sm); font-weight: 600;
+  color: var(--scp-text-primary);
+}
+.scp-wiz-brief {
+  width: 100%; padding: 10px 12px;
+  font-size: var(--scp-font-size-base);
+  border: 1px solid var(--scp-border-default); border-radius: var(--scp-radius-md);
+  resize: vertical; min-height: 70px;
+  font-family: inherit;
+}
+.scp-wiz-brief:focus { outline: none; border-color: var(--scp-border-focus); box-shadow: var(--scp-shadow-glow); }
+.scp-wiz-research-help {
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
+  margin: 0;
+}
+.scp-wiz-research-controls {
+  display: flex; align-items: center; gap: var(--scp-space-3);
+  flex-wrap: wrap;
+}
+.scp-wiz-research-picker { flex: 1; min-width: 200px; }
+.scp-wiz-research-picker .scp-ai-picker { display: inline-flex; gap: var(--scp-space-2); }
+.scp-wiz-research-picker .scp-select { padding: 6px 10px; font-size: var(--scp-font-size-sm); }
+.scp-wiz-run-btn { white-space: nowrap; }
+.scp-wiz-research-disabled {
+  display: inline-flex; align-items: center; gap: var(--scp-space-2);
+  font-size: var(--scp-font-size-sm); color: var(--scp-warning);
+  padding: var(--scp-space-2) var(--scp-space-3);
+  background: var(--scp-warning-light); border-radius: var(--scp-radius-md);
+}
+.scp-wiz-error {
+  background: var(--scp-error-light); color: var(--scp-error);
+  padding: var(--scp-space-2) var(--scp-space-3);
+  border-radius: var(--scp-radius-md);
+  font-size: var(--scp-font-size-sm);
+  display: flex; align-items: center; gap: var(--scp-space-2);
+}
+
+/* ─── Discovered fields panel ─── */
+.scp-wiz-discovered {
+  margin-top: var(--scp-space-5);
+  display: flex; flex-direction: column; gap: var(--scp-space-5);
+}
+.scp-wiz-section-title {
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-lg); font-weight: 700;
+  color: var(--scp-text-primary);
+  margin: 0;
+  display: flex; align-items: center; gap: var(--scp-space-2);
+}
+
+/* Platform chip multi-select */
+.scp-wiz-platform-grid {
+  display: flex; gap: var(--scp-space-2); flex-wrap: wrap;
+}
+.scp-wiz-platform-chip {
+  display: inline-flex; align-items: center; gap: var(--scp-space-2);
+  padding: 6px 12px; border-radius: var(--scp-radius-full);
+  border: 1.5px solid var(--scp-border-default);
+  font-size: var(--scp-font-size-sm); font-weight: 500;
+  color: var(--scp-text-secondary);
+  cursor: pointer;
+  transition: all var(--scp-transition-fast);
+  --chip-color: var(--scp-primary);
+  background: var(--scp-bg-primary);
+}
+.scp-wiz-platform-chip input { display: none; }
+.scp-wiz-platform-chip:hover { border-color: var(--chip-color); color: var(--scp-text-primary); }
+.scp-wiz-platform-chip-active {
+  background: color-mix(in srgb, var(--chip-color) 12%, white);
+  border-color: var(--chip-color);
+  color: var(--chip-color);
+  font-weight: 600;
+}
+.scp-wiz-platform-chip-disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ─── Lists of suggestions (topics, series, posts) ─── */
+.scp-wiz-list-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--scp-space-3); flex-wrap: wrap;
+  margin: var(--scp-space-5) 0 var(--scp-space-3);
+}
+.scp-wiz-list-title {
+  font-family: var(--scp-font-display); font-weight: 700;
+  font-size: var(--scp-font-size-md); color: var(--scp-text-primary);
+}
+.scp-wiz-list-actions {
+  display: flex; gap: var(--scp-space-2); align-items: center; flex-wrap: wrap;
+}
+.scp-wiz-suggestions {
+  display: flex; flex-direction: column; gap: var(--scp-space-3);
+}
+.scp-wiz-empty {
+  border: 1px dashed var(--scp-border-default);
+  border-radius: var(--scp-radius-lg);
+  padding: var(--scp-space-6) var(--scp-space-4);
+  text-align: center; color: var(--scp-text-secondary);
+  display: flex; flex-direction: column; align-items: center; gap: var(--scp-space-3);
+}
+.scp-wiz-empty p { margin: 0; }
+
+/* Suggestion card chassis */
+.scp-wiz-card {
+  position: relative;
+  display: flex; align-items: flex-start; gap: var(--scp-space-3);
+  padding: var(--scp-space-3);
+  background: var(--scp-bg-primary);
+  border: 1px solid var(--scp-border-light);
+  border-radius: var(--scp-radius-md);
+  transition: all var(--scp-transition-fast);
+}
+.scp-wiz-card-selected   { background: var(--scp-bg-primary); }
+.scp-wiz-card-deselected { background: var(--scp-gray-50); opacity: 0.65; }
+.scp-wiz-card:hover { border-color: var(--scp-border-default); }
+.scp-wiz-card-select { display: flex; align-items: center; padding-top: 4px; }
+.scp-wiz-card-select input { width: 18px; height: 18px; cursor: pointer; }
+.scp-wiz-card-fields {
+  flex: 1; display: flex; flex-direction: column; gap: var(--scp-space-2); min-width: 0;
+}
+.scp-wiz-card-fields .scp-input,
+.scp-wiz-card-fields .scp-textarea,
+.scp-wiz-card-fields .scp-select {
+  width: 100%; padding: 8px 10px; font-size: var(--scp-font-size-sm);
+  border: 1px solid var(--scp-border-light); border-radius: var(--scp-radius-md);
+  background: var(--scp-white); color: var(--scp-text-primary);
+  font-family: inherit;
+}
+.scp-wiz-card-fields .scp-input:focus,
+.scp-wiz-card-fields .scp-textarea:focus,
+.scp-wiz-card-fields .scp-select:focus {
+  outline: none; border-color: var(--scp-border-focus);
+  box-shadow: 0 0 0 3px rgba(26,115,232,0.15);
+}
+.scp-wiz-card-swatch {
+  width: 28px; height: 28px; border-radius: var(--scp-radius-full);
+  flex-shrink: 0; cursor: pointer;
+  border: 2px solid var(--scp-white); box-shadow: var(--scp-shadow-xs);
+  transition: transform var(--scp-transition-fast);
+}
+.scp-wiz-card-swatch:hover { transform: scale(1.1); }
+.scp-wiz-card-tag {
+  position: absolute; top: 6px; right: 36px;
+  font-size: 10px; font-weight: 600; color: var(--scp-text-tertiary);
+  background: var(--scp-gray-100);
+  padding: 2px 6px; border-radius: var(--scp-radius-sm);
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.scp-wiz-card-remove {
+  background: none; border: none; cursor: pointer;
+  color: var(--scp-text-tertiary); padding: 6px;
+  border-radius: var(--scp-radius-sm);
+  transition: all var(--scp-transition-fast);
+}
+.scp-wiz-card-remove:hover { color: var(--scp-error); background: var(--scp-error-light); }
+
+/* Series card extras */
+.scp-wiz-series-card { border-left: 4px solid var(--scp-primary); }
+.scp-wiz-topic-pickers {
+  display: flex; flex-wrap: wrap; gap: var(--scp-space-1);
+  margin-top: var(--scp-space-2);
+  padding-top: var(--scp-space-2);
+  border-top: 1px dashed var(--scp-border-light);
+}
+.scp-wiz-topic-pickers-label {
+  width: 100%;
+  font-size: var(--scp-font-size-xs); font-weight: 600;
+  color: var(--scp-text-tertiary); text-transform: uppercase;
+  letter-spacing: 0.04em; margin-bottom: var(--scp-space-1);
+}
+.scp-wiz-topic-picker {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: var(--scp-radius-full);
+  border: 1px solid var(--scp-border-default);
+  font-size: var(--scp-font-size-xs); font-weight: 500;
+  color: var(--scp-text-secondary);
+  cursor: pointer; transition: all var(--scp-transition-fast);
+  --chip-color: var(--scp-primary);
+  background: var(--scp-bg-primary);
+}
+.scp-wiz-topic-picker input { display: none; }
+.scp-wiz-topic-picker:hover { border-color: var(--chip-color); }
+.scp-wiz-topic-picker-active {
+  background: color-mix(in srgb, var(--chip-color) 12%, white);
+  border-color: var(--chip-color);
+  color: var(--chip-color);
+  font-weight: 600;
+}
+
+/* Post card */
+.scp-wiz-post-fields { gap: var(--scp-space-2); }
+.scp-wiz-post-meta {
+  display: flex; flex-wrap: wrap; gap: var(--scp-space-2); align-items: center;
+  font-size: var(--scp-font-size-xs);
+}
+.scp-wiz-post-meta .scp-select { width: auto; min-width: 90px; }
+
+/* Context chips (read-only) */
+.scp-wiz-context-chips {
+  display: flex; flex-wrap: wrap; gap: var(--scp-space-2); align-items: center;
+  background: var(--scp-bg-secondary);
+  padding: var(--scp-space-3) var(--scp-space-4);
+  border-radius: var(--scp-radius-md);
+  margin-bottom: var(--scp-space-4);
+}
+.scp-wiz-context-label {
+  width: 100%;
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
+  text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600;
+  margin-bottom: 2px;
+}
+.scp-wiz-context-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: var(--scp-radius-full);
+  border: 1px solid; font-size: var(--scp-font-size-xs); font-weight: 500;
+}
+
+/* Stage 3 basis selector */
+.scp-wiz-basis-row {
+  display: flex; align-items: center; gap: var(--scp-space-3);
+  flex-wrap: wrap;
+  background: var(--scp-bg-secondary);
+  padding: var(--scp-space-3) var(--scp-space-4);
+  border-radius: var(--scp-radius-md);
+  margin: var(--scp-space-5) 0 var(--scp-space-2);
+}
+.scp-wiz-basis-toggle {
+  display: inline-flex; gap: 0;
+  border: 1px solid var(--scp-border-default); border-radius: var(--scp-radius-md);
+  overflow: hidden;
+}
+.scp-wiz-basis-btn {
+  background: var(--scp-bg-primary);
+  border: none; cursor: pointer;
+  padding: 8px 14px; font-size: var(--scp-font-size-sm); font-weight: 600;
+  color: var(--scp-text-secondary);
+  display: inline-flex; align-items: center; gap: var(--scp-space-2);
+  transition: all var(--scp-transition-fast);
+}
+.scp-wiz-basis-btn:hover:not(:disabled) { background: var(--scp-gray-50); color: var(--scp-text-primary); }
+.scp-wiz-basis-btn-active { background: var(--scp-primary); color: var(--scp-white); }
+.scp-wiz-basis-btn-active:hover { background: var(--scp-primary-hover); color: var(--scp-white); }
+.scp-wiz-basis-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.scp-wiz-basis-select {
+  flex: 1; min-width: 200px;
+  padding: 8px 12px; border: 1px solid var(--scp-border-default);
+  border-radius: var(--scp-radius-md); background: var(--scp-bg-primary);
+  font-family: inherit; font-size: var(--scp-font-size-sm);
+}
+
+/* ─── Footer ─── */
+.scp-wizard-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--scp-space-4) var(--scp-space-8);
+  background: var(--scp-bg-secondary);
+  border-top: 1px solid var(--scp-border-light);
+  gap: var(--scp-space-4);
+  flex-shrink: 0;
+}
+.scp-wizard-footer-left,
+.scp-wizard-footer-right {
+  display: flex; align-items: center; gap: var(--scp-space-3);
+}
+.scp-wizard-footer-right { margin-left: auto; }
+.scp-wizard-step-count {
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Placeholder state (shouldn't normally render once steps file loads) */
+.scp-wizard-step-placeholder { text-align: center; padding: var(--scp-space-10) var(--scp-space-4); }
 .scp-wizard-placeholder-icon {
   width: 64px; height: 64px; border-radius: var(--scp-radius-full);
   background: var(--scp-primary-light); color: var(--scp-primary);
@@ -178,266 +496,6 @@
   font-size: var(--scp-font-size-2xl); color: var(--scp-text-primary);
 }
 .scp-wizard-step-placeholder p {
-  margin: 0; color: var(--scp-text-secondary);
-  max-width: 420px; margin: 0 auto; line-height: 1.6;
-}
-
-/* ─── Footer ─── */
-.scp-wizard-footer {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: var(--scp-space-4) var(--scp-space-8);
-  background: var(--scp-bg-secondary);
-  border-top: 1px solid var(--scp-border-light);
-  gap: var(--scp-space-4);
-}
-.scp-wizard-footer-left,
-.scp-wizard-footer-right {
-  display: flex; align-items: center; gap: var(--scp-space-3);
-}
-.scp-wizard-footer-right { margin-left: auto; }
-.scp-wizard-step-count {
-  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
-  font-variant-numeric: tabular-nums;
-}
-
-/* ─── Shared step affordances ─── */
-.scp-wizard-context {
-  display: inline-flex; align-items: center; gap: var(--scp-space-2);
-  background: var(--scp-primary-subtle); color: var(--scp-text-secondary);
-  padding: var(--scp-space-2) var(--scp-space-3);
-  border-radius: var(--scp-radius-md);
-  font-size: var(--scp-font-size-sm);
-  margin-bottom: var(--scp-space-5);
-}
-.scp-wizard-actions {
-  display: flex; gap: var(--scp-space-3); flex-wrap: wrap;
-  margin-bottom: var(--scp-space-5);
-}
-.scp-wizard-actions .scp-btn { white-space: nowrap; }
-.scp-wizard-ai-disabled {
-  display: inline-flex; align-items: center; gap: var(--scp-space-2);
-  font-size: var(--scp-font-size-sm); color: var(--scp-text-tertiary);
-  padding: var(--scp-space-2) var(--scp-space-3);
-  background: var(--scp-gray-50); border-radius: var(--scp-radius-md);
-}
-.scp-wizard-empty {
-  border: 1px dashed var(--scp-border-default);
-  border-radius: var(--scp-radius-lg);
-  padding: var(--scp-space-8) var(--scp-space-4);
-  text-align: center; color: var(--scp-text-secondary);
-}
-.scp-wizard-empty--compact { padding: var(--scp-space-5) var(--scp-space-4); }
-.scp-wizard-empty-icon {
-  width: 48px; height: 48px; border-radius: var(--scp-radius-full);
-  background: var(--scp-primary-light); color: var(--scp-primary);
-  display: inline-flex; align-items: center; justify-content: center;
-  font-size: 22px; margin-bottom: var(--scp-space-3);
-}
-.scp-wizard-error {
-  background: var(--scp-error-light); color: var(--scp-error);
-  padding: var(--scp-space-2) var(--scp-space-3);
-  border-radius: var(--scp-radius-md);
-  font-size: var(--scp-font-size-sm);
-  margin-bottom: var(--scp-space-4);
-}
-
-/* ─── Step 2 (topics) ─── */
-.scp-wizard-topic-list { display: flex; flex-direction: column; gap: var(--scp-space-3); }
-.scp-wizard-topic-row {
-  display: flex; align-items: center; gap: var(--scp-space-3);
-  padding: var(--scp-space-3);
-  background: var(--scp-bg-secondary);
-  border: 1px solid var(--scp-border-light);
-  border-radius: var(--scp-radius-md);
-}
-.scp-wizard-topic-swatch {
-  width: 24px; height: 24px; border-radius: var(--scp-radius-full);
-  flex-shrink: 0; cursor: pointer; box-shadow: var(--scp-shadow-xs);
-  border: 2px solid var(--scp-white);
-  transition: transform var(--scp-transition-fast);
-}
-.scp-wizard-topic-swatch:hover { transform: scale(1.1); }
-.scp-wizard-topic-fields {
-  flex: 1; display: grid; grid-template-columns: minmax(160px, 1fr) 2fr;
-  gap: var(--scp-space-2); min-width: 0;
-}
-.scp-wizard-topic-fields .scp-input { padding: 8px 10px; font-size: var(--scp-font-size-sm); }
-.scp-wizard-topic-delete {
-  background: none; border: none; cursor: pointer;
-  color: var(--scp-text-tertiary); padding: 6px;
-  border-radius: var(--scp-radius-sm);
-  transition: all var(--scp-transition-fast);
-}
-.scp-wizard-topic-delete:hover { color: var(--scp-error); background: var(--scp-error-light); }
-@media (max-width: 560px) {
-  .scp-wizard-topic-fields { grid-template-columns: 1fr; }
-}
-
-/* ─── Step 3 (series + assign) ─── */
-.scp-wizard-series-list {
-  display: flex; flex-direction: column; gap: var(--scp-space-3);
-  margin-bottom: var(--scp-space-6);
-}
-.scp-wizard-series-card {
-  display: flex; align-items: center; gap: var(--scp-space-3);
-  background: var(--scp-bg-primary);
-  border: 1px solid var(--scp-border-light);
-  border-left: 4px solid var(--scp-primary);
-  border-radius: var(--scp-radius-md);
-  padding: var(--scp-space-3);
-}
-.scp-wizard-series-fields {
-  flex: 1; display: grid; grid-template-columns: minmax(160px, 1fr) 2fr;
-  gap: var(--scp-space-2); min-width: 0;
-}
-.scp-wizard-series-fields .scp-input { padding: 8px 10px; font-size: var(--scp-font-size-sm); }
-.scp-wizard-assign-section h3 {
-  font-family: var(--scp-font-display);
-  font-size: var(--scp-font-size-lg);
-  margin: 0 0 var(--scp-space-3);
-  color: var(--scp-text-primary);
-}
-.scp-wizard-assign-list { display: flex; flex-direction: column; gap: var(--scp-space-2); }
-.scp-wizard-assign-row {
-  display: grid; grid-template-columns: 12px 1fr 200px; align-items: center;
-  gap: var(--scp-space-3);
-  padding: var(--scp-space-2) var(--scp-space-3);
-  border: 1px solid var(--scp-border-light); border-radius: var(--scp-radius-md);
-}
-.scp-wizard-assign-dot {
-  width: 12px; height: 12px; border-radius: var(--scp-radius-full);
-}
-.scp-wizard-assign-name {
-  font-weight: 500; color: var(--scp-text-primary);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.scp-wizard-assign-row .scp-select { padding: 6px 10px; font-size: var(--scp-font-size-sm); }
-@media (max-width: 560px) {
-  .scp-wizard-series-fields { grid-template-columns: 1fr; }
-  .scp-wizard-assign-row { grid-template-columns: 12px 1fr; }
-  .scp-wizard-assign-row .scp-select { grid-column: 1 / -1; }
-}
-
-/* ─── Step 4 (tone) ─── */
-.scp-wizard-tone-suggestion {
-  background: var(--scp-primary-subtle);
-  border: 1px solid var(--scp-primary-light);
-  border-radius: var(--scp-radius-md);
-  padding: var(--scp-space-3) var(--scp-space-4);
-  margin-bottom: var(--scp-space-4);
-}
-.scp-wizard-tone-suggestion-label {
-  font-size: var(--scp-font-size-xs); color: var(--scp-primary);
-  font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
-  margin-bottom: var(--scp-space-1);
-}
-.scp-wizard-tone-suggestion-text {
-  font-size: var(--scp-font-size-md); color: var(--scp-text-primary);
-}
-.scp-wizard-tone-suggestion-text span {
-  color: var(--scp-text-secondary); font-weight: 400;
-}
-.scp-wizard-tone-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: var(--scp-space-3);
-}
-.scp-wizard-tone-card {
-  text-align: left; cursor: pointer;
-  padding: var(--scp-space-4);
-  background: var(--scp-bg-primary);
-  border: 2px solid var(--scp-border-light);
-  border-radius: var(--scp-radius-md);
-  font-family: inherit;
-  transition: all var(--scp-transition-fast);
-}
-.scp-wizard-tone-card:hover { border-color: var(--scp-border-dark); transform: translateY(-1px); }
-.scp-wizard-tone-active {
-  border-color: var(--scp-primary);
-  background: var(--scp-primary-subtle);
-  box-shadow: var(--scp-shadow-glow);
-}
-.scp-wizard-tone-name {
-  font-weight: 700; color: var(--scp-text-primary);
-  margin-bottom: var(--scp-space-1);
-}
-.scp-wizard-tone-desc {
-  font-size: var(--scp-font-size-sm); color: var(--scp-text-secondary);
-  line-height: 1.5;
-}
-
-/* ─── Step 5 (review + posts) ─── */
-.scp-wizard-summary {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: var(--scp-space-3);
-  margin-bottom: var(--scp-space-6);
-}
-.scp-wizard-summary-item {
-  display: flex; align-items: center; gap: var(--scp-space-3);
-  padding: var(--scp-space-3);
-  background: var(--scp-bg-secondary);
-  border-radius: var(--scp-radius-md);
-}
-.scp-wizard-summary-icon {
-  width: 32px; height: 32px; border-radius: var(--scp-radius-full);
-  background: var(--scp-primary-light); color: var(--scp-primary);
-  display: inline-flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.scp-wizard-summary-label {
-  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
-  text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600;
-}
-.scp-wizard-summary-value {
-  font-size: var(--scp-font-size-sm); color: var(--scp-text-primary);
-  font-weight: 500;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.scp-wizard-posts-section {}
-.scp-wizard-posts-header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: var(--scp-space-3);
-}
-.scp-wizard-posts-header h3 {
-  margin: 0; font-family: var(--scp-font-display);
-  font-size: var(--scp-font-size-lg); color: var(--scp-text-primary);
-}
-.scp-wizard-posts-count {
-  display: inline-block;
-  background: var(--scp-gray-100); color: var(--scp-text-secondary);
-  font-size: var(--scp-font-size-xs); font-weight: 700;
-  padding: 1px 8px; border-radius: var(--scp-radius-full);
-  margin-left: var(--scp-space-2);
-}
-.scp-wizard-posts-list {
-  display: flex; flex-direction: column; gap: var(--scp-space-3);
-}
-.scp-wizard-post-card {
-  background: var(--scp-bg-primary);
-  border: 1px solid var(--scp-border-light);
-  border-radius: var(--scp-radius-md);
-  padding: var(--scp-space-3);
-}
-.scp-wizard-post-head {
-  display: flex; gap: var(--scp-space-2); align-items: center;
-  margin-bottom: var(--scp-space-2);
-}
-.scp-wizard-post-head .scp-input {
-  flex: 1; padding: 8px 10px; font-size: var(--scp-font-size-sm); font-weight: 500;
-}
-.scp-wizard-post-card .scp-textarea {
-  width: 100%; padding: 8px 10px; font-size: var(--scp-font-size-sm);
-  margin-bottom: var(--scp-space-2);
-}
-.scp-wizard-post-meta {
-  display: flex; flex-wrap: wrap; gap: var(--scp-space-2);
-  align-items: center; font-size: var(--scp-font-size-xs);
-}
-.scp-wizard-post-chip {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 2px 8px; border-radius: var(--scp-radius-full);
-  border: 1px solid; font-weight: 500;
-}
-.scp-wizard-post-type {
-  color: var(--scp-text-tertiary); text-transform: uppercase;
-  font-weight: 700; letter-spacing: 0.04em;
+  margin: 0 auto; max-width: 420px;
+  color: var(--scp-text-secondary); line-height: 1.6;
 }
