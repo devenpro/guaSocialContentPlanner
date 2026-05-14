@@ -214,9 +214,22 @@
     var existing = $('.scp-wizard-app');
     var html = renderShell(w);
     if (existing.length) {
+      // Preserve which stage we're rendering so the transition class
+      // knows the direction.
+      var prevStage = parseInt(existing.attr('data-stage') || '1', 10);
+      var nextStage = w.currentStage;
       existing.replaceWith(html);
+      var $app = $('.scp-wizard-app').attr('data-stage', String(nextStage));
+      if (nextStage !== prevStage) {
+        var dir = nextStage > prevStage ? 'forward' : 'back';
+        $app.find('.scp-wizard-page-body').addClass('scp-wizard-stage-enter scp-wizard-stage-enter-' + dir);
+        setTimeout(function() {
+          $('.scp-wizard-page-body').removeClass('scp-wizard-stage-enter scp-wizard-stage-enter-forward scp-wizard-stage-enter-back');
+        }, 280);
+      }
     } else {
       $('body').append(html).addClass('scp-wizard-open');
+      $('.scp-wizard-app').attr('data-stage', String(w.currentStage));
     }
     setTimeout(function() {
       var $first = $('.scp-wizard-page-body input[type="text"], .scp-wizard-page-body textarea').not('[readonly]').first();
@@ -282,6 +295,10 @@
 
     html += '</main>';
     html += '</div>'; // /shell
+
+    // Off-screen live region for AI status announcements.
+    html += '<div class="scp-wizard-live" role="status" aria-live="polite" aria-atomic="true"></div>';
+
     html += '</div>'; // /app
     return html;
   }
@@ -351,7 +368,35 @@
         var n = parseInt($(this).data('stage'), 10);
         if (n && n !== S.setupWizard.currentStage) goToStage(n);
       });
+
+    // Esc → confirm skip; helpful escape hatch.
+    $(document).off('keydown.scp-wiz-esc')
+      .on('keydown.scp-wiz-esc', function(e) {
+        if (e.key !== 'Escape') return;
+        if (!S.setupWizard || !S.setupWizard.open) return;
+        // Let textareas/inputs handle Esc to blur first.
+        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'SELECT')) {
+          document.activeElement.blur(); return;
+        }
+        skipSetup();
+      });
+
+    // Cmd/Ctrl + Enter in any brief textarea → fire the corresponding Run button.
+    $(document).off('keydown.scp-wiz-runkey', '.scp-wiz-brief')
+      .on('keydown.scp-wiz-runkey', '.scp-wiz-brief', function(e) {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+          e.preventDefault();
+          var $btn = $(this).closest('.scp-wiz-research').find('.scp-wiz-run-btn').not(':disabled');
+          if ($btn.length) $btn.trigger('click');
+        }
+      });
   }
+
+  // Public helper for stage modules to announce AI events to AT.
+  window._scpWizardAnnounce = function(msg) {
+    var $live = $('.scp-wizard-live');
+    if ($live.length) $live.text(String(msg || ''));
+  };
 
   // ------------------------------------------------------------------
   // PUBLIC API

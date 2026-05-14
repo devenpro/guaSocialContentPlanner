@@ -71,6 +71,7 @@
 
   function refresh() { if (window._scpRenderWizard) window._scpRenderWizard(); }
   function isAIReady() { return LLMService && LLMService.isConfigured && LLMService.isConfigured(); }
+  function announce(msg) { if (window._scpWizardAnnounce) window._scpWizardAnnounce(msg); }
 
   function genTempId(prefix) {
     return 'tmp_' + prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -399,6 +400,7 @@
     var u = w.uiState;
     if (u.stage1Loading) return;
     u.stage1Loading = true; u.stage1Error = '';
+    announce('Asking the AI to suggest your brand attributes…');
     refresh();
 
     var d = w.data.workspace;
@@ -435,10 +437,12 @@
         u.stage1Error = 'Could not parse AI response — fields kept as-is.';
       }
       u.stage1Loading = false;
+      announce(u.stage1Error ? 'AI returned an unreadable response.' : 'AI filled the brand attributes.');
       refresh();
     }, function(err) {
       u.stage1Loading = false;
       u.stage1Error = err || 'AI request failed.';
+      announce('AI request failed.');
       refresh();
     }, 'setup_wizard_stage1', brandContextSnippet());
   }
@@ -529,6 +533,7 @@
     var u = w.uiState;
     if (u.topicsLoading) return;
     u.topicsLoading = true; u.topicsError = '';
+    announce('Generating topic suggestions…');
     refresh();
 
     var d = w.data.workspace;
@@ -543,6 +548,7 @@
     prompt += 'Respond ONLY as JSON: [{"name":"...","description":"..."}]';
 
     LLMService.callAI(prompt, function(text) {
+      var added = 0;
       try {
         var raw = parseJSON(text);
         if (!Array.isArray(raw)) raw = raw.topics || raw.results || [];
@@ -558,15 +564,18 @@
             selected: true,
             source: 'ai'
           });
+          added++;
         }
       } catch (e) {
         u.topicsError = 'Could not parse AI response — try again or add manually.';
       }
       u.topicsLoading = false;
+      announce(u.topicsError ? 'AI returned an unreadable response.' : added + ' topic suggestion' + (added === 1 ? '' : 's') + ' added.');
       refresh();
     }, function(err) {
       u.topicsLoading = false;
       u.topicsError = err || 'AI request failed.';
+      announce('AI request failed.');
       refresh();
     }, 'setup_wizard_topics', brandContextSnippet());
   }
@@ -699,6 +708,7 @@
     var selectedTopics = (w.data.topics || []).filter(function(t) { return t.selected; });
     if (selectedTopics.length === 0) { toast('Select at least one topic first', 'warning'); return; }
     u.seriesLoading = true; u.seriesError = '';
+    announce('Generating series suggestions…');
     refresh();
 
     var d = w.data.workspace;
@@ -715,6 +725,7 @@
     prompt += 'Respond ONLY as JSON: [{"name":"...","description":"...","topic_names":["..."]}]';
 
     LLMService.callAI(prompt, function(text) {
+      var added = 0;
       try {
         var raw = parseJSON(text);
         if (!Array.isArray(raw)) raw = raw.series || raw.results || [];
@@ -736,15 +747,18 @@
             selected: true,
             source: 'ai'
           });
+          added++;
         }
       } catch (e) {
         u.seriesError = 'Could not parse AI response — try again or add manually.';
       }
       u.seriesLoading = false;
+      announce(u.seriesError ? 'AI returned an unreadable response.' : added + ' series suggestion' + (added === 1 ? '' : 's') + ' added.');
       refresh();
     }, function(err) {
       u.seriesLoading = false;
       u.seriesError = err || 'AI request failed.';
+      announce('AI request failed.');
       refresh();
     }, 'setup_wizard_series', brandContextSnippet());
   }
@@ -938,6 +952,7 @@
     if (!active) { toast('Pick a ' + basis + ' to research', 'warning'); return; }
 
     u.postsLoading = true; u.postsError = '';
+    announce('Generating post ideas for ' + active.name + '…');
     refresh();
 
     var d = w.data.workspace;
@@ -960,6 +975,7 @@
     prompt += 'Respond ONLY as JSON: [{"title":"...","hook":"...","type":"..."}]';
 
     LLMService.callAI(prompt, function(text) {
+      var added = 0;
       try {
         var raw = parseJSON(text);
         if (!Array.isArray(raw)) raw = raw.posts || raw.results || [];
@@ -987,15 +1003,18 @@
             selected: true,
             source: 'ai'
           });
+          added++;
         }
       } catch (e) {
         u.postsError = 'Could not parse AI response — try again or add manually.';
       }
       u.postsLoading = false;
+      announce(u.postsError ? 'AI returned an unreadable response.' : added + ' post idea' + (added === 1 ? '' : 's') + ' added.');
       refresh();
     }, function(err) {
       u.postsLoading = false;
       u.postsError = err || 'AI request failed.';
+      announce('AI request failed.');
       refresh();
     }, 'setup_wizard_posts', brandContextSnippet());
   }

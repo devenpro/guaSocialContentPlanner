@@ -1253,6 +1253,103 @@ body.scp-wizard-open .scp-app { display: none !important; }
   color: var(--scp-text-secondary); line-height: 1.6;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   MOTION, A11Y, & FINAL RESPONSIVE  (Phase 6)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Off-screen ARIA live region (visually hidden, AT-readable) */
+.scp-wizard-live {
+  position: absolute;
+  left: -10000px; top: auto;
+  width: 1px; height: 1px;
+  overflow: hidden;
+}
+
+/* ─── Stage transition (page-body slide-fade) ───────────────────── */
+.scp-wizard-stage-enter {
+  animation: scp-wiz-stage-fade 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.scp-wizard-stage-enter-forward { animation-name: scp-wiz-stage-slide-in-right; }
+.scp-wizard-stage-enter-back    { animation-name: scp-wiz-stage-slide-in-left; }
+@keyframes scp-wiz-stage-fade {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scp-wiz-stage-slide-in-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scp-wiz-stage-slide-in-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ─── Sidenav active-item slide indicator ───────────────────────── */
+.scp-wizard-nav-active::before {
+  animation: scp-wiz-nav-pulse 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes scp-wiz-nav-pulse {
+  0%   { transform: scaleY(0.4); opacity: 0; }
+  60%  { transform: scaleY(1.2); opacity: 1; }
+  100% { transform: scaleY(1);   opacity: 1; }
+}
+
+/* ─── Run button: idle pulse (only when not loading) ────────────── */
+.scp-wiz-run-btn:not(:disabled) {
+  position: relative;
+  isolation: isolate;
+}
+.scp-wiz-run-btn:not(:disabled)::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  z-index: -1;
+  animation: scp-wiz-run-pulse 2.4s ease-in-out infinite;
+}
+@keyframes scp-wiz-run-pulse {
+  0%, 100% { transform: scale(1);    opacity: 0; }
+  50%      { transform: scale(1.06); opacity: 0.35; }
+}
+
+/* ─── Card add animation (suggestions appearing) ────────────────── */
+.scp-wiz-suggestions > .scp-wiz-card {
+  animation: scp-wiz-card-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes scp-wiz-card-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ─── Empty state fade-in ───────────────────────────────────────── */
+.scp-wiz-empty {
+  animation: scp-wiz-fade-in 0.3s ease-out both;
+}
+@keyframes scp-wiz-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* ─── Focus rings — keyboard-only ───────────────────────────────── */
+.scp-wizard-app :focus-visible {
+  outline: 2px solid var(--scp-primary);
+  outline-offset: 2px;
+  border-radius: var(--scp-radius-sm);
+}
+
+/* ─── Skip animation when user prefers reduced motion ───────────── */
+@media (prefers-reduced-motion: reduce) {
+  .scp-wizard-stage-enter,
+  .scp-wizard-nav-active::before,
+  .scp-wiz-run-btn:not(:disabled)::after,
+  .scp-wiz-suggestions > .scp-wiz-card,
+  .scp-wiz-empty,
+  .scp-wiz-error,
+  .scp-wiz-skeleton-bar,
+  .scp-wiz-run-btn .fa-spinner {
+    animation: none !important;
+    transition: none !important;
+  }
+  .scp-wizard-app * { transition-duration: 0.01ms !important; }
+}
+
 /* ─── Responsive ─────────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .scp-wizard-shell { flex-direction: column; }
