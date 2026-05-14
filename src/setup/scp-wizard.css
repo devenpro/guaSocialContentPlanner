@@ -1042,37 +1042,197 @@ body.scp-wizard-open .scp-app { display: none !important; }
   100% { background-position: -200% 0; }
 }
 
-/* Stage 4 basis selector */
-.scp-wiz-basis-row {
-  display: flex; align-items: center; gap: var(--scp-space-3);
-  flex-wrap: wrap;
-  background: var(--scp-bg-secondary);
-  padding: var(--scp-space-3) var(--scp-space-4);
-  border-radius: var(--scp-radius-md);
-  margin: var(--scp-space-5) 0 var(--scp-space-2);
+/* ═══════════════════════════════════════════════════════════════════
+   STAGE 4 — Post Planning surfaces
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Basis panel — segmented control + chip preview + summary ──── */
+.scp-wiz-basis-panel {
+  background: linear-gradient(180deg, var(--scp-white), var(--scp-bg-secondary));
+  border: 1px solid var(--scp-border-light);
+  border-radius: var(--scp-radius-lg);
+  padding: var(--scp-space-4) var(--scp-space-5);
+  margin: var(--scp-space-5) 0;
+  display: flex; flex-direction: column; gap: var(--scp-space-3);
 }
+.scp-wiz-basis-head { display: flex; align-items: flex-start; }
+.scp-wiz-basis-eyebrow {
+  font-size: 10px; font-weight: 700;
+  color: var(--scp-primary); text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.scp-wiz-basis-title {
+  margin-top: 2px;
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-md); font-weight: 700;
+  color: var(--scp-text-primary);
+}
+
+/* Segmented toggle */
 .scp-wiz-basis-toggle {
-  display: inline-flex; gap: 0;
-  border: 1px solid var(--scp-border-default); border-radius: var(--scp-radius-md);
-  overflow: hidden;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  background: var(--scp-gray-100);
+  padding: 6px;
+  border-radius: var(--scp-radius-md);
 }
 .scp-wiz-basis-btn {
-  background: var(--scp-bg-primary);
-  border: none; cursor: pointer;
-  padding: 8px 14px; font-size: var(--scp-font-size-sm); font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 12px 14px;
+  background: transparent; border: none; cursor: pointer;
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-sm); font-weight: 700;
   color: var(--scp-text-secondary);
-  display: inline-flex; align-items: center; gap: var(--scp-space-2);
+  border-radius: var(--scp-radius-sm);
   transition: all var(--scp-transition-fast);
 }
-.scp-wiz-basis-btn:hover:not(:disabled) { background: var(--scp-gray-50); color: var(--scp-text-primary); }
-.scp-wiz-basis-btn-active { background: var(--scp-primary); color: var(--scp-white); }
-.scp-wiz-basis-btn-active:hover { background: var(--scp-primary-hover); color: var(--scp-white); }
+.scp-wiz-basis-btn-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: var(--scp-radius-sm);
+  background: var(--scp-white); color: var(--scp-text-tertiary);
+  font-size: var(--scp-font-size-sm);
+  transition: all var(--scp-transition-fast);
+}
+.scp-wiz-basis-btn-count {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: var(--scp-radius-full);
+  background: var(--scp-white); color: var(--scp-text-tertiary);
+  font-size: 10px; font-weight: 700;
+  border: 1px solid var(--scp-border-light);
+}
+.scp-wiz-basis-btn:hover:not(:disabled):not(.scp-wiz-basis-btn-active) {
+  background: var(--scp-white);
+  color: var(--scp-text-primary);
+}
+.scp-wiz-basis-btn:hover:not(:disabled):not(.scp-wiz-basis-btn-active) .scp-wiz-basis-btn-icon { color: var(--scp-primary); }
+.scp-wiz-basis-btn-active {
+  background: var(--scp-white);
+  color: var(--scp-primary-dark);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+.scp-wiz-basis-btn-active .scp-wiz-basis-btn-icon {
+  background: var(--scp-primary); color: var(--scp-white);
+}
+.scp-wiz-basis-btn-active .scp-wiz-basis-btn-count {
+  background: var(--scp-primary-light);
+  color: var(--scp-primary-dark);
+  border-color: transparent;
+}
 .scp-wiz-basis-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Active-basis dropdown + chip preview */
+.scp-wiz-basis-picker {
+  display: flex; flex-direction: column; gap: 6px;
+  padding-top: var(--scp-space-2);
+  border-top: 1px dashed var(--scp-border-light);
+}
+.scp-wiz-basis-picker-label {
+  font-size: 10px; font-weight: 700;
+  color: var(--scp-text-tertiary); text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.scp-wiz-basis-picker-row {
+  display: flex; align-items: center; gap: var(--scp-space-2);
+  flex-wrap: wrap;
+}
+.scp-wiz-basis-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--scp-radius-full);
+  --chip-color: var(--scp-primary);
+  background: color-mix(in srgb, var(--chip-color) 12%, white);
+  color: var(--chip-color);
+  border: 1.5px solid var(--chip-color);
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-sm); font-weight: 700;
+  flex-shrink: 0;
+}
+.scp-wiz-basis-chip-dot {
+  display: inline-block; width: 8px; height: 8px;
+  border-radius: var(--scp-radius-full);
+  background: var(--chip-color);
+}
 .scp-wiz-basis-select {
-  flex: 1; min-width: 200px;
-  padding: 8px 12px; border: 1px solid var(--scp-border-default);
-  border-radius: var(--scp-radius-md); background: var(--scp-bg-primary);
+  flex: 1; min-width: 180px;
+  padding: 8px 12px;
+  border: 1px solid var(--scp-border-default);
+  border-radius: var(--scp-radius-md);
+  background: var(--scp-bg-primary);
   font-family: inherit; font-size: var(--scp-font-size-sm);
+  cursor: pointer;
+}
+.scp-wiz-basis-select:focus {
+  outline: none; border-color: var(--scp-border-focus);
+  box-shadow: var(--scp-shadow-glow);
+}
+
+.scp-wiz-basis-summary {
+  display: flex; align-items: center; gap: var(--scp-space-2);
+  padding: 8px 12px;
+  background: var(--scp-bg-primary);
+  border: 1px solid var(--scp-border-light);
+  border-radius: var(--scp-radius-sm);
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-secondary);
+}
+.scp-wiz-basis-summary-icon { color: var(--scp-primary); flex-shrink: 0; }
+.scp-wiz-basis-summary-text strong { color: var(--scp-text-primary); font-weight: 700; }
+.scp-wiz-basis-summary-text em { color: var(--scp-text-tertiary); font-style: italic; }
+
+/* ─── Post card — per-type visual treatment ─────────────────────── */
+.scp-wiz-post-typeicon {
+  flex-shrink: 0;
+  width: 32px; height: 32px; border-radius: var(--scp-radius-sm);
+  background: color-mix(in srgb, var(--type-color) 14%, white);
+  color: var(--type-color);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: var(--scp-font-size-sm);
+  border: 1px solid color-mix(in srgb, var(--type-color) 30%, transparent);
+}
+
+.scp-wiz-post-typepill {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 4px 3px 10px;
+  --type-color: var(--scp-primary);
+  background: color-mix(in srgb, var(--type-color) 10%, white);
+  border: 1px solid color-mix(in srgb, var(--type-color) 30%, transparent);
+  border-radius: var(--scp-radius-full);
+  color: var(--type-color);
+  font-size: var(--scp-font-size-xs); font-weight: 600;
+}
+.scp-wiz-post-typepill-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.scp-wiz-post-typepill-select {
+  background: transparent !important;
+  border: none !important;
+  padding: 2px 18px 2px 4px !important;
+  font: inherit !important;
+  color: inherit !important;
+  appearance: none !important; -webkit-appearance: none !important;
+  text-transform: capitalize;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+                    linear-gradient(135deg, currentColor 50%, transparent 50%) !important;
+  background-position: calc(100% - 9px) center, calc(100% - 5px) center !important;
+  background-size: 4px 4px, 4px 4px !important;
+  background-repeat: no-repeat !important;
+}
+.scp-wiz-post-typepill-select:focus { outline: none; box-shadow: none; }
+
+/* Per-type edge accent — overrides the basis-derived card color
+   on the left edge so type is also visible at a glance. */
+.scp-wiz-post-card-image    { --type-color: #0891b2; }
+.scp-wiz-post-card-carousel { --type-color: #9333ea; }
+.scp-wiz-post-card-video    { --type-color: #dc2626; }
+.scp-wiz-post-card-text     { --type-color: #475569; }
+
+.scp-wiz-post-card .scp-wiz-card-edge {
+  background: linear-gradient(180deg, var(--card-color), var(--type-color));
+}
+
+@media (max-width: 640px) {
+  .scp-wiz-basis-toggle { grid-template-columns: 1fr; }
 }
 
 /* Placeholder state */

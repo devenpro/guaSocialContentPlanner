@@ -785,17 +785,60 @@
       return html;
     }
 
-    html += '<div class="scp-wiz-basis-row">';
-    html += '<div class="scp-wiz-basis-toggle">';
-    html += '<button class="scp-wiz-basis-btn' + (basis === 'series' ? ' scp-wiz-basis-btn-active' : '') + '" data-action="wiz-set-basis" data-basis="series"' + (selectedSeries.length === 0 ? ' disabled' : '') + '>' + icon('layer-group') + ' By series</button>';
-    html += '<button class="scp-wiz-basis-btn' + (basis === 'topic'  ? ' scp-wiz-basis-btn-active' : '') + '" data-action="wiz-set-basis" data-basis="topic"' + (selectedTopics.length === 0 ? ' disabled' : '') + '>' + icon('tag') + ' By topic</button>';
+    // Basis selector — big segmented control with counts
+    html += '<div class="scp-wiz-basis-panel">';
+    html += '<div class="scp-wiz-basis-head">';
+    html += '<div class="scp-wiz-basis-headtext">';
+    html += '<div class="scp-wiz-basis-eyebrow">Research basis</div>';
+    html += '<div class="scp-wiz-basis-title">Generate post ideas grouped by…</div>';
+    html += '</div></div>';
+
+    html += '<div class="scp-wiz-basis-toggle" role="tablist">';
+    html += '<button class="scp-wiz-basis-btn' + (basis === 'series' ? ' scp-wiz-basis-btn-active' : '') + '" data-action="wiz-set-basis" data-basis="series"' + (selectedSeries.length === 0 ? ' disabled' : '') + ' type="button">';
+    html += '<span class="scp-wiz-basis-btn-icon">' + icon('layer-group') + '</span>';
+    html += '<span class="scp-wiz-basis-btn-label">By series</span>';
+    html += '<span class="scp-wiz-basis-btn-count">' + selectedSeries.length + '</span>';
+    html += '</button>';
+    html += '<button class="scp-wiz-basis-btn' + (basis === 'topic'  ? ' scp-wiz-basis-btn-active' : '') + '" data-action="wiz-set-basis" data-basis="topic"' + (selectedTopics.length === 0 ? ' disabled' : '') + ' type="button">';
+    html += '<span class="scp-wiz-basis-btn-icon">' + icon('tag') + '</span>';
+    html += '<span class="scp-wiz-basis-btn-label">By topic</span>';
+    html += '<span class="scp-wiz-basis-btn-count">' + selectedTopics.length + '</span>';
+    html += '</button>';
     html += '</div>';
-    html += '<select class="scp-select scp-wiz-basis-select">';
-    for (var i = 0; i < basisOptions.length; i++) {
-      var o = basisOptions[i];
-      html += '<option value="' + esc(o.tempId) + '"' + (o.tempId === w.data.stage4BasisId ? ' selected' : '') + '>' + esc(o.name) + '</option>';
+
+    // Basis dropdown with chip preview of active item
+    if (basisOptions.length) {
+      html += '<div class="scp-wiz-basis-picker">';
+      html += '<label class="scp-wiz-basis-picker-label">Currently researching</label>';
+      html += '<div class="scp-wiz-basis-picker-row">';
+      if (activeBasis) {
+        html += '<span class="scp-wiz-basis-chip" style="--chip-color:' + esc(activeBasis.color) + '">';
+        html += '<span class="scp-wiz-basis-chip-dot"></span>' + esc(activeBasis.name);
+        html += '</span>';
+      }
+      html += '<select class="scp-select scp-wiz-basis-select">';
+      for (var i = 0; i < basisOptions.length; i++) {
+        var o = basisOptions[i];
+        html += '<option value="' + esc(o.tempId) + '"' + (o.tempId === w.data.stage4BasisId ? ' selected' : '') + '>' + esc(o.name) + '</option>';
+      }
+      html += '</select>';
+      html += '</div>';
+
+      // Active basis summary — show how many ideas already exist for it
+      var ideasForThisBasis = posts.filter(function(p) {
+        return basis === 'series' ? p.seriesTempId === w.data.stage4BasisId : p.topicTempId === w.data.stage4BasisId;
+      }).length;
+      if (activeBasis) {
+        html += '<div class="scp-wiz-basis-summary">';
+        html += '<span class="scp-wiz-basis-summary-icon">' + icon('chart-bar') + '</span>';
+        html += '<span class="scp-wiz-basis-summary-text">';
+        html += '<strong>' + ideasForThisBasis + '</strong> idea' + (ideasForThisBasis === 1 ? '' : 's') + ' already generated for this ' + basis;
+        if (activeBasis.description) html += ' · <em>' + esc(activeBasis.description) + '</em>';
+        html += '</span>';
+        html += '</div>';
+      }
+      html += '</div>';
     }
-    html += '</select>';
     html += '</div>';
 
     html += renderResearchPanel({
@@ -837,26 +880,42 @@
     var topic = (w.data.topics || []).find(function(t) { return t.tempId === p.topicTempId; });
     var series = (w.data.series || []).find(function(s) { return s.tempId === p.seriesTempId; });
     var stateCls = p.selected ? ' scp-wiz-card-selected' : ' scp-wiz-card-deselected';
-    var typeCls  = ' scp-wiz-post-card-' + (p.type || 'image');
+    var postType = p.type || 'image';
+    var typeCls  = ' scp-wiz-post-card-' + postType;
     // Card color follows the active basis (series colour preferred).
     var cardColor = (series && series.color) || (topic && topic.color) || '#1a73e8';
-    var html = '<article class="scp-wiz-card scp-wiz-post-card' + stateCls + typeCls + '" data-temp-id="' + esc(p.tempId) + '" style="--card-color:' + esc(cardColor) + '">';
+
+    var typeMeta = {
+      image:    { icon: 'images',       label: 'Image post',    color: '#0891b2' },
+      carousel: { icon: 'images',       label: 'Carousel',      color: '#9333ea' },
+      video:    { icon: 'video',        label: 'Video / Reel',  color: '#dc2626' },
+      text:     { icon: 'align-left',   label: 'Text post',     color: '#475569' }
+    };
+    var tm = typeMeta[postType] || typeMeta.image;
+
+    var html = '<article class="scp-wiz-card scp-wiz-post-card' + stateCls + typeCls + '" data-temp-id="' + esc(p.tempId) + '" style="--card-color:' + esc(cardColor) + ';--type-color:' + esc(tm.color) + '">';
     html += '<span class="scp-wiz-card-edge"></span>';
     html += '<div class="scp-wiz-card-body">';
+
     html += '<div class="scp-wiz-card-head">';
     html += '<label class="scp-wiz-card-select" title="Toggle selection"><input type="checkbox" class="scp-wiz-post-select"' + (p.selected ? ' checked' : '') + '></label>';
+    html += '<span class="scp-wiz-post-typeicon" aria-hidden="true" title="' + esc(tm.label) + '">' + icon(tm.icon) + '</span>';
     html += '<input type="text" class="scp-input scp-wiz-card-title scp-wiz-post-field" data-field="title" value="' + esc(p.title) + '" placeholder="Working title">';
     html += '<div class="scp-wiz-card-actions">';
     html += '<span class="scp-wiz-card-tag scp-wiz-card-tag-' + (p.source === 'manual' ? 'manual' : 'ai') + '">' + (p.source === 'manual' ? 'Manual' : icon('sparkles') + ' AI') + '</span>';
     html += '<button class="scp-btn-icon scp-wiz-card-remove" data-action="wiz-remove-post" title="Remove">' + icon('trash') + '</button>';
     html += '</div></div>';
+
     html += '<textarea class="scp-wiz-card-hook scp-wiz-post-field" data-field="hook" rows="2" placeholder="Hook — opening line of the post…">' + esc(p.hook || '') + '</textarea>';
+
     html += '<div class="scp-wiz-post-meta">';
-    html += '<select class="scp-select scp-select-sm scp-wiz-post-field scp-wiz-post-type-select" data-field="type">';
+    html += '<span class="scp-wiz-post-typepill" style="--type-color:' + esc(tm.color) + '">';
+    html += '<span class="scp-wiz-post-typepill-icon">' + icon(tm.icon) + '</span>';
+    html += '<select class="scp-wiz-post-field scp-wiz-post-typepill-select" data-field="type">';
     for (var t = 0; t < POST_TYPES_LIST.length; t++) {
       html += '<option value="' + POST_TYPES_LIST[t] + '"' + (p.type === POST_TYPES_LIST[t] ? ' selected' : '') + '>' + POST_TYPES_LIST[t] + '</option>';
     }
-    html += '</select>';
+    html += '</select></span>';
     if (topic)  html += '<span class="scp-wiz-context-chip" style="--chip-color:' + esc(topic.color)  + '">' + icon('tag') + ' ' + esc(topic.name) + '</span>';
     if (series) html += '<span class="scp-wiz-context-chip" style="--chip-color:' + esc(series.color) + '">' + icon('layer-group') + ' ' + esc(series.name) + '</span>';
     html += '</div>';
