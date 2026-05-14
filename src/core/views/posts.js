@@ -4,7 +4,7 @@
  *              and sort toolbar; right = preview with pipeline-step indicator
  *              and step content slot delegated to part2a's renderer registry).
  * @exports     window._scpRenderPostsView (entry)
- *              window._scpRenderPostListItem (used by views/tags.js)
+ *              window._scpRenderPostListItem (used by views/topics.js)
  * @depends-on  window._scpState, window._scpEsc, window._scpIcon,
  *              window._scpFormatRelativeTime, window._scpGetGroupedPosts,
  *              window._scpStatusBadge, window._scpTypeBadge,

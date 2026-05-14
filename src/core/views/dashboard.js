@@ -1,18 +1,18 @@
 /**
  * @category    core
  * @purpose     Dashboard view. Renders 4-column stats grid, pipeline pipeline
- *              card row, by-type breakdown, upcoming posts, tag cloud, and
+ *              card row, by-type breakdown, upcoming posts, topic cloud, and
  *              activity feed. Also owns two small shared rendering primitives
- *              re-used by Tags and Activity views (renderStatCard,
+ *              re-used by Topics and Activity views (renderStatCard,
  *              renderActivityItem).
  * @exports     window._scpRenderDashboardView (entry)
- *              window._scpRenderStatCard      (used by views/tags.js)
+ *              window._scpRenderStatCard      (used by views/topics.js)
  *              window._scpRenderActivityItem  (used by views/activity.js)
  * @depends-on  window._scpState, window._scpEsc, window._scpIcon,
  *              window._scpTruncate, window._scpFormatNumber, window._scpFormatDate,
  *              window._scpFormatDateShort, window._scpFormatRelativeTime,
  *              window._scpProgressBar, window._scpGetUpcomingPosts,
- *              window._scpGetAllTags, window._scpGetRecentActivity,
+ *              window._scpGetAllTopics, window._scpGetRecentActivity,
  *              window._scpConstants
  * @extracted-from  src/core/scp-part1.js (was SECTION 8 of v0.1.6)
  */
@@ -20,7 +20,7 @@
   'use strict';
 
   var S, esc, icon, truncate, formatNumber, formatDate, formatDateShort, formatRelativeTime;
-  var progressBar, getUpcomingPosts, getAllTags, getRecentActivity, Constants;
+  var progressBar, getUpcomingPosts, getAllTopics, getRecentActivity, Constants;
   var POST_TYPES, POST_STATUSES, ACTIVITY_TYPES;
 
   function _resolveHelpers() {
@@ -34,7 +34,7 @@
     formatRelativeTime = window._scpFormatRelativeTime;
     progressBar = window._scpProgressBar;
     getUpcomingPosts = window._scpGetUpcomingPosts;
-    getAllTags = window._scpGetAllTags;
+    getAllTopics = window._scpGetAllTopics;
     getRecentActivity = window._scpGetRecentActivity;
     Constants = window._scpConstants;
     POST_TYPES = Constants.POST_TYPES;
@@ -54,10 +54,11 @@
     html += '<button class="scp-btn scp-btn-primary" data-action="new-post">' + icon('plus') + ' New Post</button>';
     html += '<button class="scp-btn scp-btn-outline" data-action="go-view" data-view="research">' + icon('flask') + ' Research</button>';
     html += '</div></div>';
+    html += renderSeedBatchBanner();
     html += renderDashStats();
     html += renderDashPipeline();
     html += '<div class="scp-dash-grid">' + renderDashByType() + renderDashUpcoming() + '</div>';
-    html += '<div class="scp-dash-grid">' + renderDashTagBreakdown() + renderDashActivity() + '</div>';
+    html += '<div class="scp-dash-grid">' + renderDashTopicBreakdown() + renderDashActivity() + '</div>';
     // Brand strip
     if (S.brand && S.brand.configured) {
       var bi = S.brand.identity || {};
@@ -173,18 +174,18 @@
     return html;
   }
 
-  function renderDashTagBreakdown() {
-    var tags = getAllTags().slice(0, 8);
-    var html = '<div class="scp-section scp-dash-panel"><div class="scp-section-header"><h2>' + icon('tags') + ' Tags</h2>';
-    html += '<button class="scp-btn-link" data-action="go-view" data-view="tags">View All</button></div>';
-    if (tags.length === 0) {
-      html += '<div class="scp-empty-state scp-empty-state--compact"><p>No tags created yet.</p></div>';
+  function renderDashTopicBreakdown() {
+    var topics = getAllTopics().slice(0, 8);
+    var html = '<div class="scp-section scp-dash-panel"><div class="scp-section-header"><h2>' + icon('tags') + ' Topics</h2>';
+    html += '<button class="scp-btn-link" data-action="go-view" data-view="topics">View All</button></div>';
+    if (topics.length === 0) {
+      html += '<div class="scp-empty-state scp-empty-state--compact"><p>No topics created yet.</p></div>';
     } else {
-      html += '<div class="scp-tag-cloud">';
-      for (var i = 0; i < tags.length; i++) {
-        var tag = tags[i]; var postCount = (S.tagIndex[tag.id] || []).length;
-        html += '<span class="scp-tag-chip" style="background:' + tag.color + '15;color:' + tag.color + ';border-color:' + tag.color + '30" data-action="select-tag-nav" data-id="' + esc(tag.id) + '">';
-        html += esc(tag.name) + ' <span class="scp-tag-chip-count">' + postCount + '</span></span>';
+      html += '<div class="scp-topic-cloud">';
+      for (var i = 0; i < topics.length; i++) {
+        var topic = topics[i]; var postCount = (S.topicIndex[topic.id] || []).length;
+        html += '<span class="scp-topic-chip" style="background:' + topic.color + '15;color:' + topic.color + ';border-color:' + topic.color + '30" data-action="select-topic-nav" data-id="' + esc(topic.id) + '">';
+        html += esc(topic.name) + ' <span class="scp-topic-chip-count">' + postCount + '</span></span>';
       }
       html += '</div>';
     }
@@ -232,6 +233,25 @@
     html += '<span class="scp-activity-time">' + formatRelativeTime(act.timestamp) + '</span>';
     if (act.timestamp) html += '<span class="scp-activity-date">' + formatDate(act.timestamp) + '</span>';
     html += '</div></div></div>';
+    return html;
+  }
+
+  function renderSeedBatchBanner() {
+    // Surface wizard-seeded posts as a one-time CTA so users see them
+    // alongside the rest of the pipeline rather than buried in the posts list.
+    var seeds = (S.data.posts || []).filter(function(p) {
+      return p && p.source && p.source.type === 'setup_wizard' && p.status === 'idea';
+    });
+    if (seeds.length === 0) return '';
+    var html = '<div class="scp-dash-seed-banner">';
+    html += '<div class="scp-dash-seed-icon">' + icon('sparkles') + '</div>';
+    html += '<div class="scp-dash-seed-text">';
+    html += '<div class="scp-dash-seed-title">' + seeds.length + ' seed post' + (seeds.length === 1 ? '' : 's') + ' from setup</div>';
+    html += '<div class="scp-dash-seed-sub">Idea-stage drafts the wizard planted for you — open them, refine, and move to drafting when ready.</div>';
+    html += '</div>';
+    html += '<button class="scp-btn scp-btn-primary scp-btn-sm" data-action="go-view" data-view="series">' + icon('layer-group') + ' Open series</button>';
+    html += '<button class="scp-btn scp-btn-outline scp-btn-sm" data-action="go-view" data-view="posts">' + icon('thumbtack') + ' All posts</button>';
+    html += '</div>';
     return html;
   }
 

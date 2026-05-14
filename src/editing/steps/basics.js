@@ -1,12 +1,12 @@
 /**
  * @category    editing
  * @purpose     Pipeline step 1 — Basics. Title, type chips, priority,
- *              platform checkboxes, tags input, tone/audience selects, notes.
+ *              platform checkboxes, topics input, tone/audience selects, notes.
  * @exports     window._scpRenderers.step_basics (registered at load time)
  *              window._scpRenderBasicsStep (for part2a alias if needed)
  * @depends-on  window._scpState, window._scpEsc, window._scpIcon,
  *              window._scpFormatDate, window._scpConstants,
- *              window._scpRenderers.tagInput (set by scp-part2a at init)
+ *              window._scpRenderers.topicInput (set by scp-part2a at init)
  * @extracted-from  src/editing/scp-part2a.js (was SECTION 5 of v0.2.0)
  */
 (function($) {
@@ -17,8 +17,8 @@
     S = window._scpState; esc = window._scpEsc; icon = window._scpIcon;
     formatDate = window._scpFormatDate; Constants = window._scpConstants;
   }
-  function renderTagInput(tagIds, postId) {
-    var R = window._scpRenderers; if (R && R.tagInput) return R.tagInput(tagIds, postId);
+  function renderTopicInput(topicIds, postId) {
+    var R = window._scpRenderers; if (R && R.topicInput) return R.topicInput(topicIds, postId);
     return '';
   }
 
@@ -61,8 +61,8 @@
     }
     html += '</div></div>';
 
-    // Tags
-    html += '<div class="scp-form-group"><label>Tags</label>' + renderTagInput(post.tags || [], post.id) + '</div>';
+    // Topics
+    html += '<div class="scp-form-group"><label>Topics</label>' + renderTopicInput(post.topics || [], post.id) + '</div>';
 
     // Tone + Audience
     var tones = stg.tones || []; var auds = stg.audiences || [];

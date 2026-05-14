@@ -25,7 +25,8 @@ $jsFiles = @(
     'src/core/views/dashboard.js',
     'src/core/views/posts.js',
     'src/core/views/calendar.js',
-    'src/core/views/tags.js',
+    'src/core/views/topics.js',
+    'src/core/views/series.js',
     'src/core/views/activity.js',
     'src/core/scp-part1.js',
     'src/editing/steps/basics.js',
@@ -52,12 +53,15 @@ $jsFiles = @(
     'src/ai/actions/media.js',
     'src/ai/actions/visual.js',
     'src/ai/actions/platform.js',
-    'src/ai/scp-part2b.js'
+    'src/ai/scp-part2b.js',
+    'src/setup/scp-wizard.js',
+    'src/setup/scp-wizard-steps.js'
 )
 
 $cssFiles = @(
     'src/core/scp-part1.css',
-    'src/editing/scp-part2.css'
+    'src/editing/scp-part2.css',
+    'src/setup/scp-wizard.css'
 )
 
 New-Item -ItemType Directory -Force -Path 'dist' | Out-Null

@@ -15,7 +15,7 @@
  *  8. Dashboard view (6 panels)
  *  9. Posts view (split pane: grouped list + pipeline editor shell)
  * 10. Calendar view
- * 11. Tags view (list + detail)
+ * 11. Topics view (list + detail)
  * 12. Activity view
  * 13. Placeholder views (research, settings)
  * 14. Post filtering & sorting
@@ -37,15 +37,24 @@
   // ============================================================
 
   var APP_VIEWS = {
-    'dashboard': { order: 1, label: 'Dashboard',  icon: 'chart-pie',          description: 'Overview & pipeline' },
-    'research':  { order: 2, label: 'Research',   icon: 'flask',              description: 'AI-powered ideation' },
-    'posts':     { order: 3, label: 'Posts',      icon: 'thumbtack',          description: 'Content pipeline' },
-    'calendar':  { order: 4, label: 'Calendar',   icon: 'calendar',           description: 'Schedule view' },
-    'images':    { order: 5, label: 'Images',     icon: 'images',             description: 'Reference image library' },
-    'tags':      { order: 6, label: 'Tags',       icon: 'tags',               description: 'Campaign & topic tags' },
-    'activity':  { order: 7, label: 'Activity',   icon: 'clock-rotate-left',  description: 'Full activity log' },
-    'settings':  { order: 8, label: 'Settings',   icon: 'gear',               description: 'Workspace configuration' }
+    'dashboard': { order: 1, label: 'Dashboard',  icon: 'chart-pie',          group: 'overview', description: 'Overview & pipeline' },
+    'research':  { order: 2, label: 'Research',   icon: 'flask',              group: 'strategy', description: 'AI-powered ideation' },
+    'topics':    { order: 3, label: 'Topics',     icon: 'tags',               group: 'strategy', description: 'Themes & content pillars' },
+    'series':    { order: 4, label: 'Series',     icon: 'layer-group',        group: 'strategy', description: 'Multi-post content arcs' },
+    'posts':     { order: 5, label: 'Posts',      icon: 'thumbtack',          group: 'work',     description: 'Content pipeline' },
+    'calendar':  { order: 6, label: 'Calendar',   icon: 'calendar',           group: 'work',     description: 'Schedule view' },
+    'images':    { order: 7, label: 'Images',     icon: 'images',             group: 'work',     description: 'Reference image library' },
+    'activity':  { order: 8, label: 'Activity',   icon: 'clock-rotate-left',  group: 'system',   description: 'Full activity log' },
+    'settings':  { order: 9, label: 'Settings',   icon: 'gear',               group: 'system',   description: 'Workspace configuration' }
   };
+
+  // Sidebar groupings. Keys must match APP_VIEWS[*].group values.
+  var SIDEBAR_GROUPS = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'strategy', label: 'Strategy' },
+    { key: 'work',     label: 'Work' },
+    { key: 'system',   label: 'System' }
+  ];
 
   var POST_TYPES = {
     'image':    { key: 'image',    label: 'Single Image', icon: 'image',      color: '#1a73e8' },
@@ -88,7 +97,8 @@
     { key: 'status',   label: 'Status' },
     { key: 'type',     label: 'Type' },
     { key: 'platform', label: 'Platform' },
-    { key: 'tag',      label: 'Tag' },
+    { key: 'topic',    label: 'Topic' },
+    { key: 'series',   label: 'Series' },
     { key: 'priority', label: 'Priority' }
   ];
 
@@ -131,9 +141,13 @@
     'angles_researched':       { icon: 'flask',       color: '#e37400' },
     'hooks_researched':        { icon: 'sparkles',    color: '#9334e9' },
     'image_uploaded':          { icon: 'upload',      color: '#0d904f' },
-    'tag_created':             { icon: 'tag',         color: '#0d904f' },
-    'tag_updated':             { icon: 'tag',         color: '#1a73e8' },
-    'tag_deleted':             { icon: 'trash',       color: '#d93025' },
+    'topic_created':           { icon: 'tag',         color: '#0d904f' },
+    'topic_updated':           { icon: 'tag',         color: '#1a73e8' },
+    'topic_deleted':           { icon: 'trash',       color: '#d93025' },
+    'series_created':          { icon: 'layer-group', color: '#0d904f' },
+    'series_updated':          { icon: 'layer-group', color: '#1a73e8' },
+    'series_deleted':          { icon: 'trash',       color: '#d93025' },
+    'setup_completed':         { icon: 'circle-check', color: '#0d904f' },
     'settings_changed':        { icon: 'gear',        color: '#80868b' },
     'data_imported':           { icon: 'upload',      color: '#1a73e8' },
     'data_exported':           { icon: 'download',    color: '#1a73e8' }
@@ -155,15 +169,15 @@
   // ============================================================
 
   var S = {
-    data: { posts: [], research: { sessions: [] }, tags: [] },
-    meta: { workspace: {}, settings: {}, aiPreferences: {} },
+    data: { posts: [], research: { sessions: [] }, topics: [], series: [] },
+    meta: { workspace: {}, settings: {}, aiPreferences: {}, setup: { firstRun: true, completedAt: '', version: 1 } },
     activity: [],
     user: { id: '', name: '', email: '', fullName: '', timezone: '', roles: '' },
     brand: { configured: false, identity: {}, core: null, video: null, content: null, seo: null, social: null },
     // Lookup maps
-    postMap: {}, tagMap: {}, researchMap: {}, toneMap: {}, audienceMap: {}, imageStyleMap: {},
+    postMap: {}, topicMap: {}, seriesMap: {}, researchMap: {}, toneMap: {}, audienceMap: {}, imageStyleMap: {},
     // Aggregated counts
-    statusCounts: {}, typeCounts: {}, platformCounts: {}, tagIndex: {},
+    statusCounts: {}, typeCounts: {}, platformCounts: {}, topicIndex: {}, seriesIndex: {},
     totalPosts: 0, activePosts: 0, publishedPosts: 0,
     // UI state
     currentView: 'dashboard', previousView: null,
@@ -171,12 +185,14 @@
     cardDensity: 'normal', settingsTab: 'workspace',
     // Posts view state
     postGroupBy: 'workflow',
-    postFilter: { search: '', statuses: [], type: '', platform: '', tag: '', priority: '', sortBy: 'updated', sortDir: 'desc' },
+    postFilter: { search: '', statuses: [], type: '', platform: '', topic: '', series: '', priority: '', sortBy: 'updated', sortDir: 'desc' },
     collapsedGroups: {},
     // Activity view state
     activityFilter: { search: '', type: '' },
-    // Tags view state
-    selectedTagId: null,
+    // Topics view state
+    selectedTopicId: null,
+    // Series view state
+    selectedSeriesId: null,
     // Images view state
     images: [], imageMap: {}, $imageField: null,
     selectedImageId: null,
@@ -186,7 +202,7 @@
     calendarYear: null, calendarMonth: null,
     calendarMode: 'month', // 'month' or 'week'
     calendarWeekStart: null, // Date object for week view start
-    calendarFilters: { platforms: [], types: [], status: '', tag: '' },
+    calendarFilters: { platforms: [], types: [], status: '', topic: '', series: '' },
     calendarPopover: null, // { postId, x, y } when showing
     // Shell UI
     sidebarHidden: false,
@@ -220,7 +236,7 @@
     loadData(); migrateMeta(); migrateData(); injectQuillCSS(); buildMaps();
     renderApp(); setupEventHandlers(); startAutoSave();
     S.initialized = true; S._initializing = false;
-    console.log('[SCP] Part 1 initialized — ' + S.totalPosts + ' posts, ' + (S.data.tags || []).length + ' tags, user: ' + (S.user.name || 'unknown'));
+    console.log('[SCP] Part 1 initialized — ' + S.totalPosts + ' posts, ' + (S.data.topics || []).length + ' topics, ' + (S.data.series || []).length + ' series, user: ' + (S.user.name || 'unknown'));
 
     // Timeout: if Part 2B hasn't loaded in 8 seconds, re-render with helpful messages
     setTimeout(function() {
@@ -408,11 +424,17 @@
     d.posts = d.posts || [];
     d.research = d.research || { sessions: [] };
     d.research.sessions = d.research.sessions || [];
-    d.tags = d.tags || [];
+    d.topics = d.topics || [];
+    d.series = d.series || [];
+    // Ensure each topic has a seriesId slot for future grouping
+    for (var topicI = 0; topicI < d.topics.length; topicI++) {
+      if (typeof d.topics[topicI].seriesId === 'undefined') d.topics[topicI].seriesId = '';
+    }
     // Ensure each post has all required sub-objects
     for (var i = 0; i < d.posts.length; i++) {
       var p = d.posts[i];
-      p.tags = p.tags || [];
+      p.topics = p.topics || [];
+      p.seriesId = p.seriesId || '';
       p.platforms = p.platforms || [];
       p.source = p.source || { type: 'manual', research_session_id: '', research_idea_id: '', notes: '' };
       p.research = p.research || { angles: [], selected_angle: '', angle_custom_input: '', hooks: [], selected_hook: '', hook_custom_input: '', notes: '' };
@@ -446,6 +468,11 @@
   function migrateMeta() {
     var m = S.meta;
     m.workspace = m.workspace || { name: '', description: '', created: '' };
+    // Setup wizard fields — backfilled for older workspaces.
+    if (typeof m.workspace.niche === 'undefined') m.workspace.niche = '';
+    if (typeof m.workspace.audience_description === 'undefined') m.workspace.audience_description = '';
+    if (typeof m.workspace.primary_platform === 'undefined') m.workspace.primary_platform = '';
+    if (typeof m.workspace.posting_frequency === 'undefined') m.workspace.posting_frequency = '';
     m.settings = m.settings || {};
     m.settings.timezone = m.settings.timezone || 'Asia/Kolkata';
     m.settings.card_density = m.settings.card_density || 'normal';
@@ -455,7 +482,7 @@
     if (!m.settings.platforms.instagram) m.settings.platforms.instagram = { enabled: true,  handle: '', char_limit: 2200,  hashtag_limit: 30, best_times: [], notes: '' };
     if (!m.settings.platforms.facebook)  m.settings.platforms.facebook  = { enabled: true,  handle: '', char_limit: 63206, hashtag_limit: 10, best_times: [], notes: '' };
     if (!m.settings.platforms.youtube)   m.settings.platforms.youtube   = { enabled: true,  handle: '', title_limit: 100,  description_limit: 5000, tag_limit: 500, notes: '' };
-    m.settings.defaults = m.settings.defaults || { type: 'image', platforms: ['linkedin'], tone_id: '', audience_id: '', priority: 'medium', tags: [] };
+    m.settings.defaults = m.settings.defaults || { type: 'image', platforms: ['linkedin'], tone_id: '', audience_id: '', priority: 'medium', topics: [] };
     m.settings.tones = m.settings.tones || getDefaultTones();
     m.settings.audiences = m.settings.audiences || getDefaultAudiences();
     m.settings.image_styles = m.settings.image_styles || getDefaultImageStyles();
@@ -465,6 +492,11 @@
     m.aiPreferences.perAction = m.aiPreferences.perAction || {};
     m.aiPreferences.lastProvider = m.aiPreferences.lastProvider || '';
     m.aiPreferences.lastModel = m.aiPreferences.lastModel || '';
+    // Setup wizard state
+    m.setup = m.setup || { firstRun: true, completedAt: '', version: 1 };
+    if (typeof m.setup.firstRun !== 'boolean') m.setup.firstRun = true;
+    m.setup.completedAt = m.setup.completedAt || '';
+    m.setup.version = m.setup.version || 1;
     // Reference image metadata
     m.reference_images = m.reference_images || {};
     m.image_categories = m.image_categories || getDefaultImageCategories();
@@ -474,11 +506,11 @@
     S.currentView = readHash();
   }
 
-  function getDefaultData() { return { posts: [], research: { sessions: [] }, tags: [] }; }
+  function getDefaultData() { return { posts: [], research: { sessions: [] }, topics: [], series: [] }; }
 
   function getDefaultMeta() {
     return {
-      workspace: { name: '', description: '', created: new Date().toISOString() },
+      workspace: { name: '', description: '', niche: '', audience_description: '', primary_platform: '', posting_frequency: '', created: new Date().toISOString() },
       settings: {
         timezone: 'Asia/Kolkata', card_density: 'normal', default_view: 'dashboard',
         platforms: {
@@ -487,14 +519,15 @@
           facebook:  { enabled: true,  handle: '', char_limit: 63206, hashtag_limit: 10, best_times: ['09:00', '13:00', '16:00'], notes: '' },
           youtube:   { enabled: true,  handle: '', title_limit: 100,  description_limit: 5000, tag_limit: 500, notes: '' }
         },
-        defaults: { type: 'image', platforms: ['linkedin'], tone_id: '', audience_id: '', priority: 'medium', tags: [] },
+        defaults: { type: 'image', platforms: ['linkedin'], tone_id: '', audience_id: '', priority: 'medium', topics: [] },
         tones: getDefaultTones(), audiences: getDefaultAudiences(), image_styles: getDefaultImageStyles(),
         media_prompt_templates: getDefaultMediaPromptTemplates(), research_templates: getDefaultResearchTemplates(),
         brand_design: getDefaultBrandDesign()
       },
       aiPreferences: { appDefault: {}, perAction: {}, lastProvider: '', lastModel: '' },
       reference_images: {},
-      image_categories: getDefaultImageCategories()
+      image_categories: getDefaultImageCategories(),
+      setup: { firstRun: true, completedAt: '', version: 1 }
     };
   }
 
@@ -577,7 +610,7 @@
 
   function buildMaps() {
     // Posts
-    S.postMap = {}; S.statusCounts = {}; S.typeCounts = {}; S.platformCounts = {}; S.tagIndex = {};
+    S.postMap = {}; S.statusCounts = {}; S.typeCounts = {}; S.platformCounts = {}; S.topicIndex = {}; S.seriesIndex = {};
     S.totalPosts = 0; S.activePosts = 0; S.publishedPosts = 0;
     for (var st in POST_STATUSES) S.statusCounts[st] = 0;
     for (var pt in POST_TYPES) S.typeCounts[pt] = 0;
@@ -595,18 +628,28 @@
       // Platform counts
       var plats = p.platforms || [];
       for (var pli = 0; pli < plats.length; pli++) S.platformCounts[plats[pli]] = (S.platformCounts[plats[pli]] || 0) + 1;
-      // Tag index
-      var ptags = p.tags || [];
-      for (var ti = 0; ti < ptags.length; ti++) {
-        S.tagIndex[ptags[ti]] = S.tagIndex[ptags[ti]] || [];
-        S.tagIndex[ptags[ti]].push(p.id);
+      // Topic index
+      var pTopics = p.topics || [];
+      for (var ti = 0; ti < pTopics.length; ti++) {
+        S.topicIndex[pTopics[ti]] = S.topicIndex[pTopics[ti]] || [];
+        S.topicIndex[pTopics[ti]].push(p.id);
+      }
+      // Series index
+      if (p.seriesId) {
+        S.seriesIndex[p.seriesId] = S.seriesIndex[p.seriesId] || [];
+        S.seriesIndex[p.seriesId].push(p.id);
       }
     }
 
-    // Tags
-    S.tagMap = {};
-    var tags = S.data.tags || [];
-    for (var tgi = 0; tgi < tags.length; tgi++) S.tagMap[tags[tgi].id] = tags[tgi];
+    // Topics
+    S.topicMap = {};
+    var topics = S.data.topics || [];
+    for (var tgi = 0; tgi < topics.length; tgi++) S.topicMap[topics[tgi].id] = topics[tgi];
+
+    // Series
+    S.seriesMap = {};
+    var seriesList = S.data.series || [];
+    for (var sri = 0; sri < seriesList.length; sri++) S.seriesMap[seriesList[sri].id] = seriesList[sri];
 
     // Research sessions
     S.researchMap = {};
@@ -819,8 +862,10 @@
   function generateId(prefix) { return prefix + '_' + Math.random().toString(36).substr(2, 8); }
 
   // --- Collection getters ---
-  function getAllTags() { return (S.data.tags || []).slice().sort(function(a, b) { return a.name.localeCompare(b.name); }); }
-  function getTagPosts(tagId) { return (S.data.posts || []).filter(function(p) { return (p.tags || []).indexOf(tagId) > -1; }); }
+  function getAllTopics() { return (S.data.topics || []).slice().sort(function(a, b) { return a.name.localeCompare(b.name); }); }
+  function getTopicPosts(topicId) { return (S.data.posts || []).filter(function(p) { return (p.topics || []).indexOf(topicId) > -1; }); }
+  function getAllSeries() { return (S.data.series || []).slice().sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); }); }
+  function getSeriesPosts(seriesId) { return (S.data.posts || []).filter(function(p) { return p.seriesId === seriesId; }); }
   function getUpcomingPosts(n) {
     var now = new Date().toISOString().split('T')[0];
     return (S.data.posts || []).filter(function(p) { return p.schedule && p.schedule.date && p.schedule.date >= now && p.status !== 'published' && p.status !== 'archived'; })
@@ -839,7 +884,8 @@
   function resolveAudience(id) { return S.audienceMap[id] || null; }
   function resolveImageStyle(id) { return S.imageStyleMap[id] || null; }
   function getPlatformConfig(key) { return (S.meta.settings && S.meta.settings.platforms && S.meta.settings.platforms[key]) || {}; }
-  function resolveTag(id) { return S.tagMap[id] || null; }
+  function resolveTopic(id) { return S.topicMap[id] || null; }
+  function resolveSeries(id) { return S.seriesMap[id] || null; }
 
   // --- Misc ---
   function debounce(fn, delay) { var t; return function() { var c = this, a = arguments; clearTimeout(t); t = setTimeout(function() { fn.apply(c, a); }, delay); }; }
@@ -897,23 +943,46 @@
 
   function renderSidebar() {
     var html = '<div class="scp-sidebar" id="scpSidebar"><div class="scp-sidebar-overlay"></div><div class="scp-sidebar-inner"><nav class="scp-nav">';
+
+    // Bucket views by group, preserving APP_VIEWS insertion order within
+    // each bucket.
+    var byGroup = {};
     for (var key in APP_VIEWS) {
       var v = APP_VIEWS[key];
-      var active = S.currentView === key ? ' scp-nav-item-active' : '';
-      var badgeHtml = '';
-      if (key === 'posts') badgeHtml = S.activePosts > 0 ? '<span class="scp-nav-badge">' + S.activePosts + '</span>' : '';
-      else if (key === 'research') {
-        var sesCount = (S.data.research && S.data.research.sessions) ? S.data.research.sessions.length : 0;
-        badgeHtml = sesCount > 0 ? '<span class="scp-nav-badge">' + sesCount + '</span>' : '';
-      }
-      else if (key === 'tags') badgeHtml = (S.data.tags || []).length > 0 ? '<span class="scp-nav-badge">' + (S.data.tags || []).length + '</span>' : '';
-      else if (key === 'images') badgeHtml = S.images.length > 0 ? '<span class="scp-nav-badge">' + S.images.length + '</span>' : '';
-      html += '<a href="#' + key + '" class="scp-nav-item' + active + '" data-view="' + key + '">';
-      html += '<span class="scp-nav-icon">' + icon(v.icon) + '</span>';
-      html += '<span class="scp-nav-label">' + esc(v.label) + '</span>';
-      html += badgeHtml + '</a>';
+      var g = v.group || 'overview';
+      (byGroup[g] = byGroup[g] || []).push(key);
     }
+
+    for (var gi = 0; gi < SIDEBAR_GROUPS.length; gi++) {
+      var grp = SIDEBAR_GROUPS[gi];
+      var keys = byGroup[grp.key] || [];
+      if (keys.length === 0) continue;
+      html += '<div class="scp-nav-group">';
+      html += '<div class="scp-nav-group-label">' + esc(grp.label) + '</div>';
+      for (var ki = 0; ki < keys.length; ki++) html += renderSidebarItem(keys[ki]);
+      html += '</div>';
+    }
+
     html += '</nav></div></div>';
+    return html;
+  }
+
+  function renderSidebarItem(key) {
+    var v = APP_VIEWS[key]; if (!v) return '';
+    var active = S.currentView === key ? ' scp-nav-item-active' : '';
+    var badgeHtml = '';
+    if (key === 'posts') badgeHtml = S.activePosts > 0 ? '<span class="scp-nav-badge">' + S.activePosts + '</span>' : '';
+    else if (key === 'research') {
+      var sesCount = (S.data.research && S.data.research.sessions) ? S.data.research.sessions.length : 0;
+      badgeHtml = sesCount > 0 ? '<span class="scp-nav-badge">' + sesCount + '</span>' : '';
+    }
+    else if (key === 'topics') badgeHtml = (S.data.topics || []).length > 0 ? '<span class="scp-nav-badge">' + (S.data.topics || []).length + '</span>' : '';
+    else if (key === 'series') badgeHtml = (S.data.series || []).length > 0 ? '<span class="scp-nav-badge">' + (S.data.series || []).length + '</span>' : '';
+    else if (key === 'images') badgeHtml = S.images.length > 0 ? '<span class="scp-nav-badge">' + S.images.length + '</span>' : '';
+    var html = '<a href="#' + key + '" class="scp-nav-item' + active + '" data-view="' + key + '" title="' + esc(v.description || '') + '">';
+    html += '<span class="scp-nav-icon">' + icon(v.icon) + '</span>';
+    html += '<span class="scp-nav-label">' + esc(v.label) + '</span>';
+    html += badgeHtml + '</a>';
     return html;
   }
 
@@ -926,7 +995,8 @@
       case 'posts':     html = renderPostsView(); break;
       case 'calendar':  html = renderCalendarView(); break;
       case 'images':    html = (R.imagesView) ? R.imagesView() : renderImagesPlaceholder(); break;
-      case 'tags':      html = renderTagsView(); break;
+      case 'topics':    html = renderTopicsView(); break;
+      case 'series':    html = renderSeriesView ? renderSeriesView() : renderSeriesPlaceholder(); break;
       case 'activity':  html = renderActivityView(); break;
       case 'settings':  html = (R.settingsView) ? R.settingsView() : renderSettingsPlaceholder(); break;
       default: html = renderDashboardView();
@@ -944,13 +1014,15 @@
   //   8   Dashboard  -> src/core/views/dashboard.js
   //   9   Posts      -> src/core/views/posts.js
   //   10  Calendar   -> src/core/views/calendar.js
-  //   11  Tags       -> src/core/views/tags.js
+  //   11  Topics     -> src/core/views/topics.js
+  //   11b Series     -> src/core/views/series.js
   //   12  Activity   -> src/core/views/activity.js
   // ============================================================
   var renderDashboardView   = window._scpRenderDashboardView;
   var renderPostsView       = window._scpRenderPostsView;
   var renderCalendarView    = window._scpRenderCalendarView;
-  var renderTagsView        = window._scpRenderTagsView;
+  var renderTopicsView      = window._scpRenderTopicsView;
+  var renderSeriesView      = window._scpRenderSeriesView;
   var renderActivityView    = window._scpRenderActivityView;
   var renderStatCard        = window._scpRenderStatCard;
   var renderActivityItem    = window._scpRenderActivityItem;
@@ -1002,6 +1074,15 @@
       '<div class="scp-empty-state-text">Loading brand image library...</div></div></div>';
   }
 
+  function renderSeriesPlaceholder() {
+    var count = (S.data.series || []).length;
+    return '<div class="scp-view"><div class="scp-view-header"><h1>' + icon('layer-group') + ' Series</h1>' +
+      '<span class="scp-view-subtitle">' + count + ' series</span></div>' +
+      '<div class="scp-empty-state"><div class="scp-empty-state-icon">' + icon('layer-group') + '</div>' +
+      '<div class="scp-empty-state-title">Series view coming soon</div>' +
+      '<div class="scp-empty-state-text">Group related posts into multi-part content arcs. Generated from the setup wizard or created manually.</div></div></div>';
+  }
+
   // ============================================================
   // SECTION 14: POST FILTERING & SORTING
   // ============================================================
@@ -1010,7 +1091,7 @@
     var f = S.postFilter;
     var posts = (S.data.posts || []).slice();
 
-    // Search — matches title, content body, tags, hook, and platform content
+    // Search — matches title, content body, topics, hook, and platform content
     if (f.search) {
       var q = f.search.toLowerCase();
       posts = posts.filter(function(p) {
@@ -1020,11 +1101,11 @@
         if (p.content && (p.content.body || '').toLowerCase().indexOf(q) > -1) return true;
         // Selected hook
         if (p.research && (p.research.selected_hook || '').toLowerCase().indexOf(q) > -1) return true;
-        // Tag names
-        if (p.tags && p.tags.length > 0) {
-          for (var ti = 0; ti < p.tags.length; ti++) {
-            var tag = S.tagMap[p.tags[ti]];
-            if (tag && tag.name.toLowerCase().indexOf(q) > -1) return true;
+        // Topic names
+        if (p.topics && p.topics.length > 0) {
+          for (var ti = 0; ti < p.topics.length; ti++) {
+            var topic = S.topicMap[p.topics[ti]];
+            if (topic && topic.name.toLowerCase().indexOf(q) > -1) return true;
           }
         }
         return false;
@@ -1038,8 +1119,10 @@
     if (f.type) posts = posts.filter(function(p) { return p.type === f.type; });
     // Platform filter
     if (f.platform) posts = posts.filter(function(p) { return (p.platforms || []).indexOf(f.platform) > -1; });
-    // Tag filter
-    if (f.tag) posts = posts.filter(function(p) { return (p.tags || []).indexOf(f.tag) > -1; });
+    // Topic filter
+    if (f.topic) posts = posts.filter(function(p) { return (p.topics || []).indexOf(f.topic) > -1; });
+    // Series filter
+    if (f.series) posts = posts.filter(function(p) { return p.seriesId === f.series; });
     // Priority filter
     if (f.priority) posts = posts.filter(function(p) { return p.priority === f.priority; });
 
@@ -1099,15 +1182,26 @@
         }
         break;
 
-      case 'tag':
-        var tags = getAllTags();
-        for (var tgi = 0; tgi < tags.length; tgi++) {
-          var tag = tags[tgi];
-          var tagPosts = posts.filter(function(p) { return (p.tags || []).indexOf(tag.id) > -1; });
-          if (tagPosts.length) groups.push({ key: tag.id, label: tag.name, icon: 'tag', color: tag.color, posts: tagPosts });
+      case 'topic':
+        var topics = getAllTopics();
+        for (var tgi = 0; tgi < topics.length; tgi++) {
+          var topic = topics[tgi];
+          var topicPosts = posts.filter(function(p) { return (p.topics || []).indexOf(topic.id) > -1; });
+          if (topicPosts.length) groups.push({ key: topic.id, label: topic.name, icon: 'tag', color: topic.color, posts: topicPosts });
         }
-        var untagged = posts.filter(function(p) { return !p.tags || p.tags.length === 0; });
-        if (untagged.length) groups.push({ key: '_untagged', label: 'Untagged', icon: 'tag', color: '#9aa0a6', posts: untagged });
+        var untagged = posts.filter(function(p) { return !p.topics || p.topics.length === 0; });
+        if (untagged.length) groups.push({ key: '_untagged', label: 'No Topic', icon: 'tag', color: '#9aa0a6', posts: untagged });
+        break;
+
+      case 'series':
+        var seriesList = getAllSeries();
+        for (var sgi = 0; sgi < seriesList.length; sgi++) {
+          var ser = seriesList[sgi];
+          var sPosts = posts.filter(function(p) { return p.seriesId === ser.id; });
+          if (sPosts.length) groups.push({ key: ser.id, label: ser.name, icon: 'layer-group', color: ser.color || '#1a73e8', posts: sPosts });
+        }
+        var unassigned = posts.filter(function(p) { return !p.seriesId; });
+        if (unassigned.length) groups.push({ key: '_no_series', label: 'No Series', icon: 'layer-group', color: '#9aa0a6', posts: unassigned });
         break;
 
       case 'priority':
@@ -1240,9 +1334,10 @@
       renderCurrentView();
     });
     $(document).off('change.scp-cfs', '.scp-cal-status-filter').on('change.scp-cfs', '.scp-cal-status-filter', function() { S.calendarFilters.status = $(this).val(); renderCurrentView(); });
-    $(document).off('change.scp-cftg', '.scp-cal-tag-filter').on('change.scp-cftg', '.scp-cal-tag-filter', function() { S.calendarFilters.tag = $(this).val(); renderCurrentView(); });
+    $(document).off('change.scp-cftg', '.scp-cal-topic-filter').on('change.scp-cftg', '.scp-cal-topic-filter', function() { S.calendarFilters.topic = $(this).val(); renderCurrentView(); });
+    $(document).off('change.scp-cfsr', '.scp-cal-series-filter').on('change.scp-cfsr', '.scp-cal-series-filter', function() { S.calendarFilters.series = $(this).val(); renderCurrentView(); });
     $(document).off('click.scp-ccf', '[data-action="cal-clear-filters"]').on('click.scp-ccf', '[data-action="cal-clear-filters"]', function(e) {
-      e.preventDefault(); S.calendarFilters = { platforms: [], types: [], status: '', tag: '' }; renderCurrentView();
+      e.preventDefault(); S.calendarFilters = { platforms: [], types: [], status: '', topic: '', series: '' }; renderCurrentView();
     });
     // Drag-and-drop
     $(document).off('dragstart.scp-cds').on('dragstart.scp-cds', '.scp-cal-post[draggable], .scp-cal-week-card[draggable]', function(e) {
@@ -1309,22 +1404,26 @@
       if (np) { toast('New post created for ' + date, 'success'); renderCurrentView(); }
     });
 
-    // --- Tags ---
-    $(document).off('click.scp-st', '[data-action="select-tag"]').on('click.scp-st', '[data-action="select-tag"]', function(e) { e.preventDefault(); S.selectedTagId = $(this).data('id'); renderCurrentView(); });
-    $(document).off('click.scp-stn', '[data-action="select-tag-nav"]').on('click.scp-stn', '[data-action="select-tag-nav"]', function(e) { e.preventDefault(); S.selectedTagId = $(this).data('id'); navigate('tags'); });
-    $(document).off('click.scp-bt', '[data-action="back-to-tags"]').on('click.scp-bt', '[data-action="back-to-tags"]', function(e) { e.preventDefault(); S.selectedTagId = null; renderCurrentView(); });
-    $(document).off('click.scp-nt', '[data-action="new-tag"]').on('click.scp-nt', '[data-action="new-tag"]', function(e) {
+    // --- Series ---
+    $(document).off('click.scp-ssr', '[data-action="select-series"]').on('click.scp-ssr', '[data-action="select-series"]', function(e) { e.preventDefault(); S.selectedSeriesId = $(this).data('id'); renderCurrentView(); });
+    $(document).off('click.scp-bsr', '[data-action="back-to-series"]').on('click.scp-bsr', '[data-action="back-to-series"]', function(e) { e.preventDefault(); S.selectedSeriesId = null; renderCurrentView(); });
+
+    // --- Topics ---
+    $(document).off('click.scp-st', '[data-action="select-topic"]').on('click.scp-st', '[data-action="select-topic"]', function(e) { e.preventDefault(); S.selectedTopicId = $(this).data('id'); renderCurrentView(); });
+    $(document).off('click.scp-stn', '[data-action="select-topic-nav"]').on('click.scp-stn', '[data-action="select-topic-nav"]', function(e) { e.preventDefault(); S.selectedTopicId = $(this).data('id'); navigate('topics'); });
+    $(document).off('click.scp-bt', '[data-action="back-to-topics"]').on('click.scp-bt', '[data-action="back-to-topics"]', function(e) { e.preventDefault(); S.selectedTopicId = null; renderCurrentView(); });
+    $(document).off('click.scp-nt', '[data-action="new-topic"]').on('click.scp-nt', '[data-action="new-topic"]', function(e) {
       e.preventDefault();
-      if (window._scpPart2A && window._scpPart2A.openModal) { /* Part 2A handles tag creation modal */ }
+      if (window._scpPart2A && window._scpPart2A.openModal) { /* Part 2A handles topic creation modal */ }
       else {
-        var name = prompt('Tag name:');
+        var name = prompt('Topic name:');
         if (name && name.trim()) {
           var colors = ['#1a73e8', '#7c3aed', '#0d904f', '#e37400', '#d93025', '#0891b2'];
-          var tag = { id: generateId('tag'), name: name.trim(), color: colors[Math.floor(Math.random() * colors.length)], description: '', created: new Date().toISOString() };
-          S.data.tags = S.data.tags || [];
-          S.data.tags.push(tag);
-          logActivity('tag_created', '', '', 'Created tag: ' + tag.name);
-          buildMaps(); renderCurrentView(); syncToTextarea(); toast('Tag created', 'success');
+          var topic = { id: generateId('topic'), name: name.trim(), color: colors[Math.floor(Math.random() * colors.length)], description: '', seriesId: '', created: new Date().toISOString() };
+          S.data.topics = S.data.topics || [];
+          S.data.topics.push(topic);
+          logActivity('topic_created', '', '', 'Created topic: ' + topic.name);
+          buildMaps(); renderCurrentView(); syncToTextarea(); toast('Topic created', 'success');
         }
       }
     });
@@ -1348,7 +1447,8 @@
       type: overrides.type || defs.type || 'image',
       status: 'idea',
       priority: overrides.priority || defs.priority || 'medium',
-      tags: overrides.tags || (defs.tags || []).slice(),
+      topics: overrides.topics || (defs.topics || []).slice(),
+      seriesId: overrides.seriesId || '',
       source: overrides.source || { type: 'manual', research_session_id: '', research_idea_id: '', notes: '' },
       platforms: overrides.platforms || (defs.platforms || ['linkedin']).slice(),
       research: { angles: [], selected_angle: '', angle_custom_input: '', hooks: [], selected_hook: '', hook_custom_input: '', notes: '' },
@@ -1600,8 +1700,10 @@
   // Getters
   window._scpGetFilteredPosts = getFilteredPosts;
   window._scpGetGroupedPosts = getGroupedPosts;
-  window._scpGetAllTags = getAllTags;
-  window._scpGetTagPosts = getTagPosts;
+  window._scpGetAllTopics = getAllTopics;
+  window._scpGetTopicPosts = getTopicPosts;
+  window._scpGetAllSeries = getAllSeries;
+  window._scpGetSeriesPosts = getSeriesPosts;
   window._scpGetUpcomingPosts = getUpcomingPosts;
   window._scpGetRecentlyPublished = getRecentlyPublished;
   window._scpGetRecentActivity = getRecentActivity;
@@ -1609,7 +1711,8 @@
   window._scpResolveAudience = resolveAudience;
   window._scpResolveImageStyle = resolveImageStyle;
   window._scpGetPlatformConfig = getPlatformConfig;
-  window._scpResolveTag = resolveTag;
+  window._scpResolveTopic = resolveTopic;
+  window._scpResolveSeries = resolveSeries;
 
   // Auto-status
   window._scpEvaluateAutoStatus = evaluateAutoStatus;
@@ -1624,6 +1727,26 @@
   // CRUD
   window._scpCreateNewPost = createNewPost;
   window._scpSavePostField = savePostField;
+
+  // Setup wizard helpers
+  function markSetupComplete() {
+    S.meta.setup = S.meta.setup || {};
+    S.meta.setup.firstRun = false;
+    S.meta.setup.completedAt = new Date().toISOString();
+    S.meta.setup.version = S.meta.setup.version || 1;
+    logActivity('setup_completed', '', '', 'Setup wizard completed');
+    syncToTextarea();
+  }
+  function resetSetup() {
+    S.meta.setup = S.meta.setup || {};
+    S.meta.setup.firstRun = true;
+    S.meta.setup.completedAt = '';
+    syncToTextarea();
+  }
+  function isFirstRun() { return !!(S.meta.setup && S.meta.setup.firstRun); }
+  window._scpMarkSetupComplete = markSetupComplete;
+  window._scpResetSetup = resetSetup;
+  window._scpIsFirstRun = isFirstRun;
 
   // AI Text Formatting
   window._scpCleanAIText = cleanAIText;
