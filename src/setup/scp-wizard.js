@@ -1,22 +1,30 @@
 /**
  * @category    setup
- * @purpose     First-run setup wizard. Five-step modal flow that captures
- *              brand basics, then (in later phases) generates topic and
- *              series scaffolding and seeds a starter planned-post batch.
+ * @purpose     First-run setup wizard. Three-stage full-page flow:
+ *                Stage 1 — Welcome & brand attributes (AI-discovered, editable)
+ *                Stage 2 — Topics & Series (sub-stages 'topics' and 'series')
+ *                Stage 3 — Post Planning (research by series or topic)
+ *              All stages share a research-panel pattern: brief textarea +
+ *              provider/model picker + Run button + accumulating list with
+ *              per-row select. Data flushes to S.data / S.meta only on Finish.
+ *
  * @exports     window._scpWizard
  *                { openWizard, closeWizard, openIfFirstRun,
- *                  goToStep, nextStep, prevStep, skipSetup, finishSetup }
- *              window._scpRegisterWizardStep(stepNumber, renderFn)
- *                — later phases register their step renderers here.
+ *                  goToStage, nextStage, prevStage, skipSetup, finishSetup,
+ *                  TOTAL_STAGES, stageMeta }
+ *              window._scpRegisterWizardStage(stageNumber, renderFn, validatorFn?)
+ *              window._scpRegisterWizardStageEnter(stageNumber, hookFn)
+ *              window._scpRegisterWizardFlush(fn)
+ *              window._scpRenderWizard()  — re-render trigger for step modules
+ *
  * @depends-on  window._scpState, window._scpEsc, window._scpIcon,
  *              window._scpSyncToTextarea, window._scpToast,
  *              window._scpLogActivity, window._scpMarkSetupComplete,
  *              window._scpIsFirstRun, window._scpIsFreshWorkspace,
- *              window._scpConstants
+ *              window._scpConstants, window._scpBuildMaps, window._scpRender
  *
- * Step renderers self-register so Phase 2+ files can drop in step 2/3/4/5
- * without editing the shell. Unknown steps fall back to a "coming soon"
- * placeholder.
+ * Stages self-register via _scpRegisterWizardStage, so the shell stays
+ * decoupled from per-stage renderers (which live in scp-wizard-steps.js).
  */
 (function($) {
   'use strict';
@@ -25,27 +33,21 @@
   var Constants;
   var ready = false;
 
-  // Registered step renderers — { 1: fn, 2: fn, ... }. Phase 1 ships only
-  // step 1; the rest live in subsequent phases.
-  var stepRenderers = {};
-  // Optional step validators — return true to allow advance.
-  var stepValidators = {};
-  // Finish-time flushers — additional flush functions registered by step
-  // modules. Each receives the live wizard state and is expected to write
-  // its slice into S.data / S.meta. Runs before markSetupComplete.
+  // Registered stage renderers — { 1: fn, 2: fn, 3: fn }.
+  var stageRenderers = {};
+  // Optional stage validators — return true to allow advance.
+  var stageValidators = {};
+  // Finish-time flushers registered by step modules.
   var flushers = [];
-  // Step-bound init hooks: run on entry to a step (e.g. focus first input,
-  // kick off an AI call). Keyed by step number.
-  var stepEnterHooks = {};
-  // Step metadata: title + short subtitle shown in the stepper.
-  var stepMeta = {
-    1: { title: 'Welcome', subtitle: 'Tell us about your brand' },
-    2: { title: 'Topics', subtitle: 'AI-suggested content pillars' },
-    3: { title: 'Series', subtitle: 'Group topics into arcs' },
-    4: { title: 'Voice', subtitle: 'Pick your tone' },
-    5: { title: 'Review', subtitle: 'Seed your first posts' }
+  // Stage-bound init hooks: run on entry to a stage.
+  var stageEnterHooks = {};
+  // Stage metadata: title + short subtitle shown in the stepper.
+  var stageMeta = {
+    1: { title: 'Welcome',           subtitle: 'Brand & AI-discovered basics' },
+    2: { title: 'Topics & Series',   subtitle: 'Pillars and multi-post arcs' },
+    3: { title: 'Post Planning',     subtitle: 'Seed your content calendar' }
   };
-  var TOTAL_STEPS = 5;
+  var TOTAL_STAGES = 3;
 
   // ------------------------------------------------------------------
   // BOOT — poll for Part 1 readiness, then auto-open on first run.
@@ -72,13 +74,10 @@
     markSetupComplete = window._scpMarkSetupComplete;
     Constants = window._scpConstants;
     ready = true;
-    registerStep1();
     setupEvents();
-    // Defer the auto-open by a frame so the main app shell paints first —
-    // the wizard then animates in on top of a fully-rendered background.
-    // Data-driven isFreshWorkspace() is the authoritative signal; the
-    // firstRun flag is kept as a fallback so a Settings → re-run still
-    // works on a workspace that already has data.
+    // Defer the auto-open so the main app shell paints first.
+    // isFreshWorkspace() is the authoritative signal; firstRun is a
+    // belt+suspenders fallback for the Settings → re-run path.
     setTimeout(function() {
       var fresh    = window._scpIsFreshWorkspace && window._scpIsFreshWorkspace();
       var firstRun = window._scpIsFirstRun       && window._scpIsFirstRun();
@@ -92,35 +91,49 @@
   // ------------------------------------------------------------------
   function ensureWizardState() {
     if (!S.setupWizard) {
-      // Prefill from Drupal brand block if present — saves keystrokes for
-      // workspaces that already have brand data set up at the user level.
+      // Prefill workspace name + niche from Drupal brand block when present.
       var brand = S.brand || {};
       var brandIdentity = brand.identity || {};
       var brandCore = brand.core || {};
-      var workspaceName = (S.meta.workspace && S.meta.workspace.name) || brandCore.brand_name || brandIdentity.name || '';
-      var workspaceNiche = (S.meta.workspace && S.meta.workspace.niche) || brandCore.industry || brandCore.niche || '';
+      var workspaceName  = (S.meta.workspace && S.meta.workspace.name)  || brandCore.brand_name || brandIdentity.name || '';
+      var workspaceNiche = (S.meta.workspace && S.meta.workspace.niche) || brandCore.industry   || brandCore.niche    || '';
       S.setupWizard = {
         open: false,
-        currentStep: 1,
-        // Per-step working data. Steps write here as the user fills them
-        // out; finishSetup() flushes the relevant slices to S.meta / S.data.
+        currentStage: 1,
+        stage2Sub: 'topics',
         data: {
           workspace: {
             name: workspaceName,
             niche: workspaceNiche,
-            audience_description: (S.meta.workspace && S.meta.workspace.audience_description) || '',
-            primary_platform: (S.meta.workspace && S.meta.workspace.primary_platform) || '',
-            posting_frequency: (S.meta.workspace && S.meta.workspace.posting_frequency) || ''
+            audienceDescription: (S.meta.workspace && S.meta.workspace.audience_description) || '',
+            primaryPlatforms: [],
+            secondaryPlatforms: [],
+            postingFrequency: '',
+            toneId: '',
+            notes: ''
           },
-          topics: [],            // Step 2 will populate
-          series: [],            // Step 3 will populate
-          tone: { id: '', name: '', description: '' }, // Step 4
-          plannedPosts: []       // Step 5
+          stage1Brief: '',
+          topics: [],
+          stage2aBrief: '',
+          series: [],
+          stage2bBrief: '',
+          plannedPosts: [],
+          stage3Brief: '',
+          stage3Basis: 'series',
+          stage3BasisId: ''
+        },
+        uiState: {
+          stage1Loading: false, stage1Error: '',
+          topicsLoading: false, topicsError: '',
+          seriesLoading: false, seriesError: '',
+          postsLoading:  false, postsError:  ''
         }
       };
     }
     return S.setupWizard;
   }
+
+  function clearWizardState() { S.setupWizard = null; }
 
   // ------------------------------------------------------------------
   // API
@@ -130,11 +143,17 @@
     var w = ensureWizardState();
     w.open = true;
     render();
+    // Fire the stage-enter hook for the stage we're opening on (usually 1).
+    var hook = stageEnterHooks[w.currentStage];
+    if (typeof hook === 'function') {
+      try { hook(w); } catch (e) { console.error('[SCP] Wizard enter hook threw', e); }
+    }
   }
 
   function closeWizard() {
     if (S.setupWizard) S.setupWizard.open = false;
     $('.scp-wizard-backdrop').remove();
+    $('body').removeClass('scp-wizard-open');
   }
 
   function openIfFirstRun() {
@@ -143,32 +162,52 @@
     if (fresh || firstRun) openWizard();
   }
 
-  function goToStep(n) {
+  function goToStage(n) {
     var w = ensureWizardState();
-    if (n < 1 || n > TOTAL_STEPS) return;
-    w.currentStep = n;
+    if (n < 1 || n > TOTAL_STAGES) return;
+    w.currentStage = n;
+    // Reset Stage 2 sub-tab when leaving / entering Stage 2 fresh.
+    if (n === 2) w.stage2Sub = w.stage2Sub || 'topics';
     render();
-    var hook = stepEnterHooks[n];
+    var hook = stageEnterHooks[n];
     if (typeof hook === 'function') {
-      try { hook(w); }
-      catch (e) { console.error('[SCP] Wizard enter hook threw', e); }
+      try { hook(w); } catch (e) { console.error('[SCP] Wizard enter hook threw', e); }
     }
   }
 
-  function nextStep() {
+  function nextStage() {
     var w = ensureWizardState();
-    var validator = stepValidators[w.currentStep];
+    // Stage 2 is two sub-stages. Continue from 'topics' goes to 'series'
+    // before advancing to Stage 3.
+    if (w.currentStage === 2 && w.stage2Sub === 'topics') {
+      var v2a = stageValidators['2a'];
+      if (v2a && !v2a()) return;
+      w.stage2Sub = 'series';
+      render();
+      var hookSeries = stageEnterHooks['2b'];
+      if (typeof hookSeries === 'function') {
+        try { hookSeries(w); } catch (e) { console.error('[SCP] Wizard enter hook threw', e); }
+      }
+      return;
+    }
+    var validator = stageValidators[w.currentStage] || stageValidators[w.currentStage === 2 ? '2b' : ''];
     if (validator && !validator()) return;
-    if (w.currentStep < TOTAL_STEPS) {
-      goToStep(w.currentStep + 1);
+    if (w.currentStage < TOTAL_STAGES) {
+      goToStage(w.currentStage + 1);
     } else {
       finishSetup();
     }
   }
 
-  function prevStep() {
+  function prevStage() {
     var w = ensureWizardState();
-    if (w.currentStep > 1) goToStep(w.currentStep - 1);
+    // From Stage 2 sub 'series' go back to 'topics' before leaving Stage 2.
+    if (w.currentStage === 2 && w.stage2Sub === 'series') {
+      w.stage2Sub = 'topics';
+      render();
+      return;
+    }
+    if (w.currentStage > 1) goToStage(w.currentStage - 1);
   }
 
   function skipSetup() {
@@ -176,20 +215,13 @@
     if (markSetupComplete) markSetupComplete();
     if (logActivity) logActivity('setup_completed', '', '', 'Setup skipped');
     closeWizard();
+    clearWizardState();
     if (toast) toast('Setup skipped — explore freely', 'info');
   }
 
   function finishSetup() {
     var w = ensureWizardState();
-    // Flush workspace basics. Step modules add their own flushers below.
-    var ws = w.data.workspace || {};
-    S.meta.workspace = S.meta.workspace || {};
-    S.meta.workspace.name = (ws.name || '').trim();
-    S.meta.workspace.niche = (ws.niche || '').trim();
-    S.meta.workspace.audience_description = (ws.audience_description || '').trim();
-    S.meta.workspace.primary_platform = ws.primary_platform || '';
-    S.meta.workspace.posting_frequency = ws.posting_frequency || '';
-    // Run step-module flushers (topics, series, tone, planned posts, etc.)
+    // Run step-module flushers (Stage 1 workspace, topics, series, posts).
     for (var i = 0; i < flushers.length; i++) {
       try { flushers[i](w); }
       catch (e) { console.error('[SCP] Wizard flusher threw', e); }
@@ -197,6 +229,7 @@
     if (window._scpBuildMaps) window._scpBuildMaps();
     if (markSetupComplete) markSetupComplete();
     closeWizard();
+    clearWizardState();
     if (syncToTextarea) syncToTextarea();
     if (window._scpRender) window._scpRender();
     if (toast) toast('Setup complete — welcome aboard!', 'success');
@@ -212,24 +245,29 @@
     var html = renderShell(w);
     if (existing.length) {
       existing.replaceWith(html);
+      // The new backdrop has no .scp-wizard-visible — without it the
+      // CSS keeps opacity:0 and the wizard appears to "disappear".
+      $('.scp-wizard-backdrop').addClass('scp-wizard-visible');
     } else {
-      $('body').append(html);
+      $('body').append(html).addClass('scp-wizard-open');
       setTimeout(function() { $('.scp-wizard-backdrop').addClass('scp-wizard-visible'); }, 10);
     }
-    // Focus the first text input for keyboard-first users.
+    // Focus the first text input for keyboard-first users (re-running
+    // each render so the focus lands on whatever is most relevant for
+    // the current stage).
     setTimeout(function() {
-      var $first = $('.scp-wizard-body input[type="text"], .scp-wizard-body textarea').first();
+      var $first = $('.scp-wizard-body input[type="text"], .scp-wizard-body textarea').not('[readonly]').first();
       if ($first.length) $first.trigger('focus');
     }, 100);
   }
 
   function renderShell(w) {
-    var step = w.currentStep;
-    var isLast = step === TOTAL_STEPS;
+    var stage = w.currentStage;
+    var isLast = stage === TOTAL_STAGES;
     var html = '<div class="scp-wizard-backdrop">';
     html += '<div class="scp-wizard-modal" role="dialog" aria-modal="true" aria-label="Setup wizard">';
 
-    // Header — title + stepper
+    // Header — brand block + skip + stepper
     html += '<div class="scp-wizard-header">';
     html += '<div class="scp-wizard-header-top">';
     var brand = S.brand || {};
@@ -244,24 +282,30 @@
     }
     html += '<button class="scp-wizard-skip" data-action="wizard-skip">Skip setup</button>';
     html += '</div>';
-    html += renderStepper(step);
+    html += renderStepper(stage, w);
     html += '</div>';
 
-    // Body — step content
-    html += '<div class="scp-wizard-body">' + renderStep(step) + '</div>';
+    // Body — stage content
+    html += '<div class="scp-wizard-body">' + renderStage(stage, w) + '</div>';
 
     // Footer — back / next
     html += '<div class="scp-wizard-footer">';
     html += '<div class="scp-wizard-footer-left">';
-    if (step > 1) {
+    var canGoBack = stage > 1 || (stage === 2 && w.stage2Sub === 'series');
+    if (canGoBack) {
       html += '<button class="scp-btn scp-btn-outline" data-action="wizard-back">' + icon('arrow-left') + ' Back</button>';
     }
     html += '</div>';
     html += '<div class="scp-wizard-footer-right">';
-    html += '<span class="scp-wizard-step-count">Step ' + step + ' of ' + TOTAL_STEPS + '</span>';
-    var nextLabel = isLast ? 'Finish' : 'Continue';
-    var nextIcon = isLast ? 'check' : 'arrow-right';
-    html += '<button class="scp-btn scp-btn-primary" data-action="wizard-next">' + nextLabel + ' ' + icon(nextIcon) + '</button>';
+    var stageLabel = isLast ? 'Stage ' + stage + ' of ' + TOTAL_STAGES : 'Stage ' + stage + ' of ' + TOTAL_STAGES;
+    if (stage === 2) stageLabel += ' · ' + (w.stage2Sub === 'topics' ? 'Topics' : 'Series');
+    html += '<span class="scp-wizard-step-count">' + esc(stageLabel) + '</span>';
+    var nextLabel, nextIcon;
+    if (isLast) { nextLabel = 'Finish & Save'; nextIcon = 'check'; }
+    else if (stage === 2 && w.stage2Sub === 'topics') { nextLabel = 'Continue to Series'; nextIcon = 'arrow-right'; }
+    else if (stage === 2 && w.stage2Sub === 'series') { nextLabel = 'Continue to Posts';  nextIcon = 'arrow-right'; }
+    else { nextLabel = 'Continue'; nextIcon = 'arrow-right'; }
+    html += '<button class="scp-btn scp-btn-primary" data-action="wizard-next">' + esc(nextLabel) + ' ' + icon(nextIcon) + '</button>';
     html += '</div>';
     html += '</div>';
 
@@ -269,145 +313,56 @@
     return html;
   }
 
-  function renderStepper(currentStep) {
+  function renderStepper(currentStage, w) {
     var html = '<div class="scp-wizard-stepper" role="list">';
-    for (var i = 1; i <= TOTAL_STEPS; i++) {
-      var status = i < currentStep ? 'done' : (i === currentStep ? 'active' : 'pending');
-      var meta = stepMeta[i] || { title: 'Step ' + i, subtitle: '' };
+    for (var i = 1; i <= TOTAL_STAGES; i++) {
+      var status = i < currentStage ? 'done' : (i === currentStage ? 'active' : 'pending');
+      var meta = stageMeta[i] || { title: 'Stage ' + i, subtitle: '' };
+      var subLabel = meta.subtitle;
+      // Stage 2 shows the sub-tab on the active dot label.
+      if (i === 2 && currentStage === 2) subLabel = w.stage2Sub === 'topics' ? 'Topics' : 'Series';
       html += '<div class="scp-wizard-step scp-wizard-step-' + status + '" role="listitem">';
       html += '<div class="scp-wizard-step-dot">' + (status === 'done' ? icon('check') : i) + '</div>';
       html += '<div class="scp-wizard-step-label">';
       html += '<div class="scp-wizard-step-title">' + esc(meta.title) + '</div>';
-      html += '<div class="scp-wizard-step-subtitle">' + esc(meta.subtitle) + '</div>';
+      html += '<div class="scp-wizard-step-subtitle">' + esc(subLabel) + '</div>';
       html += '</div></div>';
-      if (i < TOTAL_STEPS) {
-        html += '<div class="scp-wizard-step-line scp-wizard-step-line-' + (i < currentStep ? 'done' : 'pending') + '"></div>';
+      if (i < TOTAL_STAGES) {
+        html += '<div class="scp-wizard-step-line scp-wizard-step-line-' + (i < currentStage ? 'done' : 'pending') + '"></div>';
       }
     }
     html += '</div>';
     return html;
   }
 
-  function renderStep(step) {
-    var fn = stepRenderers[step];
-    if (fn) return fn(S.setupWizard);
-    return renderPlaceholderStep(step);
+  function renderStage(stage, w) {
+    var fn = stageRenderers[stage];
+    if (fn) return fn(w);
+    return renderPlaceholderStage(stage);
   }
 
-  function renderPlaceholderStep(step) {
-    var meta = stepMeta[step] || { title: 'Step ' + step, subtitle: '' };
+  function renderPlaceholderStage(stage) {
+    var meta = stageMeta[stage] || { title: 'Stage ' + stage, subtitle: '' };
     var html = '<div class="scp-wizard-step-content scp-wizard-step-placeholder">';
     html += '<div class="scp-wizard-placeholder-icon">' + icon('flask') + '</div>';
     html += '<h2>' + esc(meta.title) + ' coming soon</h2>';
-    html += '<p>' + esc(meta.subtitle) + '. This step is wired up in a later phase — for now you can continue or skip.</p>';
+    html += '<p>' + esc(meta.subtitle) + '. Step module not loaded — Skip or reload.</p>';
     html += '</div>';
     return html;
-  }
-
-  // ------------------------------------------------------------------
-  // STEP 1 — Welcome + brand basics
-  // ------------------------------------------------------------------
-  function registerStep1() {
-    stepRenderers[1] = renderStep1;
-    stepValidators[1] = validateStep1;
-  }
-
-  function renderStep1(w) {
-    var d = (w.data && w.data.workspace) || {};
-    var PLATFORMS = (Constants && Constants.PLATFORMS) || {};
-    var html = '<div class="scp-wizard-step-content scp-wizard-step-welcome">';
-    html += '<h2 class="scp-wizard-headline">Let\'s set up your workspace</h2>';
-    html += '<p class="scp-wizard-sub">Five quick steps — you can change anything later from Settings.</p>';
-
-    html += '<div class="scp-wizard-form">';
-
-    html += '<div class="scp-form-group">';
-    html += '<label>Workspace name <span class="scp-wizard-required">*</span></label>';
-    html += '<input type="text" class="scp-input scp-wizard-field" data-field="name" value="' + esc(d.name || '') + '" placeholder="e.g. Acme Coffee Co.">';
-    html += '</div>';
-
-    html += '<div class="scp-form-group">';
-    html += '<label>What\'s your niche or focus? <span class="scp-wizard-required">*</span></label>';
-    html += '<input type="text" class="scp-input scp-wizard-field" data-field="niche" value="' + esc(d.niche || '') + '" placeholder="e.g. B2B SaaS for marketing teams, sustainable fashion, fitness coaching">';
-    html += '<p class="scp-form-hint">A short description we can pass to the AI for topic and content suggestions.</p>';
-    html += '</div>';
-
-    html += '<div class="scp-form-group">';
-    html += '<label>Who are you trying to reach?</label>';
-    html += '<textarea class="scp-textarea scp-wizard-field" data-field="audience_description" rows="2" placeholder="e.g. Marketing managers at 50-500 person companies, busy parents looking for healthy meals, junior developers learning Rust">' + esc(d.audience_description || '') + '</textarea>';
-    html += '<p class="scp-form-hint">The more specific, the better the AI suggestions.</p>';
-    html += '</div>';
-
-    html += '<div class="scp-form-row">';
-    html += '<div class="scp-form-half">';
-    html += '<label>Primary platform</label>';
-    html += '<select class="scp-select scp-wizard-field" data-field="primary_platform">';
-    html += '<option value="">Choose a platform...</option>';
-    for (var pk in PLATFORMS) {
-      var pl = PLATFORMS[pk];
-      html += '<option value="' + pk + '"' + (d.primary_platform === pk ? ' selected' : '') + '>' + esc(pl.label) + '</option>';
-    }
-    html += '</select>';
-    html += '</div>';
-    html += '<div class="scp-form-half">';
-    html += '<label>Posting frequency</label>';
-    html += '<select class="scp-select scp-wizard-field" data-field="posting_frequency">';
-    var freqs = [
-      { v: '', l: 'Not sure yet' },
-      { v: 'daily', l: 'Daily' },
-      { v: '3x_week', l: '3× per week' },
-      { v: 'weekly', l: 'Weekly' },
-      { v: '2x_month', l: 'Twice a month' },
-      { v: 'monthly', l: 'Monthly' }
-    ];
-    for (var i = 0; i < freqs.length; i++) {
-      html += '<option value="' + freqs[i].v + '"' + (d.posting_frequency === freqs[i].v ? ' selected' : '') + '>' + esc(freqs[i].l) + '</option>';
-    }
-    html += '</select>';
-    html += '</div>';
-    html += '</div>';
-
-    html += '</div></div>';
-    return html;
-  }
-
-  function validateStep1() {
-    var w = ensureWizardState();
-    var d = w.data.workspace;
-    if (!d.name || !d.name.trim()) { toast && toast('Please enter a workspace name', 'warning'); return false; }
-    if (!d.niche || !d.niche.trim()) { toast && toast('Please describe your niche or focus', 'warning'); return false; }
-    return true;
   }
 
   // ------------------------------------------------------------------
   // EVENTS
   // ------------------------------------------------------------------
   function setupEvents() {
-    // Field updates — bind on the body so input/change reach any future step's fields.
-    $(document).off('input.scp-wiz change.scp-wiz', '.scp-wizard-field')
-      .on('input.scp-wiz change.scp-wiz', '.scp-wizard-field', function() {
-        var w = ensureWizardState();
-        var field = $(this).data('field');
-        var bucket = $(this).data('bucket') || 'workspace';
-        if (!field) return;
-        w.data[bucket] = w.data[bucket] || {};
-        w.data[bucket][field] = $(this).val();
-      });
-
     $(document).off('click.scp-wiz-next', '[data-action="wizard-next"]')
-      .on('click.scp-wiz-next', '[data-action="wizard-next"]', function(e) { e.preventDefault(); nextStep(); });
+      .on('click.scp-wiz-next', '[data-action="wizard-next"]', function(e) { e.preventDefault(); nextStage(); });
 
     $(document).off('click.scp-wiz-back', '[data-action="wizard-back"]')
-      .on('click.scp-wiz-back', '[data-action="wizard-back"]', function(e) { e.preventDefault(); prevStep(); });
+      .on('click.scp-wiz-back', '[data-action="wizard-back"]', function(e) { e.preventDefault(); prevStage(); });
 
     $(document).off('click.scp-wiz-skip', '[data-action="wizard-skip"]')
       .on('click.scp-wiz-skip', '[data-action="wizard-skip"]', function(e) { e.preventDefault(); skipSetup(); });
-
-    // Enter on a text input advances (textareas keep newline behavior).
-    $(document).off('keydown.scp-wiz', '.scp-wizard-body input[type="text"]')
-      .on('keydown.scp-wiz', '.scp-wizard-body input[type="text"]', function(e) {
-        if (e.key === 'Enter') { e.preventDefault(); nextStep(); }
-      });
   }
 
   // ------------------------------------------------------------------
@@ -417,35 +372,28 @@
     openWizard: openWizard,
     closeWizard: closeWizard,
     openIfFirstRun: openIfFirstRun,
-    goToStep: goToStep,
-    nextStep: nextStep,
-    prevStep: prevStep,
+    goToStage: goToStage,
+    nextStage: nextStage,
+    prevStage: prevStage,
     skipSetup: skipSetup,
     finishSetup: finishSetup,
-    TOTAL_STEPS: TOTAL_STEPS,
-    stepMeta: stepMeta
+    TOTAL_STAGES: TOTAL_STAGES,
+    stageMeta: stageMeta
   };
 
-  // Later phases call this to plug in their step renderers without
-  // editing the shell. Validators are optional.
-  window._scpRegisterWizardStep = function(stepNumber, renderFn, validatorFn) {
-    if (typeof renderFn === 'function') stepRenderers[stepNumber] = renderFn;
-    if (typeof validatorFn === 'function') stepValidators[stepNumber] = validatorFn;
-    // If the wizard is currently sitting on this step, re-render so the
-    // new content shows immediately.
-    if (S && S.setupWizard && S.setupWizard.open && S.setupWizard.currentStep === stepNumber) render();
+  // Stages self-register. validatorFn returns true to allow advance.
+  // For Stage 2 sub-stages, register with stageNumber === '2a' / '2b'.
+  window._scpRegisterWizardStage = function(stageNumber, renderFn, validatorFn) {
+    if (typeof renderFn === 'function') stageRenderers[stageNumber] = renderFn;
+    if (typeof validatorFn === 'function') stageValidators[stageNumber] = validatorFn;
+    if (S && S.setupWizard && S.setupWizard.open && S.setupWizard.currentStage === stageNumber) render();
   };
-  // Step modules call this to be notified when the user enters their step
-  // (e.g. to lazily fire an AI request the first time).
-  window._scpRegisterWizardStepEnter = function(stepNumber, hookFn) {
-    if (typeof hookFn === 'function') stepEnterHooks[stepNumber] = hookFn;
+  window._scpRegisterWizardStageEnter = function(stageNumber, hookFn) {
+    if (typeof hookFn === 'function') stageEnterHooks[stageNumber] = hookFn;
   };
-  // Step modules register a finish-time flusher to persist their slice.
   window._scpRegisterWizardFlush = function(fn) {
     if (typeof fn === 'function') flushers.push(fn);
   };
-  // Step modules trigger a wizard re-render after async work (AI returns,
-  // user toggles, etc.) without needing access to the shell's render().
   window._scpRenderWizard = function() {
     if (S && S.setupWizard && S.setupWizard.open) render();
   };
