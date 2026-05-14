@@ -77,25 +77,94 @@
   }
 
   // ============================================================
-  // Reusable: research panel + brand context block
+  // Reusable: research panel — two-row "AI workspace" block
+  //   row 1: title + helper + brief textarea
+  //   row 2: provider/model picker (left) + Run button (right)
+  // Loading: card gets primary-tinted left accent + Run shows spinner.
+  // Error:   inline pill below the controls row.
   // ============================================================
   function renderResearchPanel(opts) {
-    var html = '<div class="scp-wiz-research">';
-    html += '<label class="scp-wiz-research-label">' + esc(opts.label || 'Brief') + '</label>';
-    html += '<textarea class="scp-textarea scp-wiz-brief" data-brief-field="' + esc(opts.briefField) + '" rows="3" placeholder="' + esc(opts.placeholder || 'Tell the AI what you want — context, constraints, examples…') + '">' + esc(opts.briefValue || '') + '</textarea>';
+    var loadingCls = opts.loading ? ' scp-wiz-research-loading' : '';
+    var html = '<section class="scp-wiz-research' + loadingCls + '" aria-busy="' + (opts.loading ? 'true' : 'false') + '">';
+
+    // Row 1 — title + helper + textarea
+    html += '<div class="scp-wiz-research-row scp-wiz-research-row-prompt">';
+    html += '<header class="scp-wiz-research-head">';
+    html += '<span class="scp-wiz-research-icon">' + icon('sparkles') + '</span>';
+    html += '<div class="scp-wiz-research-headtext">';
+    html += '<h3 class="scp-wiz-research-title">' + esc(opts.label || 'Brief for the AI') + '</h3>';
     if (opts.helpText) html += '<p class="scp-wiz-research-help">' + esc(opts.helpText) + '</p>';
-    html += '<div class="scp-wiz-research-controls">';
+    html += '</div></header>';
+    html += '<textarea class="scp-wiz-brief" data-brief-field="' + esc(opts.briefField) + '" rows="3" placeholder="' + esc(opts.placeholder || 'Tell the AI what you want — context, constraints, examples…') + '">' + esc(opts.briefValue || '') + '</textarea>';
+    html += '</div>';
+
+    // Row 2 — picker + Run
+    html += '<div class="scp-wiz-research-row scp-wiz-research-row-controls">';
     if (isAIReady()) {
       html += '<div class="scp-wiz-research-picker">' + (window._scpAiSel ? window._scpAiSel(opts.actionId) : '') + '</div>';
       var disabled = opts.loading ? ' disabled' : '';
       html += '<button class="scp-btn scp-btn-primary scp-wiz-run-btn" data-action="' + esc(opts.runActionAttr) + '"' + disabled + '>';
-      html += icon(opts.loading ? 'spinner' : 'sparkles') + ' ' + esc(opts.loading ? 'Working…' : (opts.runLabel || 'Run AI'));
+      html += '<span class="scp-wiz-run-icon">' + icon(opts.loading ? 'spinner' : 'sparkles') + '</span>';
+      html += '<span class="scp-wiz-run-label">' + esc(opts.loading ? 'Generating…' : (opts.runLabel || 'Run AI')) + '</span>';
       html += '</button>';
     } else {
       html += '<div class="scp-wiz-research-disabled">' + icon('warning') + ' AI not configured — add manually below or set up providers in Settings.</div>';
     }
     html += '</div>';
-    if (opts.lastError) html += '<div class="scp-wiz-error">' + icon('warning') + ' ' + esc(opts.lastError) + '</div>';
+
+    if (opts.lastError) {
+      html += '<div class="scp-wiz-error" role="alert">';
+      html += '<span class="scp-wiz-error-icon">' + icon('warning') + '</span>';
+      html += '<span class="scp-wiz-error-text">' + esc(opts.lastError) + '</span>';
+      html += '</div>';
+    }
+    html += '</section>';
+    return html;
+  }
+
+  // List header used by Topics / Series / Posts.
+  function renderListHeader(opts) {
+    var html = '<div class="scp-wiz-list-header">';
+    html += '<div class="scp-wiz-list-headline">';
+    html += '<span class="scp-wiz-count-badge">' + opts.total + ' ' + esc(opts.noun) + (opts.total === 1 ? '' : 's') + '</span>';
+    html += '<span class="scp-wiz-count-sep">·</span>';
+    html += '<span class="scp-wiz-count-selected">' + opts.selected + ' selected</span>';
+    html += '</div>';
+    html += '<div class="scp-wiz-list-actions">';
+    html += '<button class="scp-btn-link scp-wiz-link" data-action="' + esc(opts.toggleAllAction) + '" data-on="1">Select all</button>';
+    html += '<span class="scp-wiz-link-sep">·</span>';
+    html += '<button class="scp-btn-link scp-wiz-link" data-action="' + esc(opts.toggleAllAction) + '" data-on="0">Deselect all</button>';
+    html += '<button class="scp-btn scp-btn-outline scp-btn-sm scp-wiz-add-btn" data-action="' + esc(opts.addAction) + '">' + icon('plus') + ' Add manually</button>';
+    html += '</div></div>';
+    return html;
+  }
+
+  // Empty state (matches app's .scp-empty-state pattern).
+  function renderEmptyState(opts) {
+    var html = '<div class="scp-wiz-empty">';
+    html += '<div class="scp-wiz-empty-icon">' + icon(opts.icon || 'flask') + '</div>';
+    html += '<h4 class="scp-wiz-empty-title">' + esc(opts.title) + '</h4>';
+    if (opts.text) html += '<p class="scp-wiz-empty-text">' + esc(opts.text) + '</p>';
+    if (opts.ctaLabel && opts.ctaAction) {
+      html += '<button class="scp-btn scp-btn-primary scp-btn-sm scp-wiz-empty-cta" data-action="' + esc(opts.ctaAction) + '">' + icon('sparkles') + ' ' + esc(opts.ctaLabel) + '</button>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  // Skeleton card stack — rendered while an AI Run is in flight.
+  function renderSkeletonCards(count) {
+    var n = Math.max(1, count || 3);
+    var html = '<div class="scp-wiz-skeleton-stack" aria-hidden="true">';
+    for (var i = 0; i < n; i++) {
+      html += '<div class="scp-wiz-skeleton-card">';
+      html += '<div class="scp-wiz-skeleton-edge"></div>';
+      html += '<div class="scp-wiz-skeleton-body">';
+      html += '<div class="scp-wiz-skeleton-bar scp-wiz-skeleton-bar-title"></div>';
+      html += '<div class="scp-wiz-skeleton-bar scp-wiz-skeleton-bar-text"></div>';
+      html += '<div class="scp-wiz-skeleton-bar scp-wiz-skeleton-bar-text scp-wiz-skeleton-bar-short"></div>';
+      html += '</div></div>';
+    }
     html += '</div>';
     return html;
   }
@@ -307,20 +376,23 @@
       placeholder: 'e.g. Mix of educational tutorials, opinion pieces, and behind-the-scenes. Avoid trends.'
     });
 
-    html += '<div class="scp-wiz-list-header">';
-    html += '<div class="scp-wiz-list-title">' + topics.length + ' topic' + (topics.length === 1 ? '' : 's') + ' · ' + selectedCount + ' selected</div>';
-    html += '<div class="scp-wiz-list-actions">';
-    html += '<button class="scp-btn-link" data-action="wiz-toggle-all-topics" data-on="1">Select all</button>';
-    html += '<button class="scp-btn-link" data-action="wiz-toggle-all-topics" data-on="0">Deselect all</button>';
-    html += '<button class="scp-btn scp-btn-outline scp-btn-sm" data-action="wiz-add-topic">' + icon('plus') + ' Add manually</button>';
-    html += '</div></div>';
+    html += renderListHeader({
+      total: topics.length, selected: selectedCount, noun: 'topic',
+      toggleAllAction: 'wiz-toggle-all-topics', addAction: 'wiz-add-topic'
+    });
 
-    if (topics.length === 0) {
-      html += '<div class="scp-wiz-empty">' + icon('tags') + '<p>No topics yet. Run the AI above or add one manually.</p></div>';
-    } else {
-      html += '<div class="scp-wiz-suggestions">';
-      for (var i = 0; i < topics.length; i++) html += renderTopicCard(topics[i]);
-      html += '</div>';
+    html += '<div class="scp-wiz-suggestions">';
+    for (var i = 0; i < topics.length; i++) html += renderTopicCard(topics[i]);
+    if (u.topicsLoading) html += renderSkeletonCards(3);
+    html += '</div>';
+    if (topics.length === 0 && !u.topicsLoading) {
+      html += renderEmptyState({
+        icon: 'tags',
+        title: 'No topics yet',
+        text: 'Run the AI above for pillar ideas, or add one manually. Multiple AI runs accumulate — selections persist.',
+        ctaLabel: isAIReady() ? 'Suggest topics with AI' : '',
+        ctaAction: isAIReady() ? 'wiz-run-topics' : ''
+      });
     }
 
     html += '</div>';
@@ -328,16 +400,19 @@
   }
 
   function renderTopicCard(t) {
-    var html = '<div class="scp-wiz-card scp-wiz-topic-card' + (t.selected ? ' scp-wiz-card-selected' : ' scp-wiz-card-deselected') + '" data-temp-id="' + esc(t.tempId) + '">';
-    html += '<label class="scp-wiz-card-select"><input type="checkbox" class="scp-wiz-topic-select"' + (t.selected ? ' checked' : '') + '></label>';
-    html += '<div class="scp-wiz-card-swatch" data-action="wiz-cycle-topic-color" style="background:' + esc(t.color) + '" title="Click to cycle color"></div>';
-    html += '<div class="scp-wiz-card-fields">';
-    html += '<input type="text" class="scp-input scp-wiz-topic-field" data-field="name" value="' + esc(t.name) + '" placeholder="Topic name">';
-    html += '<input type="text" class="scp-input scp-wiz-topic-field" data-field="description" value="' + esc(t.description || '') + '" placeholder="What this pillar covers...">';
-    html += '</div>';
-    if (t.source === 'manual') html += '<span class="scp-wiz-card-tag">Manual</span>';
+    var stateCls = t.selected ? ' scp-wiz-card-selected' : ' scp-wiz-card-deselected';
+    var html = '<article class="scp-wiz-card scp-wiz-topic-card' + stateCls + '" data-temp-id="' + esc(t.tempId) + '" style="--card-color:' + esc(t.color) + '">';
+    html += '<span class="scp-wiz-card-edge" data-action="wiz-cycle-topic-color" title="Click to cycle color"></span>';
+    html += '<div class="scp-wiz-card-body">';
+    html += '<div class="scp-wiz-card-head">';
+    html += '<label class="scp-wiz-card-select" title="Toggle selection"><input type="checkbox" class="scp-wiz-topic-select"' + (t.selected ? ' checked' : '') + '></label>';
+    html += '<input type="text" class="scp-input scp-wiz-card-title scp-wiz-topic-field" data-field="name" value="' + esc(t.name) + '" placeholder="Topic name">';
+    html += '<div class="scp-wiz-card-actions">';
+    html += '<span class="scp-wiz-card-tag scp-wiz-card-tag-' + (t.source === 'manual' ? 'manual' : 'ai') + '">' + (t.source === 'manual' ? 'Manual' : icon('sparkles') + ' AI') + '</span>';
     html += '<button class="scp-btn-icon scp-wiz-card-remove" data-action="wiz-remove-topic" title="Remove">' + icon('trash') + '</button>';
-    html += '</div>';
+    html += '</div></div>';
+    html += '<input type="text" class="scp-input scp-wiz-card-desc scp-wiz-topic-field" data-field="description" value="' + esc(t.description || '') + '" placeholder="What this pillar covers in one sentence…">';
+    html += '</div></article>';
     return html;
   }
 
@@ -409,7 +484,11 @@
     var html = '<div class="scp-wizard-step-content">';
 
     if (selectedTopics.length === 0) {
-      html += '<div class="scp-wiz-empty">' + icon('layer-group') + '<p>You haven\'t selected any topics yet. Go back to Topics first, or finish without series.</p></div>';
+      html += renderEmptyState({
+        icon: 'layer-group',
+        title: 'No selected topics to group',
+        text: 'Series are built from the topics you select in Stage 2. Go back to Topics, pick a few, then return here.'
+      });
       html += '</div>';
       return html;
     }
@@ -434,20 +513,23 @@
       placeholder: 'e.g. Group the educational topics into a "Foundations" series, the opinion ones into "Hot takes".'
     });
 
-    html += '<div class="scp-wiz-list-header">';
-    html += '<div class="scp-wiz-list-title">' + series.length + ' series · ' + selectedSeriesCount + ' selected</div>';
-    html += '<div class="scp-wiz-list-actions">';
-    html += '<button class="scp-btn-link" data-action="wiz-toggle-all-series" data-on="1">Select all</button>';
-    html += '<button class="scp-btn-link" data-action="wiz-toggle-all-series" data-on="0">Deselect all</button>';
-    html += '<button class="scp-btn scp-btn-outline scp-btn-sm" data-action="wiz-add-series">' + icon('plus') + ' Add manually</button>';
-    html += '</div></div>';
+    html += renderListHeader({
+      total: series.length, selected: selectedSeriesCount, noun: 'series',
+      toggleAllAction: 'wiz-toggle-all-series', addAction: 'wiz-add-series'
+    });
 
-    if (series.length === 0) {
-      html += '<div class="scp-wiz-empty">' + icon('layer-group') + '<p>No series yet. Run the AI above or add one manually.</p></div>';
-    } else {
-      html += '<div class="scp-wiz-suggestions">';
-      for (var s = 0; s < series.length; s++) html += renderSeriesCard(series[s], selectedTopics);
-      html += '</div>';
+    html += '<div class="scp-wiz-suggestions">';
+    for (var s = 0; s < series.length; s++) html += renderSeriesCard(series[s], selectedTopics);
+    if (u.seriesLoading) html += renderSkeletonCards(3);
+    html += '</div>';
+    if (series.length === 0 && !u.seriesLoading) {
+      html += renderEmptyState({
+        icon: 'layer-group',
+        title: 'No series yet',
+        text: 'Group your topics into multi-post arcs. Run the AI for suggestions, or add a series manually.',
+        ctaLabel: isAIReady() ? 'Suggest series with AI' : '',
+        ctaAction: isAIReady() ? 'wiz-run-series' : ''
+      });
     }
 
     html += '</div>';
@@ -455,26 +537,31 @@
   }
 
   function renderSeriesCard(s, selectedTopics) {
-    var html = '<div class="scp-wiz-card scp-wiz-series-card' + (s.selected ? ' scp-wiz-card-selected' : ' scp-wiz-card-deselected') + '" data-temp-id="' + esc(s.tempId) + '" style="border-left-color:' + esc(s.color) + '">';
-    html += '<label class="scp-wiz-card-select"><input type="checkbox" class="scp-wiz-series-select"' + (s.selected ? ' checked' : '') + '></label>';
-    html += '<div class="scp-wiz-card-fields">';
-    html += '<input type="text" class="scp-input scp-wiz-series-field" data-field="name" value="' + esc(s.name) + '" placeholder="Series name">';
-    html += '<input type="text" class="scp-input scp-wiz-series-field" data-field="description" value="' + esc(s.description || '') + '" placeholder="What ties these posts together...">';
+    var stateCls = s.selected ? ' scp-wiz-card-selected' : ' scp-wiz-card-deselected';
+    var html = '<article class="scp-wiz-card scp-wiz-series-card' + stateCls + '" data-temp-id="' + esc(s.tempId) + '" style="--card-color:' + esc(s.color) + '">';
+    html += '<span class="scp-wiz-card-edge"></span>';
+    html += '<div class="scp-wiz-card-body">';
+    html += '<div class="scp-wiz-card-head">';
+    html += '<label class="scp-wiz-card-select" title="Toggle selection"><input type="checkbox" class="scp-wiz-series-select"' + (s.selected ? ' checked' : '') + '></label>';
+    html += '<span class="scp-wiz-card-leadicon" aria-hidden="true">' + icon('layer-group') + '</span>';
+    html += '<input type="text" class="scp-input scp-wiz-card-title scp-wiz-series-field" data-field="name" value="' + esc(s.name) + '" placeholder="Series name">';
+    html += '<div class="scp-wiz-card-actions">';
+    html += '<span class="scp-wiz-card-tag scp-wiz-card-tag-' + (s.source === 'manual' ? 'manual' : 'ai') + '">' + (s.source === 'manual' ? 'Manual' : icon('sparkles') + ' AI') + '</span>';
+    html += '<button class="scp-btn-icon scp-wiz-card-remove" data-action="wiz-remove-series" title="Remove">' + icon('trash') + '</button>';
+    html += '</div></div>';
+    html += '<input type="text" class="scp-input scp-wiz-card-desc scp-wiz-series-field" data-field="description" value="' + esc(s.description || '') + '" placeholder="What ties these posts together…">';
     html += '<div class="scp-wiz-topic-pickers">';
-    html += '<div class="scp-wiz-topic-pickers-label">Topics in this series:</div>';
+    html += '<div class="scp-wiz-topic-pickers-label">Topics in this series</div>';
     for (var i = 0; i < selectedTopics.length; i++) {
       var t = selectedTopics[i];
       var on = (s.topicTempIds || []).indexOf(t.tempId) > -1;
       html += '<label class="scp-wiz-topic-picker' + (on ? ' scp-wiz-topic-picker-active' : '') + '" style="--chip-color:' + esc(t.color) + '">';
       html += '<input type="checkbox" class="scp-wiz-series-topic-toggle" data-topic-temp-id="' + esc(t.tempId) + '"' + (on ? ' checked' : '') + '>';
-      html += esc(t.name);
+      html += '<span class="scp-wiz-topic-picker-dot"></span>' + esc(t.name);
       html += '</label>';
     }
     html += '</div>';
-    html += '</div>';
-    if (s.source === 'manual') html += '<span class="scp-wiz-card-tag">Manual</span>';
-    html += '<button class="scp-btn-icon scp-wiz-card-remove" data-action="wiz-remove-series" title="Remove">' + icon('trash') + '</button>';
-    html += '</div>';
+    html += '</div></article>';
     return html;
   }
 
@@ -564,7 +651,12 @@
     var html = '<div class="scp-wizard-step-content">';
 
     if (selectedSeries.length === 0 && selectedTopics.length === 0) {
-      html += '<div class="scp-wiz-empty">' + icon('thumbtack') + '<p>You need at least one selected topic or series to research posts. Go back to Stage 2 or 3.</p></div></div>';
+      html += renderEmptyState({
+        icon: 'thumbtack',
+        title: 'Nothing to research from yet',
+        text: 'Post planning needs at least one selected topic or series. Go back to Stage 2 or 3 and pick the ones to seed posts from.'
+      });
+      html += '</div>';
       return html;
     }
 
@@ -593,20 +685,23 @@
       placeholder: 'e.g. 4 ideas mixing tutorial, contrarian, and behind-the-scenes formats.'
     });
 
-    html += '<div class="scp-wiz-list-header">';
-    html += '<div class="scp-wiz-list-title">' + posts.length + ' post idea' + (posts.length === 1 ? '' : 's') + ' · ' + selectedCount + ' selected</div>';
-    html += '<div class="scp-wiz-list-actions">';
-    html += '<button class="scp-btn-link" data-action="wiz-toggle-all-posts" data-on="1">Select all</button>';
-    html += '<button class="scp-btn-link" data-action="wiz-toggle-all-posts" data-on="0">Deselect all</button>';
-    html += '<button class="scp-btn scp-btn-outline scp-btn-sm" data-action="wiz-add-post">' + icon('plus') + ' Add manually</button>';
-    html += '</div></div>';
+    html += renderListHeader({
+      total: posts.length, selected: selectedCount, noun: 'post idea',
+      toggleAllAction: 'wiz-toggle-all-posts', addAction: 'wiz-add-post'
+    });
 
-    if (posts.length === 0) {
-      html += '<div class="scp-wiz-empty">' + icon('thumbtack') + '<p>No post ideas yet. Run the AI above for the active ' + esc(basis) + '.</p></div>';
-    } else {
-      html += '<div class="scp-wiz-suggestions">';
-      for (var pi = 0; pi < posts.length; pi++) html += renderPostCard(posts[pi], w);
-      html += '</div>';
+    html += '<div class="scp-wiz-suggestions">';
+    for (var pi = 0; pi < posts.length; pi++) html += renderPostCard(posts[pi], w);
+    if (u.postsLoading) html += renderSkeletonCards(3);
+    html += '</div>';
+    if (posts.length === 0 && !u.postsLoading) {
+      html += renderEmptyState({
+        icon: 'thumbtack',
+        title: 'No post ideas yet',
+        text: 'Run the AI for ideas against the active ' + basis + ', or add a post manually.',
+        ctaLabel: isAIReady() ? 'Suggest posts with AI' : '',
+        ctaAction: isAIReady() ? 'wiz-run-posts' : ''
+      });
     }
 
     html += '</div>';
@@ -616,24 +711,31 @@
   function renderPostCard(p, w) {
     var topic = (w.data.topics || []).find(function(t) { return t.tempId === p.topicTempId; });
     var series = (w.data.series || []).find(function(s) { return s.tempId === p.seriesTempId; });
-    var html = '<div class="scp-wiz-card scp-wiz-post-card' + (p.selected ? ' scp-wiz-card-selected' : ' scp-wiz-card-deselected') + '" data-temp-id="' + esc(p.tempId) + '">';
-    html += '<label class="scp-wiz-card-select"><input type="checkbox" class="scp-wiz-post-select"' + (p.selected ? ' checked' : '') + '></label>';
-    html += '<div class="scp-wiz-card-fields scp-wiz-post-fields">';
-    html += '<input type="text" class="scp-input scp-wiz-post-field" data-field="title" value="' + esc(p.title) + '" placeholder="Working title">';
-    html += '<textarea class="scp-textarea scp-wiz-post-field" data-field="hook" rows="2" placeholder="Hook (opening line)">' + esc(p.hook || '') + '</textarea>';
+    var stateCls = p.selected ? ' scp-wiz-card-selected' : ' scp-wiz-card-deselected';
+    var typeCls  = ' scp-wiz-post-card-' + (p.type || 'image');
+    // Card color follows the active basis (series colour preferred).
+    var cardColor = (series && series.color) || (topic && topic.color) || '#1a73e8';
+    var html = '<article class="scp-wiz-card scp-wiz-post-card' + stateCls + typeCls + '" data-temp-id="' + esc(p.tempId) + '" style="--card-color:' + esc(cardColor) + '">';
+    html += '<span class="scp-wiz-card-edge"></span>';
+    html += '<div class="scp-wiz-card-body">';
+    html += '<div class="scp-wiz-card-head">';
+    html += '<label class="scp-wiz-card-select" title="Toggle selection"><input type="checkbox" class="scp-wiz-post-select"' + (p.selected ? ' checked' : '') + '></label>';
+    html += '<input type="text" class="scp-input scp-wiz-card-title scp-wiz-post-field" data-field="title" value="' + esc(p.title) + '" placeholder="Working title">';
+    html += '<div class="scp-wiz-card-actions">';
+    html += '<span class="scp-wiz-card-tag scp-wiz-card-tag-' + (p.source === 'manual' ? 'manual' : 'ai') + '">' + (p.source === 'manual' ? 'Manual' : icon('sparkles') + ' AI') + '</span>';
+    html += '<button class="scp-btn-icon scp-wiz-card-remove" data-action="wiz-remove-post" title="Remove">' + icon('trash') + '</button>';
+    html += '</div></div>';
+    html += '<textarea class="scp-wiz-card-hook scp-wiz-post-field" data-field="hook" rows="2" placeholder="Hook — opening line of the post…">' + esc(p.hook || '') + '</textarea>';
     html += '<div class="scp-wiz-post-meta">';
-    html += '<select class="scp-select scp-select-sm scp-wiz-post-field" data-field="type">';
+    html += '<select class="scp-select scp-select-sm scp-wiz-post-field scp-wiz-post-type-select" data-field="type">';
     for (var t = 0; t < POST_TYPES_LIST.length; t++) {
       html += '<option value="' + POST_TYPES_LIST[t] + '"' + (p.type === POST_TYPES_LIST[t] ? ' selected' : '') + '>' + POST_TYPES_LIST[t] + '</option>';
     }
     html += '</select>';
-    if (topic)  html += '<span class="scp-wiz-context-chip" style="background:' + esc(topic.color)  + '15;color:' + esc(topic.color)  + ';border-color:' + esc(topic.color)  + '40">' + esc(topic.name) + '</span>';
-    if (series) html += '<span class="scp-wiz-context-chip" style="background:' + esc(series.color) + '15;color:' + esc(series.color) + ';border-color:' + esc(series.color) + '40">' + icon('layer-group') + ' ' + esc(series.name) + '</span>';
+    if (topic)  html += '<span class="scp-wiz-context-chip" style="--chip-color:' + esc(topic.color)  + '">' + icon('tag') + ' ' + esc(topic.name) + '</span>';
+    if (series) html += '<span class="scp-wiz-context-chip" style="--chip-color:' + esc(series.color) + '">' + icon('layer-group') + ' ' + esc(series.name) + '</span>';
     html += '</div>';
-    html += '</div>';
-    if (p.source === 'manual') html += '<span class="scp-wiz-card-tag">Manual</span>';
-    html += '<button class="scp-btn-icon scp-wiz-card-remove" data-action="wiz-remove-post" title="Remove">' + icon('trash') + '</button>';
-    html += '</div>';
+    html += '</div></article>';
     return html;
   }
 

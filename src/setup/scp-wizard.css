@@ -266,30 +266,90 @@ body.scp-wizard-open .scp-app { display: none !important; }
 .scp-wiz-brand-card-desc { margin: var(--scp-space-2) 0; color: var(--scp-text-secondary); font-size: var(--scp-font-size-sm); }
 .scp-wiz-brand-card-foot { display: flex; align-items: center; gap: var(--scp-space-2); font-size: var(--scp-font-size-xs); color: var(--scp-success); margin-top: var(--scp-space-2); }
 
-/* Research panel */
+/* ─── Research panel ─────────────────────────────────────────────── */
 .scp-wiz-research {
+  position: relative;
   background: var(--scp-white);
   border: 1px solid var(--scp-border-light);
   border-radius: var(--scp-radius-lg);
-  padding: var(--scp-space-4);
+  padding: var(--scp-space-5);
   margin: var(--scp-space-5) 0;
-  display: flex; flex-direction: column; gap: var(--scp-space-3);
+  display: flex; flex-direction: column; gap: var(--scp-space-4);
+  box-shadow: var(--scp-shadow-xs);
+  overflow: hidden;
 }
-.scp-wiz-research-label { font-size: var(--scp-font-size-sm); font-weight: 600; color: var(--scp-text-primary); }
+.scp-wiz-research::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+  background: linear-gradient(180deg, var(--scp-primary), color-mix(in srgb, var(--scp-primary) 60%, var(--scp-secondary)));
+  opacity: 0; transition: opacity var(--scp-transition-base);
+}
+.scp-wiz-research-loading::before { opacity: 1; }
+.scp-wiz-research-row { display: flex; flex-direction: column; gap: var(--scp-space-2); }
+.scp-wiz-research-head {
+  display: flex; align-items: flex-start; gap: var(--scp-space-3);
+}
+.scp-wiz-research-icon {
+  flex-shrink: 0;
+  width: 36px; height: 36px; border-radius: var(--scp-radius-md);
+  background: var(--scp-primary-light); color: var(--scp-primary);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: var(--scp-font-size-md);
+}
+.scp-wiz-research-headtext { flex: 1; min-width: 0; }
+.scp-wiz-research-title {
+  margin: 0;
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-md); font-weight: 700;
+  color: var(--scp-text-primary);
+  line-height: 1.25;
+}
+.scp-wiz-research-help {
+  margin: 2px 0 0;
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
+  line-height: 1.5;
+}
 .scp-wiz-brief {
-  width: 100%; padding: 10px 12px;
+  width: 100%; padding: 12px 14px;
   font-size: var(--scp-font-size-base);
-  border: 1px solid var(--scp-border-default); border-radius: var(--scp-radius-md);
-  resize: vertical; min-height: 70px;
-  font-family: inherit;
+  border: 1.5px solid var(--scp-border-default); border-radius: var(--scp-radius-md);
+  resize: vertical; min-height: 84px;
+  font-family: inherit; line-height: 1.5;
+  background: var(--scp-bg-secondary);
+  transition: all var(--scp-transition-fast);
 }
-.scp-wiz-brief:focus { outline: none; border-color: var(--scp-border-focus); box-shadow: var(--scp-shadow-glow); }
-.scp-wiz-research-help { font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary); margin: 0; }
-.scp-wiz-research-controls { display: flex; align-items: center; gap: var(--scp-space-3); flex-wrap: wrap; }
-.scp-wiz-research-picker { flex: 1; min-width: 200px; }
-.scp-wiz-research-picker .scp-ai-picker { display: inline-flex; gap: var(--scp-space-2); }
+.scp-wiz-brief:focus {
+  outline: none; border-color: var(--scp-border-focus);
+  background: var(--scp-white);
+  box-shadow: var(--scp-shadow-glow);
+}
+.scp-wiz-research-row-controls {
+  flex-direction: row; align-items: center; gap: var(--scp-space-3);
+  flex-wrap: wrap;
+  padding-top: var(--scp-space-2);
+  border-top: 1px dashed var(--scp-border-light);
+}
+.scp-wiz-research-picker { flex: 1; min-width: 220px; display: flex; align-items: center; gap: var(--scp-space-2); }
+.scp-wiz-research-picker .scp-ai-picker { display: inline-flex; gap: var(--scp-space-2); flex-wrap: wrap; }
 .scp-wiz-research-picker .scp-select { padding: 6px 10px; font-size: var(--scp-font-size-sm); }
-.scp-wiz-run-btn { white-space: nowrap; }
+.scp-wiz-run-btn {
+  white-space: nowrap;
+  padding: 10px 18px;
+  font-size: var(--scp-font-size-sm); font-weight: 600;
+  background: linear-gradient(135deg, var(--scp-primary), color-mix(in srgb, var(--scp-primary) 70%, var(--scp-secondary)));
+  border: none; color: var(--scp-white);
+  display: inline-flex; align-items: center; gap: var(--scp-space-2);
+  border-radius: var(--scp-radius-md);
+  box-shadow: 0 4px 12px rgba(26,115,232,0.25);
+  transition: all var(--scp-transition-fast);
+}
+.scp-wiz-run-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(26,115,232,0.35);
+}
+.scp-wiz-run-btn:disabled { opacity: 0.7; cursor: wait; }
+.scp-wiz-run-icon { display: inline-flex; }
+.scp-wiz-run-btn .fa-spinner { animation: scp-wiz-spin 0.9s linear infinite; }
+@keyframes scp-wiz-spin { to { transform: rotate(360deg); } }
 .scp-wiz-research-disabled {
   display: inline-flex; align-items: center; gap: var(--scp-space-2);
   font-size: var(--scp-font-size-sm); color: var(--scp-warning);
@@ -297,12 +357,19 @@ body.scp-wizard-open .scp-app { display: none !important; }
   background: var(--scp-warning-light); border-radius: var(--scp-radius-md);
 }
 .scp-wiz-error {
-  background: var(--scp-error-light); color: var(--scp-error);
-  padding: var(--scp-space-2) var(--scp-space-3);
-  border-radius: var(--scp-radius-md);
-  font-size: var(--scp-font-size-sm);
   display: flex; align-items: center; gap: var(--scp-space-2);
+  background: var(--scp-error-light); color: var(--scp-error);
+  padding: 10px var(--scp-space-3);
+  border-radius: var(--scp-radius-md);
+  font-size: var(--scp-font-size-sm); font-weight: 500;
+  border-left: 3px solid var(--scp-error);
+  animation: scp-wiz-slide-in 0.2s ease-out;
 }
+@keyframes scp-wiz-slide-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.scp-wiz-error-icon { flex-shrink: 0; }
 
 /* Discovered fields panel */
 .scp-wiz-discovered { margin-top: var(--scp-space-5); display: flex; flex-direction: column; gap: var(--scp-space-5); }
@@ -335,94 +402,228 @@ body.scp-wizard-open .scp-app { display: none !important; }
 }
 .scp-wiz-platform-chip-disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* Lists */
+/* ─── List header ─────────────────────────────────────────────────── */
 .scp-wiz-list-header {
   display: flex; align-items: center; justify-content: space-between;
   gap: var(--scp-space-3); flex-wrap: wrap;
-  margin: var(--scp-space-5) 0 var(--scp-space-3);
+  margin: var(--scp-space-6) 0 var(--scp-space-3);
+  padding-bottom: var(--scp-space-3);
+  border-bottom: 1px solid var(--scp-border-light);
 }
-.scp-wiz-list-title { font-family: var(--scp-font-display); font-weight: 700; font-size: var(--scp-font-size-md); color: var(--scp-text-primary); }
-.scp-wiz-list-actions { display: flex; gap: var(--scp-space-2); align-items: center; flex-wrap: wrap; }
-.scp-wiz-suggestions { display: flex; flex-direction: column; gap: var(--scp-space-3); }
-.scp-wiz-empty {
-  border: 1px dashed var(--scp-border-default);
-  border-radius: var(--scp-radius-lg);
-  padding: var(--scp-space-6) var(--scp-space-4);
-  text-align: center; color: var(--scp-text-secondary);
-  display: flex; flex-direction: column; align-items: center; gap: var(--scp-space-3);
+.scp-wiz-list-headline {
+  display: inline-flex; align-items: center; gap: var(--scp-space-2);
+  font-family: var(--scp-font-display);
 }
-.scp-wiz-empty p { margin: 0; }
+.scp-wiz-count-badge {
+  display: inline-flex; align-items: center;
+  padding: 4px 10px;
+  background: var(--scp-primary-light); color: var(--scp-primary-dark);
+  border-radius: var(--scp-radius-full);
+  font-size: var(--scp-font-size-xs); font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.scp-wiz-count-sep { color: var(--scp-text-muted); }
+.scp-wiz-count-selected { font-size: var(--scp-font-size-sm); font-weight: 600; color: var(--scp-text-secondary); }
+.scp-wiz-list-actions {
+  display: flex; gap: var(--scp-space-2); align-items: center; flex-wrap: wrap;
+}
+.scp-wiz-link {
+  background: none; border: none; cursor: pointer;
+  font-size: var(--scp-font-size-sm); font-weight: 500;
+  color: var(--scp-primary); padding: 4px 6px;
+  border-radius: var(--scp-radius-sm);
+  transition: all var(--scp-transition-fast);
+}
+.scp-wiz-link:hover { background: var(--scp-primary-light); }
+.scp-wiz-link-sep { color: var(--scp-text-muted); font-size: var(--scp-font-size-sm); }
+.scp-wiz-add-btn { margin-left: var(--scp-space-2); }
 
-/* Suggestion cards */
+.scp-wiz-suggestions { display: flex; flex-direction: column; gap: var(--scp-space-3); }
+
+/* ─── Empty state ─────────────────────────────────────────────────── */
+.scp-wiz-empty {
+  display: flex; flex-direction: column; align-items: center; gap: var(--scp-space-2);
+  border: 1.5px dashed var(--scp-border-default);
+  border-radius: var(--scp-radius-lg);
+  padding: var(--scp-space-8) var(--scp-space-5);
+  text-align: center;
+  background: var(--scp-bg-primary);
+}
+.scp-wiz-empty-icon {
+  width: 64px; height: 64px;
+  border-radius: var(--scp-radius-full);
+  background: var(--scp-primary-light); color: var(--scp-primary);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  margin-bottom: var(--scp-space-2);
+}
+.scp-wiz-empty-title {
+  margin: 0;
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-lg); font-weight: 700;
+  color: var(--scp-text-primary);
+}
+.scp-wiz-empty-text {
+  margin: 0; max-width: 360px;
+  color: var(--scp-text-secondary); font-size: var(--scp-font-size-sm);
+  line-height: 1.55;
+}
+.scp-wiz-empty-cta { margin-top: var(--scp-space-3); }
+
+/* ─── Suggestion card chassis ─────────────────────────────────────── */
 .scp-wiz-card {
   position: relative;
-  display: flex; align-items: flex-start; gap: var(--scp-space-3);
-  padding: var(--scp-space-3);
+  display: flex; align-items: stretch;
   background: var(--scp-bg-primary);
   border: 1px solid var(--scp-border-light);
   border-radius: var(--scp-radius-md);
+  overflow: hidden;
   transition: all var(--scp-transition-fast);
+  --card-color: var(--scp-primary);
 }
-.scp-wiz-card-selected   { background: var(--scp-bg-primary); }
-.scp-wiz-card-deselected { background: var(--scp-gray-50); opacity: 0.65; }
-.scp-wiz-card:hover { border-color: var(--scp-border-default); }
-.scp-wiz-card-select { display: flex; align-items: center; padding-top: 4px; }
-.scp-wiz-card-select input { width: 18px; height: 18px; cursor: pointer; }
-.scp-wiz-card-fields { flex: 1; display: flex; flex-direction: column; gap: var(--scp-space-2); min-width: 0; }
-.scp-wiz-card-fields .scp-input,
-.scp-wiz-card-fields .scp-textarea,
-.scp-wiz-card-fields .scp-select {
-  width: 100%; padding: 8px 10px; font-size: var(--scp-font-size-sm);
-  border: 1px solid var(--scp-border-light); border-radius: var(--scp-radius-md);
-  background: var(--scp-white); color: var(--scp-text-primary);
-  font-family: inherit;
+.scp-wiz-card-edge {
+  flex-shrink: 0; width: 6px;
+  background: var(--card-color);
+  transition: width var(--scp-transition-fast);
 }
-.scp-wiz-card-fields .scp-input:focus,
-.scp-wiz-card-fields .scp-textarea:focus,
-.scp-wiz-card-fields .scp-select:focus {
-  outline: none; border-color: var(--scp-border-focus);
+.scp-wiz-card-body {
+  flex: 1; min-width: 0;
+  padding: var(--scp-space-3) var(--scp-space-4);
+  display: flex; flex-direction: column; gap: var(--scp-space-2);
+}
+.scp-wiz-card-head {
+  display: flex; align-items: center; gap: var(--scp-space-2);
+}
+.scp-wiz-card-select {
+  flex-shrink: 0; cursor: pointer;
+  display: inline-flex; align-items: center;
+}
+.scp-wiz-card-select input {
+  width: 20px; height: 20px; cursor: pointer; accent-color: var(--card-color);
+}
+.scp-wiz-card-leadicon {
+  flex-shrink: 0; color: var(--card-color);
+  font-size: var(--scp-font-size-md);
+  display: inline-flex; align-items: center;
+}
+.scp-wiz-card-title {
+  flex: 1; min-width: 0;
+  padding: 6px 8px !important;
+  font-family: var(--scp-font-display) !important;
+  font-size: var(--scp-font-size-md) !important;
+  font-weight: 600 !important;
+  color: var(--scp-text-primary) !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--scp-radius-sm) !important;
+  transition: border-color var(--scp-transition-fast), background var(--scp-transition-fast);
+}
+.scp-wiz-card-title:hover { background: var(--scp-bg-secondary) !important; }
+.scp-wiz-card-title:focus {
+  outline: none !important;
+  background: var(--scp-white) !important;
+  border-color: var(--scp-border-focus) !important;
   box-shadow: 0 0 0 3px rgba(26,115,232,0.15);
 }
-.scp-wiz-card-swatch {
-  width: 28px; height: 28px; border-radius: var(--scp-radius-full);
-  flex-shrink: 0; cursor: pointer;
-  border: 2px solid var(--scp-white); box-shadow: var(--scp-shadow-xs);
-  transition: transform var(--scp-transition-fast);
+.scp-wiz-card-desc {
+  width: 100%;
+  padding: 8px 10px !important;
+  font-size: var(--scp-font-size-sm) !important;
+  color: var(--scp-text-secondary) !important;
+  background: var(--scp-bg-secondary) !important;
+  border: 1px solid var(--scp-border-light) !important;
+  border-radius: var(--scp-radius-sm) !important;
+  font-family: inherit !important;
 }
-.scp-wiz-card-swatch:hover { transform: scale(1.1); }
+.scp-wiz-card-desc:focus {
+  outline: none !important;
+  background: var(--scp-white) !important;
+  border-color: var(--scp-border-focus) !important;
+  box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
+}
+.scp-wiz-card-hook {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: var(--scp-font-size-sm);
+  color: var(--scp-text-secondary);
+  background: var(--scp-bg-secondary);
+  border: 1px solid var(--scp-border-light);
+  border-left: 3px solid var(--card-color);
+  border-radius: 0 var(--scp-radius-sm) var(--scp-radius-sm) 0;
+  font-style: italic;
+  font-family: inherit;
+  resize: vertical; min-height: 56px;
+}
+.scp-wiz-card-hook:focus {
+  outline: none; background: var(--scp-white);
+  border-color: var(--scp-border-focus); border-left-color: var(--card-color);
+  box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
+}
+.scp-wiz-card-actions {
+  display: flex; align-items: center; gap: var(--scp-space-1);
+  flex-shrink: 0;
+}
 .scp-wiz-card-tag {
-  position: absolute; top: 6px; right: 36px;
-  font-size: 10px; font-weight: 600; color: var(--scp-text-tertiary);
-  background: var(--scp-gray-100);
-  padding: 2px 6px; border-radius: var(--scp-radius-sm);
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 10px; font-weight: 700;
+  padding: 3px 8px; border-radius: var(--scp-radius-full);
   text-transform: uppercase; letter-spacing: 0.04em;
+}
+.scp-wiz-card-tag-ai {
+  background: color-mix(in srgb, var(--card-color) 12%, white);
+  color: var(--card-color);
+}
+.scp-wiz-card-tag-manual {
+  background: var(--scp-gray-100); color: var(--scp-text-tertiary);
 }
 .scp-wiz-card-remove {
   background: none; border: none; cursor: pointer;
   color: var(--scp-text-tertiary); padding: 6px;
   border-radius: var(--scp-radius-sm);
+  display: inline-flex; align-items: center;
   transition: all var(--scp-transition-fast);
 }
 .scp-wiz-card-remove:hover { color: var(--scp-error); background: var(--scp-error-light); }
 
-/* Series card extras */
-.scp-wiz-series-card { border-left: 4px solid var(--scp-primary); }
+/* Card states */
+.scp-wiz-card-selected {
+  border-color: color-mix(in srgb, var(--card-color) 35%, var(--scp-border-light));
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+.scp-wiz-card-selected:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  border-color: color-mix(in srgb, var(--card-color) 55%, var(--scp-border-light));
+}
+.scp-wiz-card-selected .scp-wiz-card-edge { width: 6px; }
+.scp-wiz-card-deselected {
+  background: var(--scp-gray-50);
+  opacity: 0.6;
+}
+.scp-wiz-card-deselected .scp-wiz-card-edge { width: 3px; opacity: 0.4; }
+.scp-wiz-card-deselected:hover { opacity: 0.85; }
+
+/* Topic card — edge is clickable to cycle colour */
+.scp-wiz-topic-card .scp-wiz-card-edge { cursor: pointer; }
+.scp-wiz-topic-card .scp-wiz-card-edge:hover { width: 10px; }
+
+/* Series card — inner topic pickers */
 .scp-wiz-topic-pickers {
-  display: flex; flex-wrap: wrap; gap: var(--scp-space-1);
-  margin-top: var(--scp-space-2);
+  display: flex; flex-wrap: wrap; gap: 6px;
   padding-top: var(--scp-space-2);
+  margin-top: var(--scp-space-1);
   border-top: 1px dashed var(--scp-border-light);
 }
 .scp-wiz-topic-pickers-label {
   width: 100%;
-  font-size: var(--scp-font-size-xs); font-weight: 600;
+  font-size: 10px; font-weight: 700;
   color: var(--scp-text-tertiary); text-transform: uppercase;
-  letter-spacing: 0.04em; margin-bottom: var(--scp-space-1);
+  letter-spacing: 0.06em; margin-bottom: 2px;
 }
 .scp-wiz-topic-picker {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 3px 9px; border-radius: var(--scp-radius-full);
-  border: 1px solid var(--scp-border-default);
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: var(--scp-radius-full);
+  border: 1.5px solid var(--scp-border-default);
   font-size: var(--scp-font-size-xs); font-weight: 500;
   color: var(--scp-text-secondary);
   cursor: pointer; transition: all var(--scp-transition-fast);
@@ -430,16 +631,31 @@ body.scp-wizard-open .scp-app { display: none !important; }
   background: var(--scp-bg-primary);
 }
 .scp-wiz-topic-picker input { display: none; }
-.scp-wiz-topic-picker:hover { border-color: var(--chip-color); }
+.scp-wiz-topic-picker-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: var(--scp-radius-full);
+  background: var(--chip-color);
+}
+.scp-wiz-topic-picker:hover { border-color: var(--chip-color); color: var(--scp-text-primary); }
 .scp-wiz-topic-picker-active {
   background: color-mix(in srgb, var(--chip-color) 12%, white);
-  border-color: var(--chip-color); color: var(--chip-color); font-weight: 600;
+  border-color: var(--chip-color);
+  color: var(--chip-color); font-weight: 600;
 }
 
-/* Post card */
-.scp-wiz-post-fields { gap: var(--scp-space-2); }
-.scp-wiz-post-meta { display: flex; flex-wrap: wrap; gap: var(--scp-space-2); align-items: center; font-size: var(--scp-font-size-xs); }
-.scp-wiz-post-meta .scp-select { width: auto; min-width: 90px; }
+/* Post card meta row */
+.scp-wiz-post-meta {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  font-size: var(--scp-font-size-xs);
+}
+.scp-wiz-post-type-select {
+  width: auto !important; min-width: 100px;
+  padding: 4px 8px !important;
+  font-size: var(--scp-font-size-xs) !important;
+  text-transform: capitalize;
+  background: var(--scp-bg-primary) !important;
+  border: 1px solid var(--scp-border-default) !important;
+  border-radius: var(--scp-radius-sm) !important;
+}
 
 /* Context chips */
 .scp-wiz-context-chips {
@@ -448,17 +664,56 @@ body.scp-wizard-open .scp-app { display: none !important; }
   padding: var(--scp-space-3) var(--scp-space-4);
   border-radius: var(--scp-radius-md);
   margin-bottom: var(--scp-space-4);
+  border: 1px solid var(--scp-border-light);
 }
 .scp-wiz-context-label {
   width: 100%;
-  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
-  text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600;
+  font-size: 10px; color: var(--scp-text-tertiary);
+  text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700;
   margin-bottom: 2px;
 }
 .scp-wiz-context-chip {
   display: inline-flex; align-items: center; gap: 4px;
-  padding: 3px 10px; border-radius: var(--scp-radius-full);
-  border: 1px solid; font-size: var(--scp-font-size-xs); font-weight: 500;
+  padding: 4px 10px; border-radius: var(--scp-radius-full);
+  font-size: var(--scp-font-size-xs); font-weight: 600;
+  --chip-color: var(--scp-primary);
+  background: color-mix(in srgb, var(--chip-color) 12%, white);
+  color: var(--chip-color);
+  border: 1px solid color-mix(in srgb, var(--chip-color) 35%, transparent);
+}
+
+/* ─── Skeleton loading cards (shown during AI runs) ───────────────── */
+.scp-wiz-skeleton-stack {
+  display: flex; flex-direction: column; gap: var(--scp-space-3);
+}
+.scp-wiz-skeleton-card {
+  display: flex; align-items: stretch;
+  background: var(--scp-bg-primary);
+  border: 1px solid var(--scp-border-light);
+  border-radius: var(--scp-radius-md);
+  overflow: hidden;
+}
+.scp-wiz-skeleton-edge {
+  width: 6px; flex-shrink: 0;
+  background: linear-gradient(180deg, var(--scp-primary-light), var(--scp-primary));
+  opacity: 0.4;
+}
+.scp-wiz-skeleton-body {
+  flex: 1; padding: var(--scp-space-4);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.scp-wiz-skeleton-bar {
+  height: 10px; border-radius: var(--scp-radius-sm);
+  background: linear-gradient(90deg, var(--scp-gray-100) 0%, var(--scp-gray-200) 50%, var(--scp-gray-100) 100%);
+  background-size: 200% 100%;
+  animation: scp-wiz-shimmer 1.4s ease-in-out infinite;
+}
+.scp-wiz-skeleton-bar-title { width: 45%; height: 14px; }
+.scp-wiz-skeleton-bar-text  { width: 90%; }
+.scp-wiz-skeleton-bar-short { width: 65%; }
+@keyframes scp-wiz-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 /* Stage 4 basis selector */
