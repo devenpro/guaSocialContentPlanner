@@ -174,18 +174,45 @@
     if (!brand.configured) return '';
     var identity = brand.identity || {};
     var core = brand.core || {};
-    var html = '<div class="scp-wiz-brand-card">';
+    var design = (brand.design || {});
+    var colours = design.colors || identity.colors || [];
+
+    var html = '<aside class="scp-wiz-brand-card" aria-label="Brand context summary">';
     html += '<div class="scp-wiz-brand-card-head">';
-    if (identity.logoUrl) html += '<img class="scp-wiz-brand-card-logo" src="' + esc(identity.logoUrl) + '" alt="">';
-    html += '<div><div class="scp-wiz-brand-card-name">' + esc(core.brand_name || identity.name || 'Brand') + '</div>';
+    if (identity.logoUrl) {
+      html += '<img class="scp-wiz-brand-card-logo" src="' + esc(identity.logoUrl) + '" alt="">';
+    } else {
+      html += '<div class="scp-wiz-brand-card-logo scp-wiz-brand-card-logo-placeholder">' + icon('shapes') + '</div>';
+    }
+    html += '<div class="scp-wiz-brand-card-titles">';
+    html += '<div class="scp-wiz-brand-card-name">' + esc(core.brand_name || identity.name || 'Brand') + '</div>';
     if (core.industry) html += '<div class="scp-wiz-brand-card-industry">' + esc(core.industry) + '</div>';
-    html += '</div></div>';
+    html += '</div>';
+    html += '<span class="scp-wiz-brand-card-pill">' + icon('check') + ' Connected</span>';
+    html += '</div>';
+
     if (core.brand_description || core.tagline) {
       html += '<p class="scp-wiz-brand-card-desc">' + esc(core.brand_description || core.tagline) + '</p>';
     }
-    html += '<div class="scp-wiz-brand-card-foot">' + icon('check') + ' Brand context will be passed to the AI on every run</div>';
-    html += '</div>';
+
+    if (Array.isArray(colours) && colours.length) {
+      html += '<div class="scp-wiz-brand-card-colors" aria-label="Brand colours">';
+      for (var ci = 0; ci < colours.length && ci < 6; ci++) {
+        var c = typeof colours[ci] === 'string' ? colours[ci] : (colours[ci] && colours[ci].value);
+        if (!c) continue;
+        html += '<span class="scp-wiz-brand-card-swatch" style="background:' + esc(c) + '" title="' + esc(c) + '"></span>';
+      }
+      html += '</div>';
+    }
+
+    html += '<div class="scp-wiz-brand-card-foot">' + icon('sparkles') + ' Brand context is sent to the AI on every Run for this setup.</div>';
+    html += '</aside>';
     return html;
+  }
+
+  // Small badge rendered next to AI-filled fields on Stage 1.
+  function aiFilledBadge() {
+    return '<span class="scp-wiz-ai-badge">' + icon('sparkles') + ' AI-filled</span>';
   }
 
   function brandContextSnippet() {
@@ -201,19 +228,30 @@
     var u = w.uiState;
     var PLATFORMS = (Constants && Constants.PLATFORMS) || {};
     var tones = (S.meta.settings && S.meta.settings.tones) || [];
+    var AUD_MAX = 240;
+    var audLen = (d.audienceDescription || '').length;
 
     var html = '<div class="scp-wizard-step-content">';
     html += renderBrandContextCard();
 
-    html += '<div class="scp-wizard-form">';
-    html += '<div class="scp-form-row">';
-    html += '<div class="scp-form-half"><label>Workspace name <span class="scp-wizard-required">*</span></label>';
-    html += '<input type="text" class="scp-input scp-wiz-ws-field" data-field="name" value="' + esc(d.name || '') + '" placeholder="e.g. Acme Coffee Co."></div>';
-    html += '<div class="scp-form-half"><label>Niche / focus <span class="scp-wizard-required">*</span></label>';
-    html += '<input type="text" class="scp-input scp-wiz-ws-field" data-field="niche" value="' + esc(d.niche || '') + '" placeholder="e.g. B2B SaaS for marketers"></div>';
+    // ── Workspace basics ─────────────────────────────────────────
+    html += '<section class="scp-wiz-section">';
+    html += '<header class="scp-wiz-section-head">';
+    html += '<h3 class="scp-wiz-section-title">' + icon('briefcase') + ' Workspace basics</h3>';
+    html += '<p class="scp-wiz-section-sub">Pre-filled from your brand profile when available. Both are required.</p>';
+    html += '</header>';
+    html += '<div class="scp-wiz-formgrid">';
+    html += '<div class="scp-wiz-field">';
+    html += '<div class="scp-wiz-field-label"><label for="scp-wiz-ws-name">Workspace name</label><span class="scp-wiz-required-pill">Required</span></div>';
+    html += '<input id="scp-wiz-ws-name" type="text" class="scp-input scp-wiz-ws-field" data-field="name" value="' + esc(d.name || '') + '" placeholder="e.g. Acme Coffee Co.">';
     html += '</div>';
+    html += '<div class="scp-wiz-field">';
+    html += '<div class="scp-wiz-field-label"><label for="scp-wiz-ws-niche">Niche / focus</label><span class="scp-wiz-required-pill">Required</span></div>';
+    html += '<input id="scp-wiz-ws-niche" type="text" class="scp-input scp-wiz-ws-field" data-field="niche" value="' + esc(d.niche || '') + '" placeholder="e.g. B2B SaaS for marketers">';
     html += '</div>';
+    html += '</div></section>';
 
+    // ── Research panel ───────────────────────────────────────────
     html += renderResearchPanel({
       label: 'Brief for the AI',
       briefField: 'stage1Brief',
@@ -223,67 +261,128 @@
       runLabel: 'Discover with AI',
       loading: u.stage1Loading,
       lastError: u.stage1Error,
-      helpText: 'Describe your goals, audience, vibe, or anything you\'d tell a strategist on day one.',
+      helpText: 'Describe your goals, audience, vibe, or anything you\'d tell a strategist on day one. Combined with your brand context, the AI will fill the fields below.',
       placeholder: 'e.g. Helping early-career data engineers grow on LinkedIn. Smart, contrarian, lots of code snippets, posting Mon/Wed/Fri.'
     });
 
-    html += '<div class="scp-wiz-discovered">';
-    html += '<h3 class="scp-wiz-section-title">' + icon('sparkles') + ' AI-discovered (edit anything)</h3>';
+    // ── AI-discovered fields ────────────────────────────────────
+    html += '<section class="scp-wiz-section scp-wiz-discovered">';
+    html += '<header class="scp-wiz-section-head">';
+    html += '<h3 class="scp-wiz-section-title">' + icon('sparkles') + ' AI-discovered</h3>';
+    html += '<p class="scp-wiz-section-sub">Edit anything — these become the defaults for every new post.</p>';
+    html += '</header>';
 
-    html += '<div class="scp-form-group"><label>Primary platforms</label>';
+    // Primary platforms
+    html += '<div class="scp-wiz-field">';
+    html += '<div class="scp-wiz-field-label">';
+    html += '<label>Primary platforms</label>';
+    if ((d.primaryPlatforms || []).length) html += aiFilledBadge();
+    html += '</div>';
+    html += '<p class="scp-wiz-field-help">Where this brand should focus first. 1-2 typically.</p>';
     html += '<div class="scp-wiz-platform-grid">';
     for (var pk in PLATFORMS) {
       var pl = PLATFORMS[pk];
       var isP = (d.primaryPlatforms || []).indexOf(pk) > -1;
       html += '<label class="scp-wiz-platform-chip' + (isP ? ' scp-wiz-platform-chip-active' : '') + '" style="--chip-color:' + pl.color + '">';
       html += '<input type="checkbox" class="scp-wiz-platform-toggle" data-platform-tier="primary" data-platform="' + pk + '"' + (isP ? ' checked' : '') + '>';
-      html += icon(pl.icon) + ' ' + esc(pl.label);
+      html += '<span class="scp-wiz-platform-chip-icon">' + icon(pl.icon) + '</span>';
+      html += '<span class="scp-wiz-platform-chip-label">' + esc(pl.label) + '</span>';
       html += '</label>';
     }
     html += '</div></div>';
 
-    html += '<div class="scp-form-group"><label>Secondary platforms <span class="scp-wiz-meta">(optional)</span></label>';
+    // Secondary platforms
+    html += '<div class="scp-wiz-field">';
+    html += '<div class="scp-wiz-field-label">';
+    html += '<label>Secondary platforms <span class="scp-wiz-meta">optional</span></label>';
+    if ((d.secondaryPlatforms || []).length) html += aiFilledBadge();
+    html += '</div>';
+    html += '<p class="scp-wiz-field-help">Channels you\'ll repurpose into. Disabled chips are already primary.</p>';
     html += '<div class="scp-wiz-platform-grid">';
     for (var pk2 in PLATFORMS) {
       var pl2 = PLATFORMS[pk2];
       var isS = (d.secondaryPlatforms || []).indexOf(pk2) > -1;
       var disabledSec = (d.primaryPlatforms || []).indexOf(pk2) > -1;
-      html += '<label class="scp-wiz-platform-chip' + (isS ? ' scp-wiz-platform-chip-active' : '') + (disabledSec ? ' scp-wiz-platform-chip-disabled' : '') + '" style="--chip-color:' + pl2.color + '"' + (disabledSec ? ' title="Already a primary"' : '') + '>';
+      html += '<label class="scp-wiz-platform-chip' + (isS ? ' scp-wiz-platform-chip-active' : '') + (disabledSec ? ' scp-wiz-platform-chip-disabled' : '') + '" style="--chip-color:' + pl2.color + '"' + (disabledSec ? ' title="Already a primary platform"' : '') + '>';
       html += '<input type="checkbox" class="scp-wiz-platform-toggle" data-platform-tier="secondary" data-platform="' + pk2 + '"' + (isS ? ' checked' : '') + (disabledSec ? ' disabled' : '') + '>';
-      html += icon(pl2.icon) + ' ' + esc(pl2.label);
+      html += '<span class="scp-wiz-platform-chip-icon">' + icon(pl2.icon) + '</span>';
+      html += '<span class="scp-wiz-platform-chip-label">' + esc(pl2.label) + '</span>';
       html += '</label>';
     }
     html += '</div></div>';
 
-    html += '<div class="scp-form-row">';
-    html += '<div class="scp-form-half"><label>Posting frequency</label>';
-    html += '<select class="scp-select scp-wiz-ws-field" data-field="postingFrequency">';
+    // Posting frequency — button group
+    html += '<div class="scp-wiz-field">';
+    html += '<div class="scp-wiz-field-label">';
+    html += '<label>Posting frequency</label>';
+    if (d.postingFrequency) html += aiFilledBadge();
+    html += '</div>';
+    html += '<div class="scp-wiz-freq-grid">';
     var freqs = [
-      ['', 'Not sure yet'], ['daily', 'Daily'], ['3x_week', '3× per week'],
-      ['weekly', 'Weekly'], ['2x_month', 'Twice a month'], ['monthly', 'Monthly']
+      { id: '',         label: 'Not sure', sub: 'Decide later',    iconName: 'clock' },
+      { id: 'daily',    label: 'Daily',    sub: '7 posts / week',  iconName: 'bolt' },
+      { id: '3x_week',  label: '3× / week',sub: 'Mon · Wed · Fri', iconName: 'calendar' },
+      { id: 'weekly',   label: 'Weekly',   sub: '1 post / week',   iconName: 'calendar' },
+      { id: '2x_month', label: '2× / month',sub:'Every ~2 weeks',  iconName: 'calendar' },
+      { id: 'monthly',  label: 'Monthly',  sub: '1 post / month',  iconName: 'calendar' }
     ];
     for (var fi = 0; fi < freqs.length; fi++) {
-      html += '<option value="' + freqs[fi][0] + '"' + (d.postingFrequency === freqs[fi][0] ? ' selected' : '') + '>' + esc(freqs[fi][1]) + '</option>';
+      var fq = freqs[fi];
+      var fqActive = d.postingFrequency === fq.id;
+      html += '<button class="scp-wiz-freq-card' + (fqActive ? ' scp-wiz-freq-card-active' : '') + '" data-action="wiz-set-freq" data-freq="' + esc(fq.id) + '" type="button">';
+      html += '<span class="scp-wiz-freq-icon">' + icon(fq.iconName) + '</span>';
+      html += '<span class="scp-wiz-freq-label">' + esc(fq.label) + '</span>';
+      html += '<span class="scp-wiz-freq-sub">' + esc(fq.sub) + '</span>';
+      html += '</button>';
     }
-    html += '</select></div>';
+    html += '</div></div>';
 
-    html += '<div class="scp-form-half"><label>Default tone</label>';
-    html += '<select class="scp-select scp-wiz-ws-field" data-field="toneId">';
-    html += '<option value=""' + (!d.toneId ? ' selected' : '') + '>Not set</option>';
+    // Tone — card picker
+    html += '<div class="scp-wiz-field">';
+    html += '<div class="scp-wiz-field-label">';
+    html += '<label>Default tone</label>';
+    if (d.toneId) html += aiFilledBadge();
+    html += '</div>';
+    html += '<p class="scp-wiz-field-help">The voice every new post starts from. Override per-post later.</p>';
+    html += '<div class="scp-wiz-tone-grid">';
+    // "None" option
+    html += '<button class="scp-wiz-tone-card' + (!d.toneId ? ' scp-wiz-tone-card-active' : '') + ' scp-wiz-tone-card-none" data-action="wiz-set-tone" data-tone-id="" type="button">';
+    html += '<span class="scp-wiz-tone-name">No default</span>';
+    html += '<span class="scp-wiz-tone-desc">Pick per post.</span>';
+    html += '</button>';
     for (var ti = 0; ti < tones.length; ti++) {
-      html += '<option value="' + esc(tones[ti].id) + '"' + (d.toneId === tones[ti].id ? ' selected' : '') + '>' + esc(tones[ti].name) + '</option>';
+      var tn = tones[ti];
+      var toneActive = d.toneId === tn.id;
+      html += '<button class="scp-wiz-tone-card' + (toneActive ? ' scp-wiz-tone-card-active' : '') + '" data-action="wiz-set-tone" data-tone-id="' + esc(tn.id) + '" type="button">';
+      html += '<span class="scp-wiz-tone-name">' + esc(tn.name) + '</span>';
+      if (tn.description) html += '<span class="scp-wiz-tone-desc">' + esc(tn.description) + '</span>';
+      html += '</button>';
     }
-    html += '</select></div>';
+    html += '</div></div>';
+
+    // Audience description with char counter
+    html += '<div class="scp-wiz-field">';
+    html += '<div class="scp-wiz-field-label">';
+    html += '<label for="scp-wiz-ws-audience">Target audience</label>';
+    if (d.audienceDescription) html += aiFilledBadge();
+    html += '</div>';
+    html += '<p class="scp-wiz-field-help">The more specific, the better every AI suggestion downstream.</p>';
+    html += '<textarea id="scp-wiz-ws-audience" class="scp-wiz-textarea scp-wiz-ws-field" data-field="audienceDescription" maxlength="' + AUD_MAX + '" rows="3" placeholder="e.g. Marketing managers at 50-500 person SaaS companies who own demand-gen.">' + esc(d.audienceDescription || '') + '</textarea>';
+    html += '<div class="scp-wiz-charcount">' + audLen + ' / ' + AUD_MAX + ' chars</div>';
     html += '</div>';
 
-    html += '<div class="scp-form-group"><label>Target audience</label>';
-    html += '<textarea class="scp-textarea scp-wiz-ws-field" data-field="audienceDescription" rows="2" placeholder="Who you\'re trying to reach...">' + esc(d.audienceDescription || '') + '</textarea></div>';
+    // Strategy notes
+    html += '<div class="scp-wiz-field">';
+    html += '<div class="scp-wiz-field-label">';
+    html += '<label for="scp-wiz-ws-notes">Strategy notes <span class="scp-wiz-meta">optional</span></label>';
+    if (d.notes) html += aiFilledBadge();
+    html += '</div>';
+    html += '<p class="scp-wiz-field-help">Rationale, reminders, or anything else you want to keep handy on this workspace.</p>';
+    html += '<textarea id="scp-wiz-ws-notes" class="scp-wiz-textarea scp-wiz-ws-field" data-field="notes" rows="3" placeholder="">' + esc(d.notes || '') + '</textarea>';
+    html += '</div>';
 
-    html += '<div class="scp-form-group"><label>Strategy notes <span class="scp-wiz-meta">(rationale, reminders)</span></label>';
-    html += '<textarea class="scp-textarea scp-wiz-ws-field" data-field="notes" rows="2" placeholder="">' + esc(d.notes || '') + '</textarea></div>';
-
-    html += '</div>';   // /.scp-wiz-discovered
-    html += '</div>';   // /content
+    html += '</section>';
+    html += '</div>';
     return html;
   }
 
@@ -960,6 +1059,22 @@
         } else if (idx > -1) {
           w.data.workspace[key].splice(idx, 1);
         }
+        refresh();
+      });
+
+    // Stage 1 frequency button group
+    $(document).off('click.scp-wizfq', '[data-action="wiz-set-freq"]')
+      .on('click.scp-wizfq', '[data-action="wiz-set-freq"]', function(e) {
+        e.preventDefault();
+        S.setupWizard.data.workspace.postingFrequency = $(this).data('freq') || '';
+        refresh();
+      });
+
+    // Stage 1 tone card picker
+    $(document).off('click.scp-wiztn', '[data-action="wiz-set-tone"]')
+      .on('click.scp-wiztn', '[data-action="wiz-set-tone"]', function(e) {
+        e.preventDefault();
+        S.setupWizard.data.workspace.toneId = $(this).data('tone-id') || '';
         refresh();
       });
 

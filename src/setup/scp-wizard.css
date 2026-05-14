@@ -251,20 +251,154 @@ body.scp-wizard-open .scp-app { display: none !important; }
 }
 .scp-wizard-required { color: var(--scp-error); font-weight: 700; }
 
-/* Brand context card */
+/* ─── Brand context card (Stage 1 hero) ─────────────────────────── */
 .scp-wiz-brand-card {
-  background: var(--scp-white);
+  background: linear-gradient(180deg, var(--scp-white), color-mix(in srgb, var(--scp-primary) 4%, var(--scp-white)));
   border: 1px solid var(--scp-border-light);
   border-radius: var(--scp-radius-lg);
-  padding: var(--scp-space-4);
-  margin-bottom: var(--scp-space-5);
+  padding: var(--scp-space-5);
+  margin-bottom: var(--scp-space-6);
+  box-shadow: var(--scp-shadow-xs);
 }
-.scp-wiz-brand-card-head { display: flex; align-items: center; gap: var(--scp-space-3); margin-bottom: var(--scp-space-2); }
-.scp-wiz-brand-card-logo { width: 44px; height: 44px; border-radius: var(--scp-radius-md); object-fit: contain; background: var(--scp-gray-50); }
-.scp-wiz-brand-card-name { font-family: var(--scp-font-display); font-weight: 700; color: var(--scp-text-primary); font-size: var(--scp-font-size-md); }
-.scp-wiz-brand-card-industry { font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; }
-.scp-wiz-brand-card-desc { margin: var(--scp-space-2) 0; color: var(--scp-text-secondary); font-size: var(--scp-font-size-sm); }
-.scp-wiz-brand-card-foot { display: flex; align-items: center; gap: var(--scp-space-2); font-size: var(--scp-font-size-xs); color: var(--scp-success); margin-top: var(--scp-space-2); }
+.scp-wiz-brand-card-head {
+  display: flex; align-items: center; gap: var(--scp-space-3);
+}
+.scp-wiz-brand-card-logo {
+  width: 56px; height: 56px;
+  border-radius: var(--scp-radius-md);
+  object-fit: contain;
+  background: var(--scp-white);
+  border: 1px solid var(--scp-border-light);
+  padding: 6px;
+  flex-shrink: 0;
+}
+.scp-wiz-brand-card-logo-placeholder {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--scp-text-tertiary); font-size: 24px;
+}
+.scp-wiz-brand-card-titles { flex: 1; min-width: 0; line-height: 1.2; }
+.scp-wiz-brand-card-name {
+  font-family: var(--scp-font-display);
+  font-weight: 800; color: var(--scp-text-primary);
+  font-size: var(--scp-font-size-xl);
+  letter-spacing: -0.01em;
+}
+.scp-wiz-brand-card-industry {
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
+  text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+  margin-top: 2px;
+}
+.scp-wiz-brand-card-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 700;
+  padding: 4px 10px; border-radius: var(--scp-radius-full);
+  background: var(--scp-success); color: var(--scp-white);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+.scp-wiz-brand-card-desc {
+  margin: var(--scp-space-3) 0 0;
+  color: var(--scp-text-secondary);
+  font-size: var(--scp-font-size-sm); line-height: 1.55;
+}
+.scp-wiz-brand-card-colors {
+  display: flex; gap: 6px; margin-top: var(--scp-space-3);
+}
+.scp-wiz-brand-card-swatch {
+  width: 28px; height: 28px; border-radius: var(--scp-radius-sm);
+  border: 2px solid var(--scp-white);
+  box-shadow: 0 1px 3px rgba(15,23,42,0.12);
+}
+.scp-wiz-brand-card-foot {
+  display: flex; align-items: center; gap: var(--scp-space-2);
+  font-size: var(--scp-font-size-xs); color: var(--scp-primary-dark);
+  margin-top: var(--scp-space-3);
+  padding-top: var(--scp-space-3);
+  border-top: 1px dashed color-mix(in srgb, var(--scp-primary) 25%, transparent);
+}
+
+/* ─── Section pattern (Stage 1+ groupings) ──────────────────────── */
+.scp-wiz-section {
+  display: flex; flex-direction: column; gap: var(--scp-space-3);
+  margin: var(--scp-space-6) 0;
+}
+.scp-wiz-section + .scp-wiz-section { margin-top: var(--scp-space-7, var(--scp-space-6)); }
+.scp-wiz-section-head { display: flex; flex-direction: column; gap: 2px; }
+.scp-wiz-section-title {
+  margin: 0;
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-lg); font-weight: 700;
+  color: var(--scp-text-primary);
+  display: flex; align-items: center; gap: var(--scp-space-2);
+  letter-spacing: -0.01em;
+}
+.scp-wiz-section-title svg,
+.scp-wiz-section-title i { color: var(--scp-primary); }
+.scp-wiz-section-sub {
+  margin: 0;
+  font-size: var(--scp-font-size-sm); color: var(--scp-text-secondary);
+  line-height: 1.5;
+}
+
+/* Form fields (Stage 1 grid) */
+.scp-wiz-formgrid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--scp-space-4);
+}
+@media (max-width: 700px) { .scp-wiz-formgrid { grid-template-columns: 1fr; } }
+.scp-wiz-field { display: flex; flex-direction: column; gap: var(--scp-space-2); }
+.scp-wiz-field-label {
+  display: flex; align-items: center; gap: var(--scp-space-2);
+  flex-wrap: wrap;
+}
+.scp-wiz-field-label label {
+  margin: 0;
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-sm); font-weight: 600;
+  color: var(--scp-text-primary);
+}
+.scp-wiz-field-help {
+  margin: 0;
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
+  line-height: 1.5;
+}
+.scp-wiz-required-pill {
+  display: inline-flex; align-items: center;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: var(--scp-radius-full);
+  background: var(--scp-error-light); color: var(--scp-error);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.scp-wiz-ai-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: var(--scp-radius-full);
+  background: color-mix(in srgb, var(--scp-primary) 12%, white);
+  color: var(--scp-primary-dark);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  border: 1px solid color-mix(in srgb, var(--scp-primary) 25%, transparent);
+}
+.scp-wiz-ai-badge svg, .scp-wiz-ai-badge i { font-size: 9px; }
+
+.scp-wiz-field .scp-input,
+.scp-wiz-textarea {
+  width: 100%; padding: 11px 14px;
+  font-size: var(--scp-font-size-base);
+  border: 1.5px solid var(--scp-border-default); border-radius: var(--scp-radius-md);
+  background: var(--scp-bg-primary); color: var(--scp-text-primary);
+  font-family: inherit; line-height: 1.5;
+  transition: all var(--scp-transition-fast);
+}
+.scp-wiz-textarea { resize: vertical; min-height: 72px; }
+.scp-wiz-field .scp-input:focus,
+.scp-wiz-textarea:focus {
+  outline: none; border-color: var(--scp-border-focus);
+  box-shadow: var(--scp-shadow-glow);
+}
+.scp-wiz-charcount {
+  align-self: flex-end;
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
 
 /* ─── Research panel ─────────────────────────────────────────────── */
 .scp-wiz-research {
@@ -381,13 +515,17 @@ body.scp-wizard-open .scp-app { display: none !important; }
   display: flex; align-items: center; gap: var(--scp-space-2);
 }
 
-/* Platform chips */
-.scp-wiz-platform-grid { display: flex; gap: var(--scp-space-2); flex-wrap: wrap; }
+/* ─── Platform chips (Stage 1) ──────────────────────────────────── */
+.scp-wiz-platform-grid {
+  display: flex; gap: var(--scp-space-2); flex-wrap: wrap;
+}
 .scp-wiz-platform-chip {
   display: inline-flex; align-items: center; gap: var(--scp-space-2);
-  padding: 6px 12px; border-radius: var(--scp-radius-full);
+  padding: 10px 16px;
+  min-height: 44px;
+  border-radius: var(--scp-radius-md);
   border: 1.5px solid var(--scp-border-default);
-  font-size: var(--scp-font-size-sm); font-weight: 500;
+  font-size: var(--scp-font-size-sm); font-weight: 600;
   color: var(--scp-text-secondary);
   cursor: pointer;
   transition: all var(--scp-transition-fast);
@@ -395,12 +533,122 @@ body.scp-wizard-open .scp-app { display: none !important; }
   background: var(--scp-bg-primary);
 }
 .scp-wiz-platform-chip input { display: none; }
-.scp-wiz-platform-chip:hover { border-color: var(--chip-color); color: var(--scp-text-primary); }
+.scp-wiz-platform-chip-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: var(--scp-radius-sm);
+  background: color-mix(in srgb, var(--chip-color) 12%, transparent);
+  color: var(--chip-color);
+  font-size: var(--scp-font-size-sm);
+}
+.scp-wiz-platform-chip-label { line-height: 1; }
+.scp-wiz-platform-chip:hover:not(.scp-wiz-platform-chip-disabled) {
+  border-color: var(--chip-color);
+  color: var(--scp-text-primary);
+  transform: translateY(-1px);
+}
 .scp-wiz-platform-chip-active {
   background: color-mix(in srgb, var(--chip-color) 12%, white);
-  border-color: var(--chip-color); color: var(--chip-color); font-weight: 600;
+  border-color: var(--chip-color);
+  color: var(--chip-color);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--chip-color) 20%, transparent);
+}
+.scp-wiz-platform-chip-active .scp-wiz-platform-chip-icon {
+  background: var(--chip-color); color: var(--scp-white);
 }
 .scp-wiz-platform-chip-disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ─── Frequency button group ────────────────────────────────────── */
+.scp-wiz-freq-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--scp-space-2);
+}
+.scp-wiz-freq-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--scp-border-default);
+  border-radius: var(--scp-radius-md);
+  background: var(--scp-bg-primary);
+  cursor: pointer;
+  transition: all var(--scp-transition-fast);
+  text-align: left;
+  font-family: inherit;
+}
+.scp-wiz-freq-card:hover:not(.scp-wiz-freq-card-active) {
+  border-color: var(--scp-primary-light);
+  background: var(--scp-bg-secondary);
+  transform: translateY(-1px);
+}
+.scp-wiz-freq-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: var(--scp-radius-sm);
+  background: var(--scp-primary-light); color: var(--scp-primary);
+  font-size: var(--scp-font-size-sm);
+  margin-bottom: 2px;
+}
+.scp-wiz-freq-label {
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-sm); font-weight: 700;
+  color: var(--scp-text-primary);
+}
+.scp-wiz-freq-sub {
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
+}
+.scp-wiz-freq-card-active {
+  border-color: var(--scp-primary);
+  background: color-mix(in srgb, var(--scp-primary) 8%, white);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--scp-primary) 18%, transparent);
+}
+.scp-wiz-freq-card-active .scp-wiz-freq-icon {
+  background: var(--scp-primary); color: var(--scp-white);
+}
+.scp-wiz-freq-card-active .scp-wiz-freq-label { color: var(--scp-primary-dark); }
+
+/* ─── Tone card picker ──────────────────────────────────────────── */
+.scp-wiz-tone-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--scp-space-2);
+}
+.scp-wiz-tone-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--scp-border-default);
+  border-radius: var(--scp-radius-md);
+  background: var(--scp-bg-primary);
+  cursor: pointer;
+  transition: all var(--scp-transition-fast);
+  text-align: left;
+  font-family: inherit;
+  position: relative;
+}
+.scp-wiz-tone-card::before {
+  content: ''; position: absolute; left: 0; top: 12px; bottom: 12px;
+  width: 3px; border-radius: 0 var(--scp-radius-sm) var(--scp-radius-sm) 0;
+  background: var(--scp-primary);
+  opacity: 0; transition: opacity var(--scp-transition-fast);
+}
+.scp-wiz-tone-card:hover:not(.scp-wiz-tone-card-active) {
+  border-color: var(--scp-primary-light);
+  background: var(--scp-bg-secondary);
+}
+.scp-wiz-tone-name {
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-sm); font-weight: 700;
+  color: var(--scp-text-primary);
+}
+.scp-wiz-tone-desc {
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-secondary);
+  line-height: 1.45;
+}
+.scp-wiz-tone-card-active {
+  border-color: var(--scp-primary);
+  background: color-mix(in srgb, var(--scp-primary) 8%, white);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--scp-primary) 18%, transparent);
+}
+.scp-wiz-tone-card-active::before { opacity: 1; }
+.scp-wiz-tone-card-active .scp-wiz-tone-name { color: var(--scp-primary-dark); }
+.scp-wiz-tone-card-none .scp-wiz-tone-name { color: var(--scp-text-secondary); font-style: italic; }
 
 /* ─── List header ─────────────────────────────────────────────────── */
 .scp-wiz-list-header {
