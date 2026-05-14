@@ -1744,9 +1744,27 @@
     syncToTextarea();
   }
   function isFirstRun() { return !!(S.meta.setup && S.meta.setup.firstRun); }
+  // True when this looks like a brand-new workspace: no user-authored
+  // data, no activity entries, no completed-setup timestamp, and no
+  // workspace metadata. Used as the primary auto-open trigger for the
+  // setup wizard — independent of the S.meta.setup.firstRun flag so a
+  // missed flag write does not strand the wizard.
+  function isFreshWorkspace() {
+    if (!S.data || !S.meta) return false;
+    if ((S.data.posts || []).length) return false;
+    if ((S.data.topics || []).length) return false;
+    if ((S.data.series || []).length) return false;
+    if (((S.data.research || {}).sessions || []).length) return false;
+    if ((S.activity || []).length) return false;
+    var ws = S.meta.workspace || {};
+    if (ws.name || ws.description || ws.niche || ws.audience_description) return false;
+    if (S.meta.setup && S.meta.setup.completedAt) return false;
+    return true;
+  }
   window._scpMarkSetupComplete = markSetupComplete;
   window._scpResetSetup = resetSetup;
   window._scpIsFirstRun = isFirstRun;
+  window._scpIsFreshWorkspace = isFreshWorkspace;
 
   // AI Text Formatting
   window._scpCleanAIText = cleanAIText;

@@ -11,7 +11,8 @@
  * @depends-on  window._scpState, window._scpEsc, window._scpIcon,
  *              window._scpSyncToTextarea, window._scpToast,
  *              window._scpLogActivity, window._scpMarkSetupComplete,
- *              window._scpIsFirstRun, window._scpConstants
+ *              window._scpIsFirstRun, window._scpIsFreshWorkspace,
+ *              window._scpConstants
  *
  * Step renderers self-register so Phase 2+ files can drop in step 2/3/4/5
  * without editing the shell. Unknown steps fall back to a "coming soon"
@@ -75,8 +76,13 @@
     setupEvents();
     // Defer the auto-open by a frame so the main app shell paints first —
     // the wizard then animates in on top of a fully-rendered background.
+    // Data-driven isFreshWorkspace() is the authoritative signal; the
+    // firstRun flag is kept as a fallback so a Settings → re-run still
+    // works on a workspace that already has data.
     setTimeout(function() {
-      if (window._scpIsFirstRun && window._scpIsFirstRun()) openWizard();
+      var fresh    = window._scpIsFreshWorkspace && window._scpIsFreshWorkspace();
+      var firstRun = window._scpIsFirstRun       && window._scpIsFirstRun();
+      if (fresh || firstRun) openWizard();
     }, 50);
     console.log('[SCP] Setup wizard ready');
   }
@@ -132,7 +138,9 @@
   }
 
   function openIfFirstRun() {
-    if (window._scpIsFirstRun && window._scpIsFirstRun()) openWizard();
+    var fresh    = window._scpIsFreshWorkspace && window._scpIsFreshWorkspace();
+    var firstRun = window._scpIsFirstRun       && window._scpIsFirstRun();
+    if (fresh || firstRun) openWizard();
   }
 
   function goToStep(n) {
