@@ -1,17 +1,22 @@
 /**
  * @category    setup
- * @purpose     Setup-wizard Stages 1, 2 (with sub-stages a/b), and 3, plus
- *              the finish-time flusher. Self-registers into the shell
- *              exposed by scp-wizard.js via _scpRegisterWizardStage,
- *              _scpRegisterWizardStageEnter, and _scpRegisterWizardFlush.
+ * @purpose     Setup-wizard Stages 1–4 renderers + finish-time flusher.
+ *              Self-registers into the shell via _scpRegisterWizardStage
+ *              and _scpRegisterWizardFlush.
  *
- *   Stage 1   — Welcome & brand attributes (AI-discovered, editable)
- *   Stage 2a  — Topics research (accumulating, multi-select)
- *   Stage 2b  — Series research (uses selected topics)
- *   Stage 3   — Post planning (research by series or topic, accumulating)
+ *   Stage 1 — Welcome & brand attributes
+ *   Stage 2 — Topics (accumulating, multi-select)
+ *   Stage 3 — Series (uses selected topics)
+ *   Stage 4 — Post Planning (research by series or topic, accumulating)
  *
  * Each AI-driven stage shares a "research panel" component:
- *   brief textarea + provider/model picker + Run button + last-error toast.
+ *   brief textarea + provider/model picker + Run button + error line.
+ *
+ *   Stage   brief field     loading flag       error field
+ *   1       stage1Brief     stage1Loading      stage1Error
+ *   2       stage2Brief     topicsLoading      topicsError
+ *   3       stage3Brief     seriesLoading      seriesError
+ *   4       stage4Brief     postsLoading       postsError
  *
  * @depends-on  window._scpWizard, window._scpState, window._scpEsc,
  *              window._scpIcon, window._scpToast, window._scpGenerateId,
@@ -55,14 +60,13 @@
     logActivity = window._scpLogActivity;
     ready = true;
 
-    window._scpRegisterWizardStage(1,    renderStage1, validateStage1);
-    window._scpRegisterWizardStage(2,    renderStage2);
-    window._scpRegisterWizardStage(3,    renderStage3, validateStage3);
-    window._scpRegisterWizardStage('2a', null, validateStage2a);
-    window._scpRegisterWizardStage('2b', null, validateStage2b);
+    window._scpRegisterWizardStage(1, renderStage1, validateStage1);
+    window._scpRegisterWizardStage(2, renderStage2Topics, validateStage2Topics);
+    window._scpRegisterWizardStage(3, renderStage3Series, validateStage3Series);
+    window._scpRegisterWizardStage(4, renderStage4Posts, validateStage4Posts);
     window._scpRegisterWizardFlush(flushSetup);
     setupEvents();
-    console.log('[SCP] Wizard stages 1–3 registered');
+    console.log('[SCP] Wizard stages 1–4 registered');
   }
 
   function refresh() { if (window._scpRenderWizard) window._scpRenderWizard(); }
@@ -73,11 +77,9 @@
   }
 
   // ============================================================
-  // Reusable: research panel + brand context block + AI button
+  // Reusable: research panel + brand context block
   // ============================================================
   function renderResearchPanel(opts) {
-    // opts = { briefValue, briefField, actionId, runActionAttr, runLabel,
-    //          loading, lastError, helpText }
     var html = '<div class="scp-wiz-research">';
     html += '<label class="scp-wiz-research-label">' + esc(opts.label || 'Brief') + '</label>';
     html += '<textarea class="scp-textarea scp-wiz-brief" data-brief-field="' + esc(opts.briefField) + '" rows="3" placeholder="' + esc(opts.placeholder || 'Tell the AI what you want — context, constraints, examples…') + '">' + esc(opts.briefValue || '') + '</textarea>';
@@ -132,12 +134,8 @@
     var tones = (S.meta.settings && S.meta.settings.tones) || [];
 
     var html = '<div class="scp-wizard-step-content">';
-    html += '<h2 class="scp-wizard-headline">Welcome — let\'s set up your brand</h2>';
-    html += '<p class="scp-wizard-sub">Type a short brief and let the AI propose platforms, frequency, tone, and audience. You can edit anything before continuing.</p>';
-
     html += renderBrandContextCard();
 
-    // Workspace basics — always editable text
     html += '<div class="scp-wizard-form">';
     html += '<div class="scp-form-row">';
     html += '<div class="scp-form-half"><label>Workspace name <span class="scp-wizard-required">*</span></label>';
@@ -147,7 +145,6 @@
     html += '</div>';
     html += '</div>';
 
-    // Research panel
     html += renderResearchPanel({
       label: 'Brief for the AI',
       briefField: 'stage1Brief',
@@ -161,11 +158,9 @@
       placeholder: 'e.g. Helping early-career data engineers grow on LinkedIn. Smart, contrarian, lots of code snippets, posting Mon/Wed/Fri.'
     });
 
-    // AI-discovered fields — fully editable
     html += '<div class="scp-wiz-discovered">';
     html += '<h3 class="scp-wiz-section-title">' + icon('sparkles') + ' AI-discovered (edit anything)</h3>';
 
-    // Platforms (primary + secondary)
     html += '<div class="scp-form-group"><label>Primary platforms</label>';
     html += '<div class="scp-wiz-platform-grid">';
     for (var pk in PLATFORMS) {
@@ -291,26 +286,19 @@
   }
 
   // ============================================================
-  // STAGE 2 — Topics & Series (renders 2a or 2b based on stage2Sub)
+  // STAGE 2 — Topics
   // ============================================================
-  function renderStage2(w) {
-    return w.stage2Sub === 'series' ? renderStage2b(w) : renderStage2a(w);
-  }
-
-  // ----- Stage 2a: Topics -----
-  function renderStage2a(w) {
+  function renderStage2Topics(w) {
     var u = w.uiState;
     var topics = w.data.topics || [];
     var selectedCount = topics.filter(function(t) { return t.selected; }).length;
 
     var html = '<div class="scp-wizard-step-content">';
-    html += '<h2 class="scp-wizard-headline">Topics — your content pillars</h2>';
-    html += '<p class="scp-wizard-sub">Type a brief, run the AI, accept what you like, run again for more. Manual additions welcome.</p>';
 
     html += renderResearchPanel({
       label: 'Brief for topic research',
-      briefField: 'stage2aBrief',
-      briefValue: w.data.stage2aBrief,
+      briefField: 'stage2Brief',
+      briefValue: w.data.stage2Brief,
       actionId: 'setup_wizard_topics',
       runActionAttr: 'wiz-run-topics',
       runLabel: topics.length ? 'Suggest more topics' : 'Suggest topics',
@@ -353,7 +341,7 @@
     return html;
   }
 
-  function validateStage2a() {
+  function validateStage2Topics() {
     var w = S.setupWizard;
     var sel = (w.data.topics || []).filter(function(t) { return t.selected; });
     if (sel.length === 0) {
@@ -375,7 +363,7 @@
     prompt += 'Workspace: ' + (d.name || '(unnamed)') + '\n';
     prompt += 'Niche: ' + (d.niche || '(general)') + '\n';
     prompt += 'Audience: ' + (d.audienceDescription || '(general)') + '\n';
-    if (w.data.stage2aBrief) prompt += '\nUser brief:\n' + w.data.stage2aBrief + '\n';
+    if (w.data.stage2Brief) prompt += '\nUser brief:\n' + w.data.stage2Brief + '\n';
     if (existingNames.length) prompt += '\nDo NOT repeat any of these existing topics:\n- ' + existingNames.join('\n- ') + '\n';
     prompt += '\nFor each topic provide: name (2-4 words), description (one sentence).\n';
     prompt += 'Respond ONLY as JSON: [{"name":"...","description":"..."}]';
@@ -409,16 +397,16 @@
     }, 'setup_wizard_topics', brandContextSnippet());
   }
 
-  // ----- Stage 2b: Series -----
-  function renderStage2b(w) {
+  // ============================================================
+  // STAGE 3 — Series
+  // ============================================================
+  function renderStage3Series(w) {
     var u = w.uiState;
     var selectedTopics = (w.data.topics || []).filter(function(t) { return t.selected; });
     var series = w.data.series || [];
     var selectedSeriesCount = series.filter(function(s) { return s.selected; }).length;
 
     var html = '<div class="scp-wizard-step-content">';
-    html += '<h2 class="scp-wizard-headline">Series — multi-post arcs</h2>';
-    html += '<p class="scp-wizard-sub">Group your selected topics into reusable series (campaigns, sequences, evergreen themes).</p>';
 
     if (selectedTopics.length === 0) {
       html += '<div class="scp-wiz-empty">' + icon('layer-group') + '<p>You haven\'t selected any topics yet. Go back to Topics first, or finish without series.</p></div>';
@@ -426,7 +414,6 @@
       return html;
     }
 
-    // Selected-topic chips for context
     html += '<div class="scp-wiz-context-chips">';
     html += '<div class="scp-wiz-context-label">Working from these topics:</div>';
     for (var i = 0; i < selectedTopics.length; i++) {
@@ -437,8 +424,8 @@
 
     html += renderResearchPanel({
       label: 'Brief for series research',
-      briefField: 'stage2bBrief',
-      briefValue: w.data.stage2bBrief,
+      briefField: 'stage3Brief',
+      briefValue: w.data.stage3Brief,
       actionId: 'setup_wizard_series',
       runActionAttr: 'wiz-run-series',
       runLabel: series.length ? 'Suggest more series' : 'Suggest series',
@@ -491,7 +478,7 @@
     return html;
   }
 
-  function validateStage2b() { return true; }
+  function validateStage3Series() { return true; }
 
   function runSeries(w) {
     if (!isAIReady()) { toast('AI not configured — add manually', 'warning'); return; }
@@ -509,7 +496,7 @@
     prompt += 'Brand: ' + (d.name || '(unnamed)') + ' — ' + (d.niche || '(general)') + '\n';
     prompt += 'Audience: ' + (d.audienceDescription || '(general)') + '\n\n';
     prompt += 'Topics to group:\n' + topicLines + '\n';
-    if (w.data.stage2bBrief) prompt += '\nUser brief:\n' + w.data.stage2bBrief + '\n';
+    if (w.data.stage3Brief) prompt += '\nUser brief:\n' + w.data.stage3Brief + '\n';
     if (existingNames.length) prompt += '\nDo NOT repeat any of these existing series:\n- ' + existingNames.join('\n- ') + '\n';
     prompt += '\nSuggest 2-4 NEW series. Each series bundles 2+ topics. Some topics may stand alone.\n';
     prompt += 'For each series provide: name (3-5 words), description (one sentence), topic_names (array of EXACT topic names from the list above).\n';
@@ -559,32 +546,28 @@
   }
 
   // ============================================================
-  // STAGE 3 — Post Planning
+  // STAGE 4 — Post Planning
   // ============================================================
-  function renderStage3(w) {
+  function renderStage4Posts(w) {
     var u = w.uiState;
     var selectedSeries = (w.data.series || []).filter(function(s) { return s.selected; });
     var selectedTopics = (w.data.topics || []).filter(function(t) { return t.selected; });
     var posts = w.data.plannedPosts || [];
     var selectedCount = posts.filter(function(p) { return p.selected; }).length;
 
-    // Default the basis intelligently: prefer series if any exist
-    if (!w.data.stage3Basis) w.data.stage3Basis = selectedSeries.length ? 'series' : 'topic';
-    var basis = w.data.stage3Basis;
+    if (!w.data.stage4Basis) w.data.stage4Basis = selectedSeries.length ? 'series' : 'topic';
+    var basis = w.data.stage4Basis;
     var basisOptions = basis === 'series' ? selectedSeries : selectedTopics;
-    if (!w.data.stage3BasisId && basisOptions.length) w.data.stage3BasisId = basisOptions[0].tempId;
-    var activeBasis = basisOptions.find(function(o) { return o.tempId === w.data.stage3BasisId; });
+    if (!w.data.stage4BasisId && basisOptions.length) w.data.stage4BasisId = basisOptions[0].tempId;
+    var activeBasis = basisOptions.find(function(o) { return o.tempId === w.data.stage4BasisId; });
 
     var html = '<div class="scp-wizard-step-content">';
-    html += '<h2 class="scp-wizard-headline">Post Planning — seed your calendar</h2>';
-    html += '<p class="scp-wizard-sub">Pick a series (preferred) or topic, run the AI for post ideas, accumulate across runs, and select which to keep.</p>';
 
     if (selectedSeries.length === 0 && selectedTopics.length === 0) {
-      html += '<div class="scp-wiz-empty">' + icon('thumbtack') + '<p>You need at least one selected topic or series to research posts. Go back to Stage 2.</p></div></div>';
+      html += '<div class="scp-wiz-empty">' + icon('thumbtack') + '<p>You need at least one selected topic or series to research posts. Go back to Stage 2 or 3.</p></div></div>';
       return html;
     }
 
-    // Basis selector
     html += '<div class="scp-wiz-basis-row">';
     html += '<div class="scp-wiz-basis-toggle">';
     html += '<button class="scp-wiz-basis-btn' + (basis === 'series' ? ' scp-wiz-basis-btn-active' : '') + '" data-action="wiz-set-basis" data-basis="series"' + (selectedSeries.length === 0 ? ' disabled' : '') + '>' + icon('layer-group') + ' By series</button>';
@@ -593,15 +576,15 @@
     html += '<select class="scp-select scp-wiz-basis-select">';
     for (var i = 0; i < basisOptions.length; i++) {
       var o = basisOptions[i];
-      html += '<option value="' + esc(o.tempId) + '"' + (o.tempId === w.data.stage3BasisId ? ' selected' : '') + '>' + esc(o.name) + '</option>';
+      html += '<option value="' + esc(o.tempId) + '"' + (o.tempId === w.data.stage4BasisId ? ' selected' : '') + '>' + esc(o.name) + '</option>';
     }
     html += '</select>';
     html += '</div>';
 
     html += renderResearchPanel({
       label: 'Brief for post ideas' + (activeBasis ? ' on "' + activeBasis.name + '"' : ''),
-      briefField: 'stage3Brief',
-      briefValue: w.data.stage3Brief,
+      briefField: 'stage4Brief',
+      briefValue: w.data.stage4Brief,
       actionId: 'setup_wizard_posts',
       runActionAttr: 'wiz-run-posts',
       runLabel: posts.length ? 'Suggest more posts' : 'Suggest posts',
@@ -654,18 +637,18 @@
     return html;
   }
 
-  function validateStage3() { return true; }
+  function validateStage4Posts() { return true; }
 
   function runPosts(w) {
     if (!isAIReady()) { toast('AI not configured — add manually', 'warning'); return; }
     var u = w.uiState;
     if (u.postsLoading) return;
 
-    var basis = w.data.stage3Basis;
+    var basis = w.data.stage4Basis;
     var basisOptions = basis === 'series'
       ? (w.data.series || []).filter(function(s) { return s.selected; })
       : (w.data.topics || []).filter(function(t) { return t.selected; });
-    var active = basisOptions.find(function(o) { return o.tempId === w.data.stage3BasisId; });
+    var active = basisOptions.find(function(o) { return o.tempId === w.data.stage4BasisId; });
     if (!active) { toast('Pick a ' + basis + ' to research', 'warning'); return; }
 
     u.postsLoading = true; u.postsError = '';
@@ -685,7 +668,7 @@
     prompt += '\nResearch basis: ' + basis + ' "' + active.name + '"';
     if (active.description) prompt += ' — ' + active.description;
     prompt += '\n';
-    if (w.data.stage3Brief) prompt += '\nUser brief:\n' + w.data.stage3Brief + '\n';
+    if (w.data.stage4Brief) prompt += '\nUser brief:\n' + w.data.stage4Brief + '\n';
     if (existingTitlesInBasis.length) prompt += '\nDo NOT repeat any of these existing titles for this ' + basis + ':\n- ' + existingTitlesInBasis.join('\n- ') + '\n';
     prompt += '\nFor each idea provide: title (working title — short), hook (opening line of the post), type (one of: image, carousel, video, text).\n';
     prompt += 'Respond ONLY as JSON: [{"title":"...","hook":"...","type":"..."}]';
@@ -694,15 +677,12 @@
       try {
         var raw = parseJSON(text);
         if (!Array.isArray(raw)) raw = raw.posts || raw.results || [];
-        // Pin topic + series at creation. If basis is series, derive a topic
-        // from the first selected topic in that series (if any).
         var pinTopicId, pinSeriesId;
         if (basis === 'series') {
           pinSeriesId = active.tempId;
           pinTopicId  = (active.topicTempIds && active.topicTempIds[0]) || '';
         } else {
           pinTopicId  = active.tempId;
-          // If this topic belongs to any selected series, pin it; else blank.
           var ownerSeries = (w.data.series || []).find(function(s) { return s.selected && (s.topicTempIds || []).indexOf(active.tempId) > -1; });
           pinSeriesId = ownerSeries ? ownerSeries.tempId : '';
         }
@@ -741,26 +721,22 @@
     var nowIso = new Date().toISOString();
     var ws = w.data.workspace || {};
 
-    // Workspace meta — match the field names elsewhere in the app.
     S.meta.workspace = S.meta.workspace || {};
     S.meta.workspace.name                 = (ws.name  || '').trim();
     S.meta.workspace.niche                = (ws.niche || '').trim();
     S.meta.workspace.audience_description = (ws.audienceDescription || '').trim();
     S.meta.workspace.primary_platform     = (ws.primaryPlatforms && ws.primaryPlatforms[0]) || '';
     S.meta.workspace.posting_frequency    = ws.postingFrequency || '';
-    if (ws.notes) S.meta.workspace.description = ws.notes; // keep description in sync
+    if (ws.notes) S.meta.workspace.description = ws.notes;
 
-    // Default tone for new posts
     if (ws.toneId) {
       S.meta.settings = S.meta.settings || {};
       S.meta.settings.defaults = S.meta.settings.defaults || {};
       S.meta.settings.defaults.tone_id = ws.toneId;
-      // Also default platforms array from primary + secondary
       var defaultPlats = (ws.primaryPlatforms || []).concat((ws.secondaryPlatforms || []).filter(function(k) { return (ws.primaryPlatforms || []).indexOf(k) === -1; }));
       if (defaultPlats.length) S.meta.settings.defaults.platforms = defaultPlats;
     }
 
-    // ---- Topics → S.data.topics ----
     var topicIdMap = {};
     S.data.topics = S.data.topics || [];
     var selectedTopics = (w.data.topics || []).filter(function(t) { return t.selected; });
@@ -779,7 +755,6 @@
       if (logActivity) logActivity('topic_created', '', '', 'Created topic: ' + td.name);
     }
 
-    // ---- Series → S.data.series; rewrite topicIds ----
     var seriesIdMap = {};
     S.data.series = S.data.series || [];
     var selectedSeries = (w.data.series || []).filter(function(s) { return s.selected; });
@@ -796,7 +771,6 @@
         topicIds: topicIds,
         created: nowIso
       });
-      // Mirror seriesId onto topics that belong to this series.
       topicIds.forEach(function(realTopicId) {
         for (var j = 0; j < S.data.topics.length; j++) {
           if (S.data.topics[j].id === realTopicId) { S.data.topics[j].seriesId = sid; break; }
@@ -805,7 +779,6 @@
       if (logActivity) logActivity('series_created', '', '', 'Created series: ' + sd.name);
     }
 
-    // ---- Posts → S.data.posts at status='idea' ----
     S.data.posts = S.data.posts || [];
     var defs = (S.meta.settings && S.meta.settings.defaults) || {};
     var selectedPosts = (w.data.plannedPosts || []).filter(function(p) { return p.selected; });
@@ -854,7 +827,6 @@
   // EVENTS
   // ============================================================
   function setupEvents() {
-    // Brief textarea (any stage)
     $(document).off('input.scp-wizbr change.scp-wizbr', '.scp-wiz-brief')
       .on('input.scp-wizbr change.scp-wizbr', '.scp-wiz-brief', function() {
         var w = S.setupWizard;
@@ -862,7 +834,6 @@
         if (field) w.data[field] = $(this).val();
       });
 
-    // Stage 1 workspace text fields
     $(document).off('input.scp-wizws change.scp-wizws', '.scp-wiz-ws-field')
       .on('input.scp-wizws change.scp-wizws', '.scp-wiz-ws-field', function() {
         var w = S.setupWizard;
@@ -870,7 +841,6 @@
         if (field) w.data.workspace[field] = $(this).val();
       });
 
-    // Stage 1 platform toggles
     $(document).off('change.scp-wizpt', '.scp-wiz-platform-toggle')
       .on('change.scp-wizpt', '.scp-wiz-platform-toggle', function() {
         var w = S.setupWizard;
@@ -881,7 +851,6 @@
         var idx = w.data.workspace[key].indexOf(pk);
         if (this.checked) {
           if (idx === -1) w.data.workspace[key].push(pk);
-          // If marked primary, remove from secondary
           if (tier === 'primary') {
             var sIdx = (w.data.workspace.secondaryPlatforms || []).indexOf(pk);
             if (sIdx > -1) w.data.workspace.secondaryPlatforms.splice(sIdx, 1);
@@ -889,7 +858,7 @@
         } else if (idx > -1) {
           w.data.workspace[key].splice(idx, 1);
         }
-        refresh();  // re-render to update primary/secondary chip enable states
+        refresh();
       });
 
     // Run buttons
@@ -940,7 +909,6 @@
         var w = S.setupWizard;
         var tempId = $(this).closest('[data-temp-id]').data('temp-id');
         w.data.topics = w.data.topics.filter(function(t) { return t.tempId !== tempId; });
-        // Cascade to series + posts
         w.data.series.forEach(function(s) {
           s.topicTempIds = (s.topicTempIds || []).filter(function(x) { return x !== tempId; });
         });
@@ -1022,7 +990,7 @@
         var tempId = $(this).closest('[data-temp-id]').data('temp-id');
         w.data.series = w.data.series.filter(function(s) { return s.tempId !== tempId; });
         w.data.plannedPosts.forEach(function(p) { if (p.seriesTempId === tempId) p.seriesTempId = ''; });
-        if (w.data.stage3BasisId === tempId) w.data.stage3BasisId = '';
+        if (w.data.stage4BasisId === tempId) w.data.stage4BasisId = '';
         refresh();
       });
     $(document).off('click.scp-wizats', '[data-action="wiz-toggle-all-series"]')
@@ -1033,24 +1001,23 @@
         refresh();
       });
 
-    // ---- Stage 3 basis ----
+    // ---- Stage 4 basis ----
     $(document).off('click.scp-wizsb', '[data-action="wiz-set-basis"]')
       .on('click.scp-wizsb', '[data-action="wiz-set-basis"]', function(e) {
         e.preventDefault();
         var w = S.setupWizard;
         var basis = $(this).data('basis');
-        if (w.data.stage3Basis === basis) return;
-        w.data.stage3Basis = basis;
-        // Reset basis id to first option of the new tier
+        if (w.data.stage4Basis === basis) return;
+        w.data.stage4Basis = basis;
         var opts = basis === 'series'
           ? (w.data.series || []).filter(function(s) { return s.selected; })
           : (w.data.topics || []).filter(function(t) { return t.selected; });
-        w.data.stage3BasisId = opts.length ? opts[0].tempId : '';
+        w.data.stage4BasisId = opts.length ? opts[0].tempId : '';
         refresh();
       });
     $(document).off('change.scp-wizbsl', '.scp-wiz-basis-select')
       .on('change.scp-wizbsl', '.scp-wiz-basis-select', function() {
-        S.setupWizard.data.stage3BasisId = $(this).val();
+        S.setupWizard.data.stage4BasisId = $(this).val();
         refresh();
       });
 
@@ -1079,8 +1046,8 @@
       .on('click.scp-wizap', '[data-action="wiz-add-post"]', function(e) {
         e.preventDefault();
         var w = S.setupWizard;
-        var basis = w.data.stage3Basis;
-        var active = (basis === 'series' ? w.data.series : w.data.topics).find(function(o) { return o.tempId === w.data.stage3BasisId; });
+        var basis = w.data.stage4Basis;
+        var active = (basis === 'series' ? w.data.series : w.data.topics).find(function(o) { return o.tempId === w.data.stage4BasisId; });
         var pinTopic = '', pinSeries = '';
         if (active) {
           if (basis === 'series') { pinSeries = active.tempId; pinTopic = (active.topicTempIds && active.topicTempIds[0]) || ''; }
