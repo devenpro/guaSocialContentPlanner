@@ -1,132 +1,215 @@
 /* ═══════════════════════════════════════════════════════════════════
-   SETUP WIZARD — full-page takeover used on first run.
+   SETUP WIZARD — full-screen app takeover (Phase 1 chassis).
 
-   The wizard fills the viewport so users focus on it and only it.
-   Variables come from core/scp-part1.css.
+   Layout = topbar (54px) + shell (sidenav 240px + content fluid).
+   While open, body.scp-wizard-open hides the regular .scp-app chrome
+   so the wizard reads as its own surface, not a modal over the app.
+   Visual polish of cards / panels / AI states lands in later phases.
    ═══════════════════════════════════════════════════════════════════ */
 
-/* Lock body scroll while the wizard is mounted. */
+/* While the wizard is mounted, hide the underlying app entirely so the
+   wizard is the only thing on screen, and lock body scroll. */
 body.scp-wizard-open { overflow: hidden; }
+body.scp-wizard-open .scp-app { display: none !important; }
 
-.scp-wizard-backdrop {
+.scp-wizard-app {
   position: fixed; inset: 0; z-index: 1000;
+  display: grid; grid-template-rows: auto 1fr;
   background: var(--scp-bg-secondary);
-  display: flex; flex-direction: column;
-  padding: 0;
-  opacity: 0; transition: opacity var(--scp-transition-base);
-}
-.scp-wizard-backdrop.scp-wizard-visible { opacity: 1; }
-
-.scp-wizard-modal {
-  width: 100%; height: 100%;
-  max-width: none; max-height: none;
-  background: var(--scp-bg-primary);
-  border-radius: 0; box-shadow: none;
-  display: flex; flex-direction: column;
-  overflow: hidden;
   font-family: var(--scp-font-family);
+  color: var(--scp-text-primary);
 }
 
-/* ─── Header ─── */
-.scp-wizard-header {
-  padding: var(--scp-space-5) var(--scp-space-8) var(--scp-space-4);
-  background: linear-gradient(135deg, var(--scp-primary-subtle), var(--scp-white));
+/* ─── Top bar (matches app .scp-header proportions) ─────────────── */
+.scp-wizard-topbar {
+  height: 54px; padding: 0 var(--scp-space-6);
+  background: var(--scp-white);
   border-bottom: 1px solid var(--scp-border-light);
+  display: flex; align-items: center; justify-content: space-between;
   flex-shrink: 0;
 }
-.scp-wizard-header-top {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: var(--scp-space-4);
+.scp-wizard-topbar-brand {
+  display: flex; align-items: center; gap: var(--scp-space-3);
+  min-width: 0;
 }
-.scp-wizard-brand {
-  display: inline-flex; align-items: center; gap: var(--scp-space-2);
-  font-family: var(--scp-font-display); font-size: var(--scp-font-size-lg); font-weight: 700;
-  color: var(--scp-primary);
+.scp-wizard-topbar-logo {
+  height: 32px; width: auto; max-width: 100px;
+  object-fit: contain; border-radius: var(--scp-radius-sm);
+  background: var(--scp-gray-50);
 }
-.scp-wizard-brand svg, .scp-wizard-brand i { font-size: var(--scp-font-size-xl); }
-.scp-wizard-brand-logo {
-  height: 28px; width: auto; max-width: 100px;
-  border-radius: var(--scp-radius-sm);
-  object-fit: contain;
+.scp-wizard-topbar-iconwrap {
+  width: 36px; height: 36px; border-radius: var(--scp-radius-md);
+  background: var(--scp-primary-light); color: var(--scp-primary);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: var(--scp-font-size-md);
 }
-.scp-wizard-skip {
-  background: none; border: none; cursor: pointer;
-  color: var(--scp-text-secondary); font-size: var(--scp-font-size-sm);
-  padding: var(--scp-space-2) var(--scp-space-3); border-radius: var(--scp-radius-sm);
+.scp-wizard-topbar-titles { min-width: 0; line-height: 1.2; }
+.scp-wizard-topbar-title {
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-md); font-weight: 700;
+  color: var(--scp-text-primary);
+}
+.scp-wizard-topbar-sub {
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.scp-wizard-topbar-actions { display: flex; align-items: center; gap: var(--scp-space-2); }
+.scp-wizard-skip { font-size: var(--scp-font-size-sm); }
+
+/* ─── Shell: sidenav (240px) + content (fluid) ──────────────────── */
+.scp-wizard-shell {
+  display: flex; flex-direction: row;
+  min-height: 0; overflow: hidden;
+}
+
+/* ─── Side navigation ──────────────────────────────────────────── */
+.scp-wizard-sidenav {
+  width: 240px; flex-shrink: 0;
+  background: var(--scp-white);
+  border-right: 1px solid var(--scp-border-light);
+  padding: var(--scp-space-5) var(--scp-space-3);
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+.scp-wizard-sidenav-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--scp-text-tertiary);
+  padding: 0 var(--scp-space-3); margin-bottom: var(--scp-space-2);
+}
+.scp-wizard-sidenav-list {
+  list-style: none; padding: 0; margin: 0 0 var(--scp-space-5);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.scp-wizard-nav-item {
+  display: flex; align-items: flex-start; gap: var(--scp-space-3);
+  padding: 10px var(--scp-space-3);
+  border-radius: var(--scp-radius-md);
+  position: relative;
+  cursor: default;
+  transition: background var(--scp-transition-fast), color var(--scp-transition-fast);
+}
+.scp-wizard-nav-clickable { cursor: pointer; }
+.scp-wizard-nav-clickable:hover { background: var(--scp-gray-50); }
+.scp-wizard-nav-active {
+  background: var(--scp-primary-light);
+}
+.scp-wizard-nav-active .scp-wizard-nav-title { color: var(--scp-primary-dark); }
+.scp-wizard-nav-pending .scp-wizard-nav-title { color: var(--scp-text-secondary); }
+.scp-wizard-nav-pending .scp-wizard-nav-sub   { color: var(--scp-text-muted); }
+.scp-wizard-nav-pending .scp-wizard-nav-dot   { background: var(--scp-gray-100); color: var(--scp-text-muted); border-color: transparent; }
+.scp-wizard-nav-done .scp-wizard-nav-dot      { background: var(--scp-success); color: var(--scp-white); border-color: transparent; }
+.scp-wizard-nav-done .scp-wizard-nav-title    { color: var(--scp-text-primary); }
+
+.scp-wizard-nav-dot {
+  flex-shrink: 0; width: 28px; height: 28px; border-radius: var(--scp-radius-full);
+  background: var(--scp-white); color: var(--scp-primary);
+  border: 1.5px solid var(--scp-primary);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: var(--scp-font-size-sm);
+  font-family: var(--scp-font-display);
   transition: all var(--scp-transition-fast);
 }
-.scp-wizard-skip:hover { color: var(--scp-text-primary); background: var(--scp-gray-100); }
-
-/* ─── Stepper ─── */
-.scp-wizard-stepper {
-  display: flex; align-items: flex-start; gap: var(--scp-space-1);
-  overflow-x: auto;
-}
-.scp-wizard-step {
-  display: flex; align-items: flex-start; gap: var(--scp-space-2);
-  flex-shrink: 0; min-width: 0;
-}
-.scp-wizard-step-dot {
-  width: 36px; height: 36px; border-radius: var(--scp-radius-full);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: var(--scp-font-size-md);
-  background: var(--scp-gray-100); color: var(--scp-text-tertiary);
-  border: 2px solid transparent;
-  flex-shrink: 0;
-  transition: all var(--scp-transition-base);
-}
-.scp-wizard-step-active .scp-wizard-step-dot {
+.scp-wizard-nav-active .scp-wizard-nav-dot {
   background: var(--scp-primary); color: var(--scp-white);
-  border-color: var(--scp-primary-light);
-  box-shadow: var(--scp-shadow-glow);
+  border-color: var(--scp-primary);
+  box-shadow: 0 0 0 4px rgba(26,115,232,0.18);
 }
-.scp-wizard-step-done .scp-wizard-step-dot {
-  background: var(--scp-success); color: var(--scp-white);
-}
-.scp-wizard-step-label { min-width: 0; padding-top: 6px; }
-.scp-wizard-step-title {
+.scp-wizard-nav-text { min-width: 0; line-height: 1.3; padding-top: 2px; }
+.scp-wizard-nav-title {
+  font-family: var(--scp-font-display);
   font-size: var(--scp-font-size-sm); font-weight: 600;
-  color: var(--scp-text-secondary);
-  white-space: nowrap;
+  color: var(--scp-text-primary);
 }
-.scp-wizard-step-active .scp-wizard-step-title { color: var(--scp-text-primary); }
-.scp-wizard-step-done   .scp-wizard-step-title { color: var(--scp-text-secondary); }
-.scp-wizard-step-subtitle {
+.scp-wizard-nav-sub {
   font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
-  white-space: nowrap;
+  margin-top: 1px;
 }
-.scp-wizard-step-line {
-  flex: 1; min-width: 32px; height: 2px; margin-top: 17px;
-  background: var(--scp-gray-200); border-radius: var(--scp-radius-full);
-  transition: background var(--scp-transition-base);
-}
-.scp-wizard-step-line-done { background: var(--scp-success); }
-
-@media (max-width: 720px) {
-  .scp-wizard-step-label { display: none; }
-  .scp-wizard-step-line { margin-top: 16px; min-width: 16px; }
-  .scp-wizard-header { padding: var(--scp-space-4) var(--scp-space-5); }
+.scp-wizard-nav-active::before {
+  content: ''; position: absolute; left: 0; top: 8px; bottom: 8px;
+  width: 3px; border-radius: 0 var(--scp-radius-sm) var(--scp-radius-sm) 0;
+  background: var(--scp-primary);
 }
 
-/* ─── Body ─── */
-.scp-wizard-body {
-  padding: var(--scp-space-8) var(--scp-space-6);
-  overflow-y: auto;
-  flex: 1;
+.scp-wizard-sidenav-progress {
+  margin-top: auto;
+  padding: var(--scp-space-3);
+  border-top: 1px solid var(--scp-border-light);
 }
-.scp-wizard-step-content { max-width: 720px; margin: 0 auto; }
-.scp-wizard-headline {
+.scp-wizard-sidenav-bar {
+  height: 4px; background: var(--scp-gray-100); border-radius: var(--scp-radius-full);
+  overflow: hidden; margin-bottom: var(--scp-space-2);
+}
+.scp-wizard-sidenav-bar > span {
+  display: block; height: 100%; background: var(--scp-primary);
+  transition: width var(--scp-transition-base);
+}
+.scp-wizard-sidenav-progress-text {
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
+}
+
+/* ─── Content area ──────────────────────────────────────────────── */
+.scp-wizard-content {
+  flex: 1; display: flex; flex-direction: column;
+  min-width: 0; min-height: 0;
+  background: var(--scp-bg-secondary);
+  position: relative;
+}
+
+.scp-wizard-page-header {
+  padding: var(--scp-space-6) var(--scp-space-8) var(--scp-space-4);
+  background: linear-gradient(180deg, var(--scp-white), var(--scp-bg-secondary));
+  border-bottom: 1px solid var(--scp-border-light);
+}
+.scp-wizard-page-eyebrow {
+  font-size: var(--scp-font-size-xs); font-weight: 600;
+  color: var(--scp-primary); text-transform: uppercase;
+  letter-spacing: 0.06em; margin-bottom: var(--scp-space-2);
+  display: block;
+}
+.scp-wizard-page-title {
   margin: 0 0 var(--scp-space-2);
   font-family: var(--scp-font-display);
   font-size: var(--scp-font-size-3xl); font-weight: 800;
   color: var(--scp-text-primary); letter-spacing: -0.02em;
 }
-.scp-wizard-sub {
-  margin: 0 0 var(--scp-space-6);
+.scp-wizard-page-desc {
+  margin: 0; max-width: 720px;
   color: var(--scp-text-secondary); font-size: var(--scp-font-size-md);
+  line-height: 1.55;
 }
 
-/* Form basics inside wizard */
+.scp-wizard-page-body {
+  flex: 1; overflow-y: auto;
+  padding: var(--scp-space-6) var(--scp-space-8) calc(var(--scp-space-8) + 80px);
+}
+.scp-wizard-step-content {
+  max-width: 880px; margin: 0 auto;
+}
+
+/* ─── Sticky footer (inside content pane) ───────────────────────── */
+.scp-wizard-footer {
+  position: sticky; bottom: 0; left: 0; right: 0;
+  background: var(--scp-white);
+  border-top: 1px solid var(--scp-border-light);
+  padding: var(--scp-space-3) var(--scp-space-8);
+  display: flex; align-items: center; gap: var(--scp-space-4);
+  flex-shrink: 0;
+  box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.04);
+}
+.scp-wizard-footer-left  { flex: 1; }
+.scp-wizard-footer-right { display: flex; gap: var(--scp-space-2); }
+.scp-wizard-footer-meta {
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   STAGE INNER ELEMENTS — kept from prior pass; visual polish is in
+   Phases 2-5 of the rebuild. Anything below here only needs to keep
+   working with the new chassis.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Form basics */
 .scp-wizard-form { display: flex; flex-direction: column; gap: var(--scp-space-5); }
 .scp-wizard-form .scp-form-group { margin: 0; }
 .scp-wizard-form label,
@@ -135,10 +218,7 @@ body.scp-wizard-open { overflow: hidden; }
   font-size: var(--scp-font-size-sm); font-weight: 600;
   color: var(--scp-text-primary);
 }
-.scp-wiz-meta {
-  font-weight: 400; color: var(--scp-text-tertiary);
-  font-size: var(--scp-font-size-xs); margin-left: var(--scp-space-2);
-}
+.scp-wiz-meta { font-weight: 400; color: var(--scp-text-tertiary); font-size: var(--scp-font-size-xs); margin-left: var(--scp-space-2); }
 .scp-wizard-form .scp-input,
 .scp-wizard-form .scp-textarea,
 .scp-wizard-form .scp-select,
@@ -165,79 +245,245 @@ body.scp-wizard-open { overflow: hidden; }
 .scp-wiz-discovered .scp-form-row {
   display: grid; grid-template-columns: 1fr 1fr; gap: var(--scp-space-4);
 }
-@media (max-width: 560px) {
+@media (max-width: 720px) {
   .scp-wizard-form .scp-form-row,
   .scp-wiz-discovered .scp-form-row { grid-template-columns: 1fr; }
 }
 .scp-wizard-required { color: var(--scp-error); font-weight: 700; }
 
-/* ─── Brand context card ─── */
+/* ─── Brand context card (Stage 1 hero) ─────────────────────────── */
 .scp-wiz-brand-card {
-  background: var(--scp-white);
+  background: linear-gradient(180deg, var(--scp-white), color-mix(in srgb, var(--scp-primary) 4%, var(--scp-white)));
   border: 1px solid var(--scp-border-light);
   border-radius: var(--scp-radius-lg);
-  padding: var(--scp-space-4);
-  margin-bottom: var(--scp-space-5);
+  padding: var(--scp-space-5);
+  margin-bottom: var(--scp-space-6);
+  box-shadow: var(--scp-shadow-xs);
 }
 .scp-wiz-brand-card-head {
   display: flex; align-items: center; gap: var(--scp-space-3);
-  margin-bottom: var(--scp-space-2);
 }
 .scp-wiz-brand-card-logo {
-  width: 44px; height: 44px; border-radius: var(--scp-radius-md);
-  object-fit: contain; background: var(--scp-gray-50);
+  width: 56px; height: 56px;
+  border-radius: var(--scp-radius-md);
+  object-fit: contain;
+  background: var(--scp-white);
+  border: 1px solid var(--scp-border-light);
+  padding: 6px;
+  flex-shrink: 0;
 }
+.scp-wiz-brand-card-logo-placeholder {
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--scp-text-tertiary); font-size: 24px;
+}
+.scp-wiz-brand-card-titles { flex: 1; min-width: 0; line-height: 1.2; }
 .scp-wiz-brand-card-name {
-  font-family: var(--scp-font-display); font-weight: 700;
-  color: var(--scp-text-primary); font-size: var(--scp-font-size-md);
+  font-family: var(--scp-font-display);
+  font-weight: 800; color: var(--scp-text-primary);
+  font-size: var(--scp-font-size-xl);
+  letter-spacing: -0.01em;
 }
 .scp-wiz-brand-card-industry {
   font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
-  text-transform: uppercase; letter-spacing: 0.05em;
+  text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+  margin-top: 2px;
+}
+.scp-wiz-brand-card-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 700;
+  padding: 4px 10px; border-radius: var(--scp-radius-full);
+  background: var(--scp-success); color: var(--scp-white);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  flex-shrink: 0;
 }
 .scp-wiz-brand-card-desc {
-  margin: var(--scp-space-2) 0;
-  color: var(--scp-text-secondary); font-size: var(--scp-font-size-sm);
+  margin: var(--scp-space-3) 0 0;
+  color: var(--scp-text-secondary);
+  font-size: var(--scp-font-size-sm); line-height: 1.55;
+}
+.scp-wiz-brand-card-colors {
+  display: flex; gap: 6px; margin-top: var(--scp-space-3);
+}
+.scp-wiz-brand-card-swatch {
+  width: 28px; height: 28px; border-radius: var(--scp-radius-sm);
+  border: 2px solid var(--scp-white);
+  box-shadow: 0 1px 3px rgba(15,23,42,0.12);
 }
 .scp-wiz-brand-card-foot {
   display: flex; align-items: center; gap: var(--scp-space-2);
-  font-size: var(--scp-font-size-xs); color: var(--scp-success);
-  margin-top: var(--scp-space-2);
+  font-size: var(--scp-font-size-xs); color: var(--scp-primary-dark);
+  margin-top: var(--scp-space-3);
+  padding-top: var(--scp-space-3);
+  border-top: 1px dashed color-mix(in srgb, var(--scp-primary) 25%, transparent);
 }
 
-/* ─── Research panel (shared by all stages) ─── */
-.scp-wiz-research {
-  background: var(--scp-white);
-  border: 1px solid var(--scp-border-light);
-  border-radius: var(--scp-radius-lg);
-  padding: var(--scp-space-4);
-  margin: var(--scp-space-5) 0;
+/* ─── Section pattern (Stage 1+ groupings) ──────────────────────── */
+.scp-wiz-section {
   display: flex; flex-direction: column; gap: var(--scp-space-3);
+  margin: var(--scp-space-6) 0;
 }
-.scp-wiz-research-label {
+.scp-wiz-section + .scp-wiz-section { margin-top: var(--scp-space-7, var(--scp-space-6)); }
+.scp-wiz-section-head { display: flex; flex-direction: column; gap: 2px; }
+.scp-wiz-section-title {
+  margin: 0;
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-lg); font-weight: 700;
+  color: var(--scp-text-primary);
+  display: flex; align-items: center; gap: var(--scp-space-2);
+  letter-spacing: -0.01em;
+}
+.scp-wiz-section-title svg,
+.scp-wiz-section-title i { color: var(--scp-primary); }
+.scp-wiz-section-sub {
+  margin: 0;
+  font-size: var(--scp-font-size-sm); color: var(--scp-text-secondary);
+  line-height: 1.5;
+}
+
+/* Form fields (Stage 1 grid) */
+.scp-wiz-formgrid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--scp-space-4);
+}
+@media (max-width: 700px) { .scp-wiz-formgrid { grid-template-columns: 1fr; } }
+.scp-wiz-field { display: flex; flex-direction: column; gap: var(--scp-space-2); }
+.scp-wiz-field-label {
+  display: flex; align-items: center; gap: var(--scp-space-2);
+  flex-wrap: wrap;
+}
+.scp-wiz-field-label label {
+  margin: 0;
+  font-family: var(--scp-font-display);
   font-size: var(--scp-font-size-sm); font-weight: 600;
   color: var(--scp-text-primary);
 }
-.scp-wiz-brief {
-  width: 100%; padding: 10px 12px;
-  font-size: var(--scp-font-size-base);
-  border: 1px solid var(--scp-border-default); border-radius: var(--scp-radius-md);
-  resize: vertical; min-height: 70px;
-  font-family: inherit;
-}
-.scp-wiz-brief:focus { outline: none; border-color: var(--scp-border-focus); box-shadow: var(--scp-shadow-glow); }
-.scp-wiz-research-help {
-  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
+.scp-wiz-field-help {
   margin: 0;
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
+  line-height: 1.5;
 }
-.scp-wiz-research-controls {
-  display: flex; align-items: center; gap: var(--scp-space-3);
+.scp-wiz-required-pill {
+  display: inline-flex; align-items: center;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: var(--scp-radius-full);
+  background: var(--scp-error-light); color: var(--scp-error);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.scp-wiz-ai-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: var(--scp-radius-full);
+  background: color-mix(in srgb, var(--scp-primary) 12%, white);
+  color: var(--scp-primary-dark);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  border: 1px solid color-mix(in srgb, var(--scp-primary) 25%, transparent);
+}
+.scp-wiz-ai-badge svg, .scp-wiz-ai-badge i { font-size: 9px; }
+
+.scp-wiz-field .scp-input,
+.scp-wiz-textarea {
+  width: 100%; padding: 11px 14px;
+  font-size: var(--scp-font-size-base);
+  border: 1.5px solid var(--scp-border-default); border-radius: var(--scp-radius-md);
+  background: var(--scp-bg-primary); color: var(--scp-text-primary);
+  font-family: inherit; line-height: 1.5;
+  transition: all var(--scp-transition-fast);
+}
+.scp-wiz-textarea { resize: vertical; min-height: 72px; }
+.scp-wiz-field .scp-input:focus,
+.scp-wiz-textarea:focus {
+  outline: none; border-color: var(--scp-border-focus);
+  box-shadow: var(--scp-shadow-glow);
+}
+.scp-wiz-charcount {
+  align-self: flex-end;
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Research panel ─────────────────────────────────────────────── */
+.scp-wiz-research {
+  position: relative;
+  background: var(--scp-white);
+  border: 1px solid var(--scp-border-light);
+  border-radius: var(--scp-radius-lg);
+  padding: var(--scp-space-5);
+  margin: var(--scp-space-5) 0;
+  display: flex; flex-direction: column; gap: var(--scp-space-4);
+  box-shadow: var(--scp-shadow-xs);
+  overflow: hidden;
+}
+.scp-wiz-research::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+  background: linear-gradient(180deg, var(--scp-primary), color-mix(in srgb, var(--scp-primary) 60%, var(--scp-secondary)));
+  opacity: 0; transition: opacity var(--scp-transition-base);
+}
+.scp-wiz-research-loading::before { opacity: 1; }
+.scp-wiz-research-row { display: flex; flex-direction: column; gap: var(--scp-space-2); }
+.scp-wiz-research-head {
+  display: flex; align-items: flex-start; gap: var(--scp-space-3);
+}
+.scp-wiz-research-icon {
+  flex-shrink: 0;
+  width: 36px; height: 36px; border-radius: var(--scp-radius-md);
+  background: var(--scp-primary-light); color: var(--scp-primary);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: var(--scp-font-size-md);
+}
+.scp-wiz-research-headtext { flex: 1; min-width: 0; }
+.scp-wiz-research-title {
+  margin: 0;
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-md); font-weight: 700;
+  color: var(--scp-text-primary);
+  line-height: 1.25;
+}
+.scp-wiz-research-help {
+  margin: 2px 0 0;
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
+  line-height: 1.5;
+}
+.scp-wiz-brief {
+  width: 100%; padding: 12px 14px;
+  font-size: var(--scp-font-size-base);
+  border: 1.5px solid var(--scp-border-default); border-radius: var(--scp-radius-md);
+  resize: vertical; min-height: 84px;
+  font-family: inherit; line-height: 1.5;
+  background: var(--scp-bg-secondary);
+  transition: all var(--scp-transition-fast);
+}
+.scp-wiz-brief:focus {
+  outline: none; border-color: var(--scp-border-focus);
+  background: var(--scp-white);
+  box-shadow: var(--scp-shadow-glow);
+}
+.scp-wiz-research-row-controls {
+  flex-direction: row; align-items: center; gap: var(--scp-space-3);
   flex-wrap: wrap;
+  padding-top: var(--scp-space-2);
+  border-top: 1px dashed var(--scp-border-light);
 }
-.scp-wiz-research-picker { flex: 1; min-width: 200px; }
-.scp-wiz-research-picker .scp-ai-picker { display: inline-flex; gap: var(--scp-space-2); }
+.scp-wiz-research-picker { flex: 1; min-width: 220px; display: flex; align-items: center; gap: var(--scp-space-2); }
+.scp-wiz-research-picker .scp-ai-picker { display: inline-flex; gap: var(--scp-space-2); flex-wrap: wrap; }
 .scp-wiz-research-picker .scp-select { padding: 6px 10px; font-size: var(--scp-font-size-sm); }
-.scp-wiz-run-btn { white-space: nowrap; }
+.scp-wiz-run-btn {
+  white-space: nowrap;
+  padding: 10px 18px;
+  font-size: var(--scp-font-size-sm); font-weight: 600;
+  background: linear-gradient(135deg, var(--scp-primary), color-mix(in srgb, var(--scp-primary) 70%, var(--scp-secondary)));
+  border: none; color: var(--scp-white);
+  display: inline-flex; align-items: center; gap: var(--scp-space-2);
+  border-radius: var(--scp-radius-md);
+  box-shadow: 0 4px 12px rgba(26,115,232,0.25);
+  transition: all var(--scp-transition-fast);
+}
+.scp-wiz-run-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(26,115,232,0.35);
+}
+.scp-wiz-run-btn:disabled { opacity: 0.7; cursor: wait; }
+.scp-wiz-run-icon { display: inline-flex; }
+.scp-wiz-run-btn .fa-spinner { animation: scp-wiz-spin 0.9s linear infinite; }
+@keyframes scp-wiz-spin { to { transform: rotate(360deg); } }
 .scp-wiz-research-disabled {
   display: inline-flex; align-items: center; gap: var(--scp-space-2);
   font-size: var(--scp-font-size-sm); color: var(--scp-warning);
@@ -245,18 +491,22 @@ body.scp-wizard-open { overflow: hidden; }
   background: var(--scp-warning-light); border-radius: var(--scp-radius-md);
 }
 .scp-wiz-error {
-  background: var(--scp-error-light); color: var(--scp-error);
-  padding: var(--scp-space-2) var(--scp-space-3);
-  border-radius: var(--scp-radius-md);
-  font-size: var(--scp-font-size-sm);
   display: flex; align-items: center; gap: var(--scp-space-2);
+  background: var(--scp-error-light); color: var(--scp-error);
+  padding: 10px var(--scp-space-3);
+  border-radius: var(--scp-radius-md);
+  font-size: var(--scp-font-size-sm); font-weight: 500;
+  border-left: 3px solid var(--scp-error);
+  animation: scp-wiz-slide-in 0.2s ease-out;
 }
+@keyframes scp-wiz-slide-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.scp-wiz-error-icon { flex-shrink: 0; }
 
-/* ─── Discovered fields panel ─── */
-.scp-wiz-discovered {
-  margin-top: var(--scp-space-5);
-  display: flex; flex-direction: column; gap: var(--scp-space-5);
-}
+/* Discovered fields panel */
+.scp-wiz-discovered { margin-top: var(--scp-space-5); display: flex; flex-direction: column; gap: var(--scp-space-5); }
 .scp-wiz-section-title {
   font-family: var(--scp-font-display);
   font-size: var(--scp-font-size-lg); font-weight: 700;
@@ -265,15 +515,17 @@ body.scp-wizard-open { overflow: hidden; }
   display: flex; align-items: center; gap: var(--scp-space-2);
 }
 
-/* Platform chip multi-select */
+/* ─── Platform chips (Stage 1) ──────────────────────────────────── */
 .scp-wiz-platform-grid {
   display: flex; gap: var(--scp-space-2); flex-wrap: wrap;
 }
 .scp-wiz-platform-chip {
   display: inline-flex; align-items: center; gap: var(--scp-space-2);
-  padding: 6px 12px; border-radius: var(--scp-radius-full);
+  padding: 10px 16px;
+  min-height: 44px;
+  border-radius: var(--scp-radius-md);
   border: 1.5px solid var(--scp-border-default);
-  font-size: var(--scp-font-size-sm); font-weight: 500;
+  font-size: var(--scp-font-size-sm); font-weight: 600;
   color: var(--scp-text-secondary);
   cursor: pointer;
   transition: all var(--scp-transition-fast);
@@ -281,112 +533,384 @@ body.scp-wizard-open { overflow: hidden; }
   background: var(--scp-bg-primary);
 }
 .scp-wiz-platform-chip input { display: none; }
-.scp-wiz-platform-chip:hover { border-color: var(--chip-color); color: var(--scp-text-primary); }
+.scp-wiz-platform-chip-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: var(--scp-radius-sm);
+  background: color-mix(in srgb, var(--chip-color) 12%, transparent);
+  color: var(--chip-color);
+  font-size: var(--scp-font-size-sm);
+}
+.scp-wiz-platform-chip-label { line-height: 1; }
+.scp-wiz-platform-chip:hover:not(.scp-wiz-platform-chip-disabled) {
+  border-color: var(--chip-color);
+  color: var(--scp-text-primary);
+  transform: translateY(-1px);
+}
 .scp-wiz-platform-chip-active {
   background: color-mix(in srgb, var(--chip-color) 12%, white);
   border-color: var(--chip-color);
   color: var(--chip-color);
-  font-weight: 600;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--chip-color) 20%, transparent);
+}
+.scp-wiz-platform-chip-active .scp-wiz-platform-chip-icon {
+  background: var(--chip-color); color: var(--scp-white);
 }
 .scp-wiz-platform-chip-disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* ─── Lists of suggestions (topics, series, posts) ─── */
+/* ─── Frequency button group ────────────────────────────────────── */
+.scp-wiz-freq-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--scp-space-2);
+}
+.scp-wiz-freq-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--scp-border-default);
+  border-radius: var(--scp-radius-md);
+  background: var(--scp-bg-primary);
+  cursor: pointer;
+  transition: all var(--scp-transition-fast);
+  text-align: left;
+  font-family: inherit;
+}
+.scp-wiz-freq-card:hover:not(.scp-wiz-freq-card-active) {
+  border-color: var(--scp-primary-light);
+  background: var(--scp-bg-secondary);
+  transform: translateY(-1px);
+}
+.scp-wiz-freq-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: var(--scp-radius-sm);
+  background: var(--scp-primary-light); color: var(--scp-primary);
+  font-size: var(--scp-font-size-sm);
+  margin-bottom: 2px;
+}
+.scp-wiz-freq-label {
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-sm); font-weight: 700;
+  color: var(--scp-text-primary);
+}
+.scp-wiz-freq-sub {
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
+}
+.scp-wiz-freq-card-active {
+  border-color: var(--scp-primary);
+  background: color-mix(in srgb, var(--scp-primary) 8%, white);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--scp-primary) 18%, transparent);
+}
+.scp-wiz-freq-card-active .scp-wiz-freq-icon {
+  background: var(--scp-primary); color: var(--scp-white);
+}
+.scp-wiz-freq-card-active .scp-wiz-freq-label { color: var(--scp-primary-dark); }
+
+/* ─── Tone card picker ──────────────────────────────────────────── */
+.scp-wiz-tone-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--scp-space-2);
+}
+.scp-wiz-tone-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--scp-border-default);
+  border-radius: var(--scp-radius-md);
+  background: var(--scp-bg-primary);
+  cursor: pointer;
+  transition: all var(--scp-transition-fast);
+  text-align: left;
+  font-family: inherit;
+  position: relative;
+}
+.scp-wiz-tone-card::before {
+  content: ''; position: absolute; left: 0; top: 12px; bottom: 12px;
+  width: 3px; border-radius: 0 var(--scp-radius-sm) var(--scp-radius-sm) 0;
+  background: var(--scp-primary);
+  opacity: 0; transition: opacity var(--scp-transition-fast);
+}
+.scp-wiz-tone-card:hover:not(.scp-wiz-tone-card-active) {
+  border-color: var(--scp-primary-light);
+  background: var(--scp-bg-secondary);
+}
+.scp-wiz-tone-name {
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-sm); font-weight: 700;
+  color: var(--scp-text-primary);
+}
+.scp-wiz-tone-desc {
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-secondary);
+  line-height: 1.45;
+}
+.scp-wiz-tone-card-active {
+  border-color: var(--scp-primary);
+  background: color-mix(in srgb, var(--scp-primary) 8%, white);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--scp-primary) 18%, transparent);
+}
+.scp-wiz-tone-card-active::before { opacity: 1; }
+.scp-wiz-tone-card-active .scp-wiz-tone-name { color: var(--scp-primary-dark); }
+.scp-wiz-tone-card-none .scp-wiz-tone-name { color: var(--scp-text-secondary); font-style: italic; }
+
+/* ─── List header ─────────────────────────────────────────────────── */
 .scp-wiz-list-header {
   display: flex; align-items: center; justify-content: space-between;
   gap: var(--scp-space-3); flex-wrap: wrap;
-  margin: var(--scp-space-5) 0 var(--scp-space-3);
+  margin: var(--scp-space-6) 0 var(--scp-space-3);
+  padding-bottom: var(--scp-space-3);
+  border-bottom: 1px solid var(--scp-border-light);
 }
-.scp-wiz-list-title {
-  font-family: var(--scp-font-display); font-weight: 700;
-  font-size: var(--scp-font-size-md); color: var(--scp-text-primary);
+.scp-wiz-list-headline {
+  display: inline-flex; align-items: center; gap: var(--scp-space-2);
+  font-family: var(--scp-font-display);
 }
+.scp-wiz-count-badge {
+  display: inline-flex; align-items: center;
+  padding: 4px 10px;
+  background: var(--scp-primary-light); color: var(--scp-primary-dark);
+  border-radius: var(--scp-radius-full);
+  font-size: var(--scp-font-size-xs); font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.scp-wiz-count-sep { color: var(--scp-text-muted); }
+.scp-wiz-count-selected { font-size: var(--scp-font-size-sm); font-weight: 600; color: var(--scp-text-secondary); }
 .scp-wiz-list-actions {
   display: flex; gap: var(--scp-space-2); align-items: center; flex-wrap: wrap;
 }
-.scp-wiz-suggestions {
-  display: flex; flex-direction: column; gap: var(--scp-space-3);
+.scp-wiz-link {
+  background: none; border: none; cursor: pointer;
+  font-size: var(--scp-font-size-sm); font-weight: 500;
+  color: var(--scp-primary); padding: 4px 6px;
+  border-radius: var(--scp-radius-sm);
+  transition: all var(--scp-transition-fast);
 }
-.scp-wiz-empty {
-  border: 1px dashed var(--scp-border-default);
-  border-radius: var(--scp-radius-lg);
-  padding: var(--scp-space-6) var(--scp-space-4);
-  text-align: center; color: var(--scp-text-secondary);
-  display: flex; flex-direction: column; align-items: center; gap: var(--scp-space-3);
-}
-.scp-wiz-empty p { margin: 0; }
+.scp-wiz-link:hover { background: var(--scp-primary-light); }
+.scp-wiz-link-sep { color: var(--scp-text-muted); font-size: var(--scp-font-size-sm); }
+.scp-wiz-add-btn { margin-left: var(--scp-space-2); }
 
-/* Suggestion card chassis */
+.scp-wiz-suggestions { display: flex; flex-direction: column; gap: var(--scp-space-3); }
+
+/* ─── Empty state ─────────────────────────────────────────────────── */
+.scp-wiz-empty {
+  display: flex; flex-direction: column; align-items: center; gap: var(--scp-space-2);
+  border: 1.5px dashed var(--scp-border-default);
+  border-radius: var(--scp-radius-lg);
+  padding: var(--scp-space-8) var(--scp-space-5);
+  text-align: center;
+  background: var(--scp-bg-primary);
+}
+.scp-wiz-empty-icon {
+  width: 64px; height: 64px;
+  border-radius: var(--scp-radius-full);
+  background: var(--scp-primary-light); color: var(--scp-primary);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  margin-bottom: var(--scp-space-2);
+}
+.scp-wiz-empty-title {
+  margin: 0;
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-lg); font-weight: 700;
+  color: var(--scp-text-primary);
+}
+.scp-wiz-empty-text {
+  margin: 0; max-width: 360px;
+  color: var(--scp-text-secondary); font-size: var(--scp-font-size-sm);
+  line-height: 1.55;
+}
+.scp-wiz-empty-cta { margin-top: var(--scp-space-3); }
+
+/* ─── Suggestion card chassis ─────────────────────────────────────── */
 .scp-wiz-card {
   position: relative;
-  display: flex; align-items: flex-start; gap: var(--scp-space-3);
-  padding: var(--scp-space-3);
+  display: flex; align-items: stretch;
   background: var(--scp-bg-primary);
   border: 1px solid var(--scp-border-light);
   border-radius: var(--scp-radius-md);
+  overflow: hidden;
   transition: all var(--scp-transition-fast);
+  --card-color: var(--scp-primary);
 }
-.scp-wiz-card-selected   { background: var(--scp-bg-primary); }
-.scp-wiz-card-deselected { background: var(--scp-gray-50); opacity: 0.65; }
-.scp-wiz-card:hover { border-color: var(--scp-border-default); }
-.scp-wiz-card-select { display: flex; align-items: center; padding-top: 4px; }
-.scp-wiz-card-select input { width: 18px; height: 18px; cursor: pointer; }
-.scp-wiz-card-fields {
-  flex: 1; display: flex; flex-direction: column; gap: var(--scp-space-2); min-width: 0;
+.scp-wiz-card-edge {
+  flex-shrink: 0; width: 6px;
+  background: var(--card-color);
+  transition: width var(--scp-transition-fast);
 }
-.scp-wiz-card-fields .scp-input,
-.scp-wiz-card-fields .scp-textarea,
-.scp-wiz-card-fields .scp-select {
-  width: 100%; padding: 8px 10px; font-size: var(--scp-font-size-sm);
-  border: 1px solid var(--scp-border-light); border-radius: var(--scp-radius-md);
-  background: var(--scp-white); color: var(--scp-text-primary);
-  font-family: inherit;
+.scp-wiz-card-body {
+  flex: 1; min-width: 0;
+  padding: var(--scp-space-3) var(--scp-space-4);
+  display: flex; flex-direction: column; gap: var(--scp-space-2);
 }
-.scp-wiz-card-fields .scp-input:focus,
-.scp-wiz-card-fields .scp-textarea:focus,
-.scp-wiz-card-fields .scp-select:focus {
-  outline: none; border-color: var(--scp-border-focus);
+.scp-wiz-card-head {
+  display: flex; align-items: center; gap: var(--scp-space-2);
+}
+.scp-wiz-card-select {
+  flex-shrink: 0; cursor: pointer;
+  display: inline-flex; align-items: center;
+}
+.scp-wiz-card-select input {
+  width: 20px; height: 20px; cursor: pointer; accent-color: var(--card-color);
+}
+.scp-wiz-card-leadicon {
+  flex-shrink: 0; color: var(--card-color);
+  font-size: var(--scp-font-size-md);
+  display: inline-flex; align-items: center;
+}
+.scp-wiz-card-title {
+  flex: 1; min-width: 0;
+  padding: 6px 8px !important;
+  font-family: var(--scp-font-display) !important;
+  font-size: var(--scp-font-size-md) !important;
+  font-weight: 600 !important;
+  color: var(--scp-text-primary) !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--scp-radius-sm) !important;
+  transition: border-color var(--scp-transition-fast), background var(--scp-transition-fast);
+}
+.scp-wiz-card-title:hover { background: var(--scp-bg-secondary) !important; }
+.scp-wiz-card-title:focus {
+  outline: none !important;
+  background: var(--scp-white) !important;
+  border-color: var(--scp-border-focus) !important;
   box-shadow: 0 0 0 3px rgba(26,115,232,0.15);
 }
-.scp-wiz-card-swatch {
-  width: 28px; height: 28px; border-radius: var(--scp-radius-full);
-  flex-shrink: 0; cursor: pointer;
-  border: 2px solid var(--scp-white); box-shadow: var(--scp-shadow-xs);
-  transition: transform var(--scp-transition-fast);
+.scp-wiz-card-desc {
+  width: 100%;
+  padding: 8px 10px !important;
+  font-size: var(--scp-font-size-sm) !important;
+  color: var(--scp-text-secondary) !important;
+  background: var(--scp-bg-secondary) !important;
+  border: 1px solid var(--scp-border-light) !important;
+  border-radius: var(--scp-radius-sm) !important;
+  font-family: inherit !important;
 }
-.scp-wiz-card-swatch:hover { transform: scale(1.1); }
+.scp-wiz-card-desc:focus {
+  outline: none !important;
+  background: var(--scp-white) !important;
+  border-color: var(--scp-border-focus) !important;
+  box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
+}
+.scp-wiz-card-hook {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: var(--scp-font-size-sm);
+  color: var(--scp-text-secondary);
+  background: var(--scp-bg-secondary);
+  border: 1px solid var(--scp-border-light);
+  border-left: 3px solid var(--card-color);
+  border-radius: 0 var(--scp-radius-sm) var(--scp-radius-sm) 0;
+  font-style: italic;
+  font-family: inherit;
+  resize: vertical; min-height: 56px;
+}
+.scp-wiz-card-hook:focus {
+  outline: none; background: var(--scp-white);
+  border-color: var(--scp-border-focus); border-left-color: var(--card-color);
+  box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
+}
+.scp-wiz-card-actions {
+  display: flex; align-items: center; gap: var(--scp-space-1);
+  flex-shrink: 0;
+}
 .scp-wiz-card-tag {
-  position: absolute; top: 6px; right: 36px;
-  font-size: 10px; font-weight: 600; color: var(--scp-text-tertiary);
-  background: var(--scp-gray-100);
-  padding: 2px 6px; border-radius: var(--scp-radius-sm);
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 10px; font-weight: 700;
+  padding: 3px 8px; border-radius: var(--scp-radius-full);
   text-transform: uppercase; letter-spacing: 0.04em;
+}
+.scp-wiz-card-tag-ai {
+  background: color-mix(in srgb, var(--card-color) 12%, white);
+  color: var(--card-color);
+}
+.scp-wiz-card-tag-manual {
+  background: var(--scp-gray-100); color: var(--scp-text-tertiary);
 }
 .scp-wiz-card-remove {
   background: none; border: none; cursor: pointer;
   color: var(--scp-text-tertiary); padding: 6px;
   border-radius: var(--scp-radius-sm);
+  display: inline-flex; align-items: center;
   transition: all var(--scp-transition-fast);
 }
 .scp-wiz-card-remove:hover { color: var(--scp-error); background: var(--scp-error-light); }
 
-/* Series card extras */
-.scp-wiz-series-card { border-left: 4px solid var(--scp-primary); }
+/* Card states */
+.scp-wiz-card-selected {
+  border-color: color-mix(in srgb, var(--card-color) 35%, var(--scp-border-light));
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.04),
+    inset 0 0 0 0 transparent;
+  transition: all var(--scp-transition-fast);
+}
+.scp-wiz-card-selected:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.10);
+  border-color: color-mix(in srgb, var(--card-color) 55%, var(--scp-border-light));
+}
+.scp-wiz-card-selected .scp-wiz-card-edge { width: 8px; }
+.scp-wiz-card-selected:hover .scp-wiz-card-edge { width: 12px; }
+.scp-wiz-card-deselected {
+  background: var(--scp-gray-50);
+  opacity: 0.55;
+  filter: saturate(0.5);
+}
+.scp-wiz-card-deselected .scp-wiz-card-edge { width: 4px; opacity: 0.4; }
+.scp-wiz-card-deselected:hover { opacity: 0.85; filter: saturate(0.85); }
+
+/* Lead-icon "filled" variant for Series card */
+.scp-wiz-card-leadicon-filled {
+  width: 32px; height: 32px; border-radius: var(--scp-radius-sm);
+  background: color-mix(in srgb, var(--card-color) 12%, white);
+  color: var(--card-color);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: var(--scp-font-size-sm);
+  flex-shrink: 0;
+}
+
+/* Count chip in card header (series → "3 topics") */
+.scp-wiz-card-count {
+  display: inline-flex; align-items: center;
+  font-size: 10px; font-weight: 700;
+  padding: 3px 8px; border-radius: var(--scp-radius-full);
+  background: var(--scp-bg-secondary);
+  color: var(--scp-text-secondary);
+  border: 1px solid var(--scp-border-light);
+  white-space: nowrap;
+}
+
+/* AI hint line — appears on AI-generated series cards */
+.scp-wiz-series-aihint {
+  display: flex; align-items: flex-start; gap: var(--scp-space-2);
+  font-size: var(--scp-font-size-xs);
+  color: var(--scp-primary-dark);
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--scp-primary) 7%, white);
+  border: 1px solid color-mix(in srgb, var(--scp-primary) 20%, transparent);
+  border-radius: var(--scp-radius-sm);
+}
+.scp-wiz-series-aihint-icon { color: var(--scp-primary); flex-shrink: 0; }
+.scp-wiz-series-aihint-text { line-height: 1.45; }
+
+/* Topic card — edge is clickable to cycle colour */
+.scp-wiz-topic-card .scp-wiz-card-edge { cursor: pointer; }
+.scp-wiz-topic-card .scp-wiz-card-edge:hover { width: 10px; }
+
+/* Series card — inner topic pickers */
 .scp-wiz-topic-pickers {
-  display: flex; flex-wrap: wrap; gap: var(--scp-space-1);
-  margin-top: var(--scp-space-2);
+  display: flex; flex-wrap: wrap; gap: 6px;
   padding-top: var(--scp-space-2);
+  margin-top: var(--scp-space-1);
   border-top: 1px dashed var(--scp-border-light);
 }
 .scp-wiz-topic-pickers-label {
   width: 100%;
-  font-size: var(--scp-font-size-xs); font-weight: 600;
+  font-size: 10px; font-weight: 700;
   color: var(--scp-text-tertiary); text-transform: uppercase;
-  letter-spacing: 0.04em; margin-bottom: var(--scp-space-1);
+  letter-spacing: 0.06em; margin-bottom: 2px;
 }
 .scp-wiz-topic-picker {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 3px 9px; border-radius: var(--scp-radius-full);
-  border: 1px solid var(--scp-border-default);
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: var(--scp-radius-full);
+  border: 1.5px solid var(--scp-border-default);
   font-size: var(--scp-font-size-xs); font-weight: 500;
   color: var(--scp-text-secondary);
   cursor: pointer; transition: all var(--scp-transition-fast);
@@ -394,95 +918,324 @@ body.scp-wizard-open { overflow: hidden; }
   background: var(--scp-bg-primary);
 }
 .scp-wiz-topic-picker input { display: none; }
-.scp-wiz-topic-picker:hover { border-color: var(--chip-color); }
+.scp-wiz-topic-picker-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: var(--scp-radius-full);
+  background: var(--chip-color);
+}
+.scp-wiz-topic-picker:hover { border-color: var(--chip-color); color: var(--scp-text-primary); }
 .scp-wiz-topic-picker-active {
   background: color-mix(in srgb, var(--chip-color) 12%, white);
   border-color: var(--chip-color);
-  color: var(--chip-color);
-  font-weight: 600;
+  color: var(--chip-color); font-weight: 600;
 }
 
-/* Post card */
-.scp-wiz-post-fields { gap: var(--scp-space-2); }
+/* Post card meta row */
 .scp-wiz-post-meta {
-  display: flex; flex-wrap: wrap; gap: var(--scp-space-2); align-items: center;
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
   font-size: var(--scp-font-size-xs);
 }
-.scp-wiz-post-meta .scp-select { width: auto; min-width: 90px; }
+.scp-wiz-post-type-select {
+  width: auto !important; min-width: 100px;
+  padding: 4px 8px !important;
+  font-size: var(--scp-font-size-xs) !important;
+  text-transform: capitalize;
+  background: var(--scp-bg-primary) !important;
+  border: 1px solid var(--scp-border-default) !important;
+  border-radius: var(--scp-radius-sm) !important;
+}
 
-/* Context chips (read-only) */
+/* ─── Context panel (Stage 3 hero) ──────────────────────────────── */
+.scp-wiz-context-panel {
+  background: linear-gradient(180deg, var(--scp-white), var(--scp-bg-secondary));
+  border: 1px solid var(--scp-border-light);
+  border-radius: var(--scp-radius-lg);
+  padding: var(--scp-space-4) var(--scp-space-5);
+  margin-bottom: var(--scp-space-5);
+  display: flex; flex-direction: column; gap: var(--scp-space-3);
+}
+.scp-wiz-context-panel-head {
+  display: flex; align-items: center; gap: var(--scp-space-3);
+}
+.scp-wiz-context-panel-icon {
+  width: 40px; height: 40px; border-radius: var(--scp-radius-md);
+  background: var(--scp-primary-light); color: var(--scp-primary);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: var(--scp-font-size-md);
+  flex-shrink: 0;
+}
+.scp-wiz-context-panel-titles { flex: 1; min-width: 0; line-height: 1.3; }
+.scp-wiz-context-panel-title {
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-md); font-weight: 700;
+  color: var(--scp-text-primary);
+}
+.scp-wiz-context-panel-sub {
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-secondary);
+  margin-top: 1px;
+}
+.scp-wiz-context-chip-row {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+
+/* Legacy context-chips wrapper (kept for any callers not yet upgraded) */
 .scp-wiz-context-chips {
   display: flex; flex-wrap: wrap; gap: var(--scp-space-2); align-items: center;
   background: var(--scp-bg-secondary);
   padding: var(--scp-space-3) var(--scp-space-4);
   border-radius: var(--scp-radius-md);
   margin-bottom: var(--scp-space-4);
+  border: 1px solid var(--scp-border-light);
 }
 .scp-wiz-context-label {
   width: 100%;
-  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
-  text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600;
+  font-size: 10px; color: var(--scp-text-tertiary);
+  text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700;
   margin-bottom: 2px;
 }
+
 .scp-wiz-context-chip {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 3px 10px; border-radius: var(--scp-radius-full);
-  border: 1px solid; font-size: var(--scp-font-size-xs); font-weight: 500;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: var(--scp-radius-full);
+  font-size: var(--scp-font-size-xs); font-weight: 600;
+  --chip-color: var(--scp-primary);
+  background: color-mix(in srgb, var(--chip-color) 12%, white);
+  color: var(--chip-color);
+  border: 1px solid color-mix(in srgb, var(--chip-color) 30%, transparent);
+}
+.scp-wiz-context-chip-dot {
+  display: inline-block; width: 6px; height: 6px;
+  border-radius: var(--scp-radius-full);
+  background: var(--chip-color);
 }
 
-/* Stage 3 basis selector */
-.scp-wiz-basis-row {
-  display: flex; align-items: center; gap: var(--scp-space-3);
-  flex-wrap: wrap;
-  background: var(--scp-bg-secondary);
-  padding: var(--scp-space-3) var(--scp-space-4);
-  border-radius: var(--scp-radius-md);
-  margin: var(--scp-space-5) 0 var(--scp-space-2);
+/* ─── Skeleton loading cards (shown during AI runs) ───────────────── */
+.scp-wiz-skeleton-stack {
+  display: flex; flex-direction: column; gap: var(--scp-space-3);
 }
-.scp-wiz-basis-toggle {
-  display: inline-flex; gap: 0;
-  border: 1px solid var(--scp-border-default); border-radius: var(--scp-radius-md);
+.scp-wiz-skeleton-card {
+  display: flex; align-items: stretch;
+  background: var(--scp-bg-primary);
+  border: 1px solid var(--scp-border-light);
+  border-radius: var(--scp-radius-md);
   overflow: hidden;
 }
+.scp-wiz-skeleton-edge {
+  width: 6px; flex-shrink: 0;
+  background: linear-gradient(180deg, var(--scp-primary-light), var(--scp-primary));
+  opacity: 0.4;
+}
+.scp-wiz-skeleton-body {
+  flex: 1; padding: var(--scp-space-4);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.scp-wiz-skeleton-bar {
+  height: 10px; border-radius: var(--scp-radius-sm);
+  background: linear-gradient(90deg, var(--scp-gray-100) 0%, var(--scp-gray-200) 50%, var(--scp-gray-100) 100%);
+  background-size: 200% 100%;
+  animation: scp-wiz-shimmer 1.4s ease-in-out infinite;
+}
+.scp-wiz-skeleton-bar-title { width: 45%; height: 14px; }
+.scp-wiz-skeleton-bar-text  { width: 90%; }
+.scp-wiz-skeleton-bar-short { width: 65%; }
+@keyframes scp-wiz-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   STAGE 4 — Post Planning surfaces
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Basis panel — segmented control + chip preview + summary ──── */
+.scp-wiz-basis-panel {
+  background: linear-gradient(180deg, var(--scp-white), var(--scp-bg-secondary));
+  border: 1px solid var(--scp-border-light);
+  border-radius: var(--scp-radius-lg);
+  padding: var(--scp-space-4) var(--scp-space-5);
+  margin: var(--scp-space-5) 0;
+  display: flex; flex-direction: column; gap: var(--scp-space-3);
+}
+.scp-wiz-basis-head { display: flex; align-items: flex-start; }
+.scp-wiz-basis-eyebrow {
+  font-size: 10px; font-weight: 700;
+  color: var(--scp-primary); text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.scp-wiz-basis-title {
+  margin-top: 2px;
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-md); font-weight: 700;
+  color: var(--scp-text-primary);
+}
+
+/* Segmented toggle */
+.scp-wiz-basis-toggle {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  background: var(--scp-gray-100);
+  padding: 6px;
+  border-radius: var(--scp-radius-md);
+}
 .scp-wiz-basis-btn {
-  background: var(--scp-bg-primary);
-  border: none; cursor: pointer;
-  padding: 8px 14px; font-size: var(--scp-font-size-sm); font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 12px 14px;
+  background: transparent; border: none; cursor: pointer;
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-sm); font-weight: 700;
   color: var(--scp-text-secondary);
-  display: inline-flex; align-items: center; gap: var(--scp-space-2);
+  border-radius: var(--scp-radius-sm);
   transition: all var(--scp-transition-fast);
 }
-.scp-wiz-basis-btn:hover:not(:disabled) { background: var(--scp-gray-50); color: var(--scp-text-primary); }
-.scp-wiz-basis-btn-active { background: var(--scp-primary); color: var(--scp-white); }
-.scp-wiz-basis-btn-active:hover { background: var(--scp-primary-hover); color: var(--scp-white); }
-.scp-wiz-basis-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.scp-wiz-basis-select {
-  flex: 1; min-width: 200px;
-  padding: 8px 12px; border: 1px solid var(--scp-border-default);
-  border-radius: var(--scp-radius-md); background: var(--scp-bg-primary);
-  font-family: inherit; font-size: var(--scp-font-size-sm);
+.scp-wiz-basis-btn-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: var(--scp-radius-sm);
+  background: var(--scp-white); color: var(--scp-text-tertiary);
+  font-size: var(--scp-font-size-sm);
+  transition: all var(--scp-transition-fast);
 }
+.scp-wiz-basis-btn-count {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: var(--scp-radius-full);
+  background: var(--scp-white); color: var(--scp-text-tertiary);
+  font-size: 10px; font-weight: 700;
+  border: 1px solid var(--scp-border-light);
+}
+.scp-wiz-basis-btn:hover:not(:disabled):not(.scp-wiz-basis-btn-active) {
+  background: var(--scp-white);
+  color: var(--scp-text-primary);
+}
+.scp-wiz-basis-btn:hover:not(:disabled):not(.scp-wiz-basis-btn-active) .scp-wiz-basis-btn-icon { color: var(--scp-primary); }
+.scp-wiz-basis-btn-active {
+  background: var(--scp-white);
+  color: var(--scp-primary-dark);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+.scp-wiz-basis-btn-active .scp-wiz-basis-btn-icon {
+  background: var(--scp-primary); color: var(--scp-white);
+}
+.scp-wiz-basis-btn-active .scp-wiz-basis-btn-count {
+  background: var(--scp-primary-light);
+  color: var(--scp-primary-dark);
+  border-color: transparent;
+}
+.scp-wiz-basis-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* ─── Footer ─── */
-.scp-wizard-footer {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: var(--scp-space-4) var(--scp-space-8);
-  background: var(--scp-bg-secondary);
-  border-top: 1px solid var(--scp-border-light);
-  gap: var(--scp-space-4);
+/* Active-basis dropdown + chip preview */
+.scp-wiz-basis-picker {
+  display: flex; flex-direction: column; gap: 6px;
+  padding-top: var(--scp-space-2);
+  border-top: 1px dashed var(--scp-border-light);
+}
+.scp-wiz-basis-picker-label {
+  font-size: 10px; font-weight: 700;
+  color: var(--scp-text-tertiary); text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.scp-wiz-basis-picker-row {
+  display: flex; align-items: center; gap: var(--scp-space-2);
+  flex-wrap: wrap;
+}
+.scp-wiz-basis-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--scp-radius-full);
+  --chip-color: var(--scp-primary);
+  background: color-mix(in srgb, var(--chip-color) 12%, white);
+  color: var(--chip-color);
+  border: 1.5px solid var(--chip-color);
+  font-family: var(--scp-font-display);
+  font-size: var(--scp-font-size-sm); font-weight: 700;
   flex-shrink: 0;
 }
-.scp-wizard-footer-left,
-.scp-wizard-footer-right {
-  display: flex; align-items: center; gap: var(--scp-space-3);
+.scp-wiz-basis-chip-dot {
+  display: inline-block; width: 8px; height: 8px;
+  border-radius: var(--scp-radius-full);
+  background: var(--chip-color);
 }
-.scp-wizard-footer-right { margin-left: auto; }
-.scp-wizard-step-count {
-  font-size: var(--scp-font-size-xs); color: var(--scp-text-tertiary);
-  font-variant-numeric: tabular-nums;
+.scp-wiz-basis-select {
+  flex: 1; min-width: 180px;
+  padding: 8px 12px;
+  border: 1px solid var(--scp-border-default);
+  border-radius: var(--scp-radius-md);
+  background: var(--scp-bg-primary);
+  font-family: inherit; font-size: var(--scp-font-size-sm);
+  cursor: pointer;
+}
+.scp-wiz-basis-select:focus {
+  outline: none; border-color: var(--scp-border-focus);
+  box-shadow: var(--scp-shadow-glow);
 }
 
-/* Placeholder state (shouldn't normally render once steps file loads) */
+.scp-wiz-basis-summary {
+  display: flex; align-items: center; gap: var(--scp-space-2);
+  padding: 8px 12px;
+  background: var(--scp-bg-primary);
+  border: 1px solid var(--scp-border-light);
+  border-radius: var(--scp-radius-sm);
+  font-size: var(--scp-font-size-xs); color: var(--scp-text-secondary);
+}
+.scp-wiz-basis-summary-icon { color: var(--scp-primary); flex-shrink: 0; }
+.scp-wiz-basis-summary-text strong { color: var(--scp-text-primary); font-weight: 700; }
+.scp-wiz-basis-summary-text em { color: var(--scp-text-tertiary); font-style: italic; }
+
+/* ─── Post card — per-type visual treatment ─────────────────────── */
+.scp-wiz-post-typeicon {
+  flex-shrink: 0;
+  width: 32px; height: 32px; border-radius: var(--scp-radius-sm);
+  background: color-mix(in srgb, var(--type-color) 14%, white);
+  color: var(--type-color);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: var(--scp-font-size-sm);
+  border: 1px solid color-mix(in srgb, var(--type-color) 30%, transparent);
+}
+
+.scp-wiz-post-typepill {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 4px 3px 10px;
+  --type-color: var(--scp-primary);
+  background: color-mix(in srgb, var(--type-color) 10%, white);
+  border: 1px solid color-mix(in srgb, var(--type-color) 30%, transparent);
+  border-radius: var(--scp-radius-full);
+  color: var(--type-color);
+  font-size: var(--scp-font-size-xs); font-weight: 600;
+}
+.scp-wiz-post-typepill-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.scp-wiz-post-typepill-select {
+  background: transparent !important;
+  border: none !important;
+  padding: 2px 18px 2px 4px !important;
+  font: inherit !important;
+  color: inherit !important;
+  appearance: none !important; -webkit-appearance: none !important;
+  text-transform: capitalize;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+                    linear-gradient(135deg, currentColor 50%, transparent 50%) !important;
+  background-position: calc(100% - 9px) center, calc(100% - 5px) center !important;
+  background-size: 4px 4px, 4px 4px !important;
+  background-repeat: no-repeat !important;
+}
+.scp-wiz-post-typepill-select:focus { outline: none; box-shadow: none; }
+
+/* Per-type edge accent — overrides the basis-derived card color
+   on the left edge so type is also visible at a glance. */
+.scp-wiz-post-card-image    { --type-color: #0891b2; }
+.scp-wiz-post-card-carousel { --type-color: #9333ea; }
+.scp-wiz-post-card-video    { --type-color: #dc2626; }
+.scp-wiz-post-card-text     { --type-color: #475569; }
+
+.scp-wiz-post-card .scp-wiz-card-edge {
+  background: linear-gradient(180deg, var(--card-color), var(--type-color));
+}
+
+@media (max-width: 640px) {
+  .scp-wiz-basis-toggle { grid-template-columns: 1fr; }
+}
+
+/* Placeholder state */
 .scp-wizard-step-placeholder { text-align: center; padding: var(--scp-space-10) var(--scp-space-4); }
 .scp-wizard-placeholder-icon {
   width: 64px; height: 64px; border-radius: var(--scp-radius-full);
@@ -498,4 +1251,138 @@ body.scp-wizard-open { overflow: hidden; }
 .scp-wizard-step-placeholder p {
   margin: 0 auto; max-width: 420px;
   color: var(--scp-text-secondary); line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOTION, A11Y, & FINAL RESPONSIVE  (Phase 6)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Off-screen ARIA live region (visually hidden, AT-readable) */
+.scp-wizard-live {
+  position: absolute;
+  left: -10000px; top: auto;
+  width: 1px; height: 1px;
+  overflow: hidden;
+}
+
+/* ─── Stage transition (page-body slide-fade) ───────────────────── */
+.scp-wizard-stage-enter {
+  animation: scp-wiz-stage-fade 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.scp-wizard-stage-enter-forward { animation-name: scp-wiz-stage-slide-in-right; }
+.scp-wizard-stage-enter-back    { animation-name: scp-wiz-stage-slide-in-left; }
+@keyframes scp-wiz-stage-fade {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scp-wiz-stage-slide-in-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scp-wiz-stage-slide-in-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ─── Sidenav active-item slide indicator ───────────────────────── */
+.scp-wizard-nav-active::before {
+  animation: scp-wiz-nav-pulse 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes scp-wiz-nav-pulse {
+  0%   { transform: scaleY(0.4); opacity: 0; }
+  60%  { transform: scaleY(1.2); opacity: 1; }
+  100% { transform: scaleY(1);   opacity: 1; }
+}
+
+/* ─── Run button: idle pulse (only when not loading) ────────────── */
+.scp-wiz-run-btn:not(:disabled) {
+  position: relative;
+  isolation: isolate;
+}
+.scp-wiz-run-btn:not(:disabled)::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  z-index: -1;
+  animation: scp-wiz-run-pulse 2.4s ease-in-out infinite;
+}
+@keyframes scp-wiz-run-pulse {
+  0%, 100% { transform: scale(1);    opacity: 0; }
+  50%      { transform: scale(1.06); opacity: 0.35; }
+}
+
+/* ─── Card add animation (suggestions appearing) ────────────────── */
+.scp-wiz-suggestions > .scp-wiz-card {
+  animation: scp-wiz-card-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes scp-wiz-card-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ─── Empty state fade-in ───────────────────────────────────────── */
+.scp-wiz-empty {
+  animation: scp-wiz-fade-in 0.3s ease-out both;
+}
+@keyframes scp-wiz-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* ─── Focus rings — keyboard-only ───────────────────────────────── */
+.scp-wizard-app :focus-visible {
+  outline: 2px solid var(--scp-primary);
+  outline-offset: 2px;
+  border-radius: var(--scp-radius-sm);
+}
+
+/* ─── Skip animation when user prefers reduced motion ───────────── */
+@media (prefers-reduced-motion: reduce) {
+  .scp-wizard-stage-enter,
+  .scp-wizard-nav-active::before,
+  .scp-wiz-run-btn:not(:disabled)::after,
+  .scp-wiz-suggestions > .scp-wiz-card,
+  .scp-wiz-empty,
+  .scp-wiz-error,
+  .scp-wiz-skeleton-bar,
+  .scp-wiz-run-btn .fa-spinner {
+    animation: none !important;
+    transition: none !important;
+  }
+  .scp-wizard-app * { transition-duration: 0.01ms !important; }
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .scp-wizard-shell { flex-direction: column; }
+  .scp-wizard-sidenav {
+    width: 100%; border-right: none;
+    border-bottom: 1px solid var(--scp-border-light);
+    padding: var(--scp-space-3);
+    flex-direction: row; gap: var(--scp-space-2);
+    overflow-x: auto; overflow-y: hidden;
+  }
+  .scp-wizard-sidenav-label,
+  .scp-wizard-sidenav-progress { display: none; }
+  .scp-wizard-sidenav-list {
+    flex-direction: row; gap: var(--scp-space-1);
+    margin: 0; min-width: max-content;
+  }
+  .scp-wizard-nav-item {
+    flex-direction: column; align-items: center;
+    min-width: 96px; padding: var(--scp-space-2);
+    gap: var(--scp-space-1);
+  }
+  .scp-wizard-nav-active::before { display: none; }
+  .scp-wizard-nav-text { text-align: center; padding-top: 0; }
+  .scp-wizard-nav-sub { display: none; }
+  .scp-wizard-page-header,
+  .scp-wizard-page-body { padding-left: var(--scp-space-5); padding-right: var(--scp-space-5); }
+  .scp-wizard-footer { padding-left: var(--scp-space-5); padding-right: var(--scp-space-5); }
+}
+@media (max-width: 600px) {
+  .scp-wizard-topbar { padding: 0 var(--scp-space-4); }
+  .scp-wizard-topbar-sub { display: none; }
+  .scp-wizard-page-title { font-size: var(--scp-font-size-2xl); }
+  .scp-wizard-page-body { padding: var(--scp-space-4); padding-bottom: 96px; }
+  .scp-wizard-footer { padding: var(--scp-space-3) var(--scp-space-4); }
+  .scp-wizard-footer-meta { display: none; }
 }
